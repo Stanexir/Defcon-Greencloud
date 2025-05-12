@@ -19,10 +19,6 @@
 
 package me.mochibit.defcon.particles.emitter
 
-import me.mochibit.defcon.particles.templates.AbstractParticle
-import me.mochibit.defcon.particles.templates.GenericParticleProperties
-import me.mochibit.defcon.particles.templates.TextDisplayParticleProperties
-import me.mochibit.defcon.utils.ColorUtils
 import org.bukkit.Color
 import org.bukkit.entity.Player
 import org.joml.Quaternionf
@@ -38,13 +34,14 @@ import kotlin.math.sign
  * Base particle instance that manages state and physics
  */
 abstract class ParticleInstance(
-    private val particleProperties: GenericParticleProperties,
+    private val maxLife: Long,
     val position: Vector3d,
     var velocity: Vector3d = Vector3d(0.0, 0.0, 0.0),
     private var damping: Vector3d = Vector3d(0.0, 0.0, 0.0),
-    private var acceleration: Vector3f = Vector3f(0.0f, 0.0f, 0.0f)
+    private var acceleration: Vector3f = Vector3f(0.0f, 0.0f, 0.0f),
+    var color: Color = Color.WHITE
 ) {
-    private var life: Int = 0
+    private var age: Int = 0
     val particleID: Int = ENTITY_ID_COUNTER.getAndIncrement()
     protected val particleUUID: UUID = UUID.randomUUID() // Consider lazily initializing if needed
 
@@ -135,9 +132,9 @@ abstract class ParticleInstance(
 
         // Only update position for significant changes or on interval
         // (using mod is cheaper than % operator for powers of 2)
-        val needsPositionUpdate = (isMoving && (life and (UPDATE_INTERVAL - 1)) == 0)
+        val needsPositionUpdate = (isMoving && (age and (UPDATE_INTERVAL - 1)) == 0)
 
-        life++
+        age++
 
         // Mark as removed if reached end of life
         if (isDead()) {
@@ -150,7 +147,7 @@ abstract class ParticleInstance(
     /**
      * Check if particle has reached end of life
      */
-    fun isDead() = life >= particleProperties.maxLife
+    fun isDead() = age >= maxLife
 
     /**
      * Check if particle is marked as removed
@@ -167,48 +164,6 @@ abstract class ParticleInstance(
 
         @JvmStatic
         private val ENTITY_ID_COUNTER = AtomicInteger(ThreadLocalRandom.current().nextInt(10000, Int.MAX_VALUE / 4))
-
-        /**
-         * Create a particle instance from template - optimized for bulk creation
-         */
-        fun fromTemplate(
-            particleTemplate: AbstractParticle,
-        ): ParticleInstance {
-            val particleProperties = particleTemplate.particleProperties.clone().apply {
-                color = adjustColor(this.color ?: Color.RED, particleTemplate)
-            }
-
-            if (particleTemplate.randomizeScale) {
-                val scale = particleProperties.scale
-                // Get a random scale - using ThreadLocalRandom for better threading performance
-                val scaleRandom = ThreadLocalRandom.current().nextDouble(0.9, 1.3).toFloat()
-                particleProperties.scale = scale.mul(scaleRandom, scale)  // Reuse scale vector
-            }
-
-            return TextDisplayParticleInstance(
-                particleProperties as TextDisplayParticleProperties,
-            ).apply {
-                setAcceleration(particleTemplate.initialAcceleration)
-                setDamping(particleTemplate.initialDamping)
-            }
-        }
-
-        /**
-         * Adjust color with optimized calculations
-         */
-        private fun adjustColor(color: Color, template: AbstractParticle): Color {
-            val baseColor = template.colorSupplier?.invoke() ?: color
-            return if (template.randomizeColorBrightness) {
-
-                ColorUtils.randomizeColorBrightness(
-                    baseColor,
-                    template.colorDarkenFactorMax,
-                    template.colorDarkenFactorMin,
-                    template.colorLightenFactorMax,
-                    template.colorLightenFactorMin
-                )
-            } else baseColor
-        }
     }
 }
 

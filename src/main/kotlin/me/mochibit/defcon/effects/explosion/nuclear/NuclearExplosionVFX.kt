@@ -28,6 +28,7 @@ import me.mochibit.defcon.particles.emitter.ParticleEmitter
 import me.mochibit.defcon.particles.emitter.SphereShape
 import me.mochibit.defcon.particles.emitter.SphereSurfaceShape
 import me.mochibit.defcon.particles.templates.definition.ExplosionDustParticle
+import org.bukkit.Color
 import org.bukkit.Location
 import org.joml.Vector3f
 import kotlin.time.Duration.Companion.seconds
@@ -46,11 +47,13 @@ class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val 
                 yRadius = 50.0f
             ),
         ),
-        TemperatureComponent(temperatureCoolingRate = 35.0)
+        TemperatureComponent()
     ).addSpawnableParticle(
         ExplosionDustParticle()
-            .scale(Vector3f(30.0f, 30.0f, 30.0f))
-            .velocity(Vector3f(0.0f, 1f, 0.0f))
+            .apply {
+                scale(30.0f, 30.0f, 30.0f)
+                initialVelocity(0.0, 1.0, 0.0)
+            }
     )
 
 
@@ -62,11 +65,12 @@ class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val 
                 yRadius = 50.0f,
             ),
         ),
-        TemperatureComponent(temperatureCoolingRate = 105.0)
+        TemperatureComponent(baseCoolingRate = 15.0)
     ).addSpawnableParticle(
-        ExplosionDustParticle()
-            .scale(Vector3f(45.0f, 45.0f, 45.0f))
-            .velocity(Vector3f(0.0f, .8f, 0.0f))
+        ExplosionDustParticle().apply {
+            scale(45.0f, 45.0f, 45.0f)
+            initialVelocity(0.0, .8, 0.0)
+        }
     )
 
     private val tertiaryCloud = ParticleComponent(
@@ -77,12 +81,13 @@ class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val 
                 yRadius = 70.0f,
             ),
         ),
-        TemperatureComponent(temperatureCoolingRate = 200.0)
+        TemperatureComponent(baseCoolingRate = 40.0)
     ).addSpawnableParticle(
         ExplosionDustParticle()
-            .scale(Vector3f(50.0f, 50.0f, 50.0f))
-            .velocity(Vector3f(0.0f, .6f, 0.0f)),
-        true
+            .apply {
+                scale(50.0f, 50.0f, 50.0f)
+                initialVelocity(0.0, .6, 0.0)
+            }
     )
 
     private val quaterniaryCloud = ParticleComponent(
@@ -93,12 +98,13 @@ class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val 
                 yRadius = 60.0f,
             ),
         ),
-        TemperatureComponent(temperatureCoolingRate = 300.0)
+        TemperatureComponent(baseCoolingRate = 50.0)
     ).addSpawnableParticle(
         ExplosionDustParticle()
-            .scale(Vector3f(55.0f, 55.0f, 55.0f))
-            .velocity(Vector3f(0.0f, -1.0f, 0.0f)),
-        true
+            .apply {
+                scale(55.0f, 55.0f, 55.0f)
+                initialVelocity(0.0, -1.0, 0.0)
+            }
     )
         .translate(Vector3f(0.0f, -5.0f, 0.0f))
 
@@ -111,13 +117,16 @@ class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val 
                 height = 60.0f,
             ),
         ),
-        TemperatureComponent(temperatureCoolingRate = 40.0)
+        TemperatureComponent(baseCoolingRate = 8.0)
     ).addSpawnableParticle(
-        ExplosionDustParticle().velocity(Vector3f(0.0f, -1.2f, 0.0f))
+        ExplosionDustParticle()
+            .apply {
+                initialVelocity(0.0, -1.2, 0.0)
+            }
     )
         .translate(Vector3f(0.0f, -30.0f, 0.0f))
 
-    private val neckCone = ParticleComponent(
+    private val neckSkirt = ParticleComponent(
         ParticleEmitter(
             center, 8000.0,
             emitterShape = SphereShape(
@@ -126,16 +135,18 @@ class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val 
                 minY = -15.0
             ),
         ),
-        TemperatureComponent(temperatureCoolingRate = 100.0)
     ).addSpawnableParticle(
         ExplosionDustParticle()
-            .velocity(Vector3f(0.0f, -1.2f, 0.0f))
+            .apply {
+                defaultColor = Color.GRAY
+                initialVelocity(0.0, -5.0, 0.0)
+            }
     )
         .apply {
             visible = false
         }
-        .translate(Vector3f(0.0f, -90.0f, 0.0f))
-        .setVisibilityAfterDelay(true, 30.seconds)
+        .translate(Vector3f(0.0f, -60.0f, 0.0f))
+        .setVisibilityAfterDelay(true, 50.seconds)
         .applyRadialVelocityFromCenter(Vector3f(5.0f, 0f, 5.0f))
 
     private val stem = ParticleComponent(
@@ -147,15 +158,19 @@ class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val 
                 height = 1f,
             ),
         ),
-        TemperatureComponent(temperatureCoolingRate = 140.0)
+        TemperatureComponent(baseCoolingRate = 30.0)
     ).addSpawnableParticle(
         ExplosionDustParticle()
-            .scale(Vector3f(40.0f, 40.0f, 40.0f))
-            .velocity(Vector3f(0.0f, 1.0f, 0.0f))
-    )
+            .apply {
+                scale(40.0f, 40.0f, 40.0f)
+                initialVelocity(0.0, 1.0, 0.0)
+            }
+    ).apply {
+        positionBasedColoring = true
+    }
 
     private val stemShape = stem.shape
-    private val neckConeShape = neckCone.shape
+    private val neckConeShape = neckSkirt.shape
 
 
     init {
@@ -166,7 +181,7 @@ class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val 
                 secondaryCloud,
                 tertiaryCloud,
                 quaterniaryCloud,
-                neckCone,
+                neckSkirt,
                 stem
             )
         )
@@ -188,11 +203,11 @@ class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val 
         secondaryCloud.translate(movementVector)
         tertiaryCloud.translate(movementVector)
         quaterniaryCloud.translate(movementVector)
-        neckCone.translate(movementVector)
+        neckSkirt.translate(movementVector)
         currentHeight += deltaMovement
 
         // Gradually increase the displayed height of the cone to simulate the nuke skirt
-        if (neckCone.visible)
+        if (neckSkirt.visible)
             neckConeShape.maxY += deltaMovement / 5
 
         stemShape.height = (currentHeight - 70)

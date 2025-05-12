@@ -19,22 +19,19 @@
 
 package me.mochibit.defcon.particles.templates.definition
 
-import me.mochibit.defcon.particles.templates.DisplayParticleProperties
-import me.mochibit.defcon.particles.templates.TextDisplayParticle
-import me.mochibit.defcon.particles.templates.TextDisplayParticleProperties
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.TextComponent
+import me.mochibit.defcon.particles.templates.AbstractParticle
+import me.mochibit.defcon.particles.templates.ParticleTemplateProperties
+import me.mochibit.defcon.particles.templates.TextMode
 import org.bukkit.Color
-import org.bukkit.Material
-import org.bukkit.inventory.ItemStack
-import org.joml.Vector3f
 
-class ExplosionDustParticle : TextDisplayParticle(
-    TextDisplayParticleProperties(
-        text = "\uE000",
-    ).apply {
-        color = Color.fromRGB(49,49,49)
-        scale = Vector3f(40.0f, 40.0f, 40.0f)
-        viewRange = 500.0f
-    }
-)
+class ExplosionDustParticle(
+    override val particleProperties: ParticleTemplateProperties =
+        ParticleTemplateProperties(
+            defaultColor = Color.fromRGB(49, 49, 49),
+            textMode = TextMode(
+                text = "\uE000",
+            )
+        )
+) : AbstractParticle
+
+

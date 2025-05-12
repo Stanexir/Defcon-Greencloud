@@ -27,8 +27,11 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDe
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityMetadata
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityTeleport
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSpawnEntity
-import me.mochibit.defcon.particles.templates.DisplayParticleProperties
+import org.bukkit.Color
+import org.bukkit.entity.Display
+import org.bukkit.entity.Display.Billboard
 import org.bukkit.entity.Player
+import org.joml.Quaternionf
 import org.joml.Vector3d
 import org.joml.Vector3f
 import java.util.*
@@ -37,13 +40,31 @@ import java.util.*
  * Client-side particle instance that handles packets and display logic
  * Optimized for handling large numbers of particles
  */
+
+data class DisplayParticleProperties(
+    val interpolationDelay: Int = 0,
+    val interpolationDuration: Int = 0,
+    val translation: Vector3f = Vector3f(0.0f, 0.0f, 0.0f),
+    val scale: Vector3f = Vector3f(1.0f, 1.0f, 1.0f),
+    val rotationLeft: Quaternionf = Quaternionf(0.0f, 0.0f, 0.0f, 1.0f),
+    val rotationRight: Quaternionf = Quaternionf(0.0f, 0.0f, 0.0f, 1.0f),
+    val billboard: Billboard = Billboard.FIXED,
+    val brightness: Display.Brightness = Display.Brightness(0, 0),
+    val viewRange: Float = 0.0f,
+    val shadowRadius: Float = 0.0f,
+    val shadowStrength: Float = 0.0f,
+    val width: Float = 0.0f,
+    val height: Float
+)
+
 abstract class ClientSideParticleInstance(
+    maxLife: Long = 20,
     particleProperties: DisplayParticleProperties,
     position: Vector3d,
     velocity: Vector3d = Vector3d(0.0, 0.0, 0.0),
     damping: Vector3d = Vector3d(0.0, 0.0, 0.0),
-    acceleration: Vector3f = Vector3f(0.0f, 0.0f, 0.0f)
-) : ParticleInstance(particleProperties, position, velocity, damping, acceleration) {
+    acceleration: Vector3f = Vector3f(0.0f, 0.0f, 0.0f),
+) : ParticleInstance(maxLife, position, velocity, damping, acceleration) {
 
     companion object {
         fun destroyParticlesInBatch(

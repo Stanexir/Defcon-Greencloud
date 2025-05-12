@@ -115,7 +115,7 @@ object CustomBiomeHandler {
     private val activeBiomes = ConcurrentHashMap<UUID, CustomBiomeBoundary>()
 
     // Thread-safe map to track which players can see which biomes (for client-side updates)
-    private val playerVisibleBiomes = ConcurrentHashMap<UUID, MutableSet<UUID>>()
+    private val playerVisibleBiomes = ConcurrentHashMap<UUID, ConcurrentHashMap.KeySetView<UUID, Boolean>>()
 
     // Track which worlds have had their biomes loaded
     private val loadedWorlds = Collections.synchronizedSet(HashSet<String>())
@@ -384,10 +384,9 @@ object CustomBiomeHandler {
     fun getPlayerVisibleBiomes(playerId: UUID): Set<CustomBiomeBoundary> {
         val biomeIds = playerVisibleBiomes[playerId] ?: return emptySet()
         // Create a synchronized copy of the set to prevent concurrent modification during iteration
-        val biomeIdsCopy = synchronized(biomeIds) { biomeIds.toSet() }
 
         // Now safely map over the copy
-        return biomeIdsCopy.mapNotNull { activeBiomes[it] }.toSet()
+        return biomeIds.mapNotNull { activeBiomes[it] }.toSet()
     }
 
     /**
@@ -514,7 +513,7 @@ object CustomBiomeHandler {
      * Makes a specific biome visible to a player.
      */
     fun makeBiomeVisibleToPlayer(playerId: UUID, biomeId: UUID) {
-        val playerBiomes = playerVisibleBiomes.computeIfAbsent(playerId) { mutableSetOf() }
+        val playerBiomes = playerVisibleBiomes.computeIfAbsent(playerId) { ConcurrentHashMap.newKeySet() }
         if (playerBiomes.add(biomeId)) {
             // Only refresh chunks if this is a new addition
             updateClientSideBiomeChunks(playerId)
@@ -576,7 +575,7 @@ object CustomBiomeHandler {
         }.keys.toSet()
 
         // Update player's visible biomes
-        val currentVisible = playerVisibleBiomes.computeIfAbsent(player.uniqueId) { mutableSetOf() }
+        val currentVisible = playerVisibleBiomes.computeIfAbsent(player.uniqueId) { ConcurrentHashMap.newKeySet() }
         if (currentVisible != visibleBiomes) {
             currentVisible.clear()
             currentVisible.addAll(visibleBiomes)

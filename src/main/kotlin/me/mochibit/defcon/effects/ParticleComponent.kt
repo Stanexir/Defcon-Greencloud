@@ -1,6 +1,5 @@
 package me.mochibit.defcon.effects
 
-import me.mochibit.defcon.lifecycle.Lifecycled
 import me.mochibit.defcon.particles.emitter.EmitterShape
 import me.mochibit.defcon.particles.emitter.ParticleEmitter
 import me.mochibit.defcon.particles.templates.AbstractParticle
@@ -14,10 +13,9 @@ import kotlin.time.Duration
  */
 open class ParticleComponent<T: EmitterShape>(
     private val particleEmitter: ParticleEmitter<T>,
-    private val colorSupplier: ColorSuppliable? = null,
+    private val colorSupplier: CycledColorSupplier? = null,
 ) : EffectComponent {
-
-    private var lifecycledSupport: Lifecycled? = colorSupplier as? Lifecycled
+    var positionBasedColoring: Boolean = false
 
     // Matrix transformation for particleEmitter
     val transform: Matrix4d
@@ -47,12 +45,13 @@ open class ParticleComponent<T: EmitterShape>(
     /**
      * Adds a spawnable particle with optional color supplier attachment.
      */
-    fun addSpawnableParticle(particle: AbstractParticle, attachColorSupplier: Boolean = false): ParticleComponent<T> {
+    fun addSpawnableParticle(particle: AbstractParticle): ParticleComponent<T> {
         particleEmitter.spawnableParticles.add(particle)
-        if (attachColorSupplier) {
-            colorSupplier?.let { particle.colorSupplier(it.colorSupplier) }
-        }
         return this
+    }
+
+    fun particleRate(particlesPerSecond: Int) = apply {
+        particleEmitter.setSpawnRate(particlesPerSecond)
     }
 
     fun addSpawnableParticles(
@@ -60,9 +59,6 @@ open class ParticleComponent<T: EmitterShape>(
         attachColorSupplier: Boolean = false
     ): ParticleComponent<T> {
         particleEmitter.spawnableParticles.addAll(particles)
-        if (attachColorSupplier) {
-            colorSupplier?.let { particles.forEach { it.colorSupplier(colorSupplier.colorSupplier) } }
-        }
         return this
     }
 
@@ -100,17 +96,23 @@ open class ParticleComponent<T: EmitterShape>(
 
     // Lifecycle management for starting, updating, and stopping the particle component.
     override fun start() {
-        lifecycledSupport?.start()
+        colorSupplier?.let {
+            if (positionBasedColoring) {
+                particleEmitter.positionColorSupply = it.shapeColorSupplier
+            } else
+                particleEmitter.colorSupply = it.colorSupplier
+            it.start()
+        }
         particleEmitter.start()
     }
 
     override fun update(delta: Float) {
-        lifecycledSupport?.update(delta)
+        colorSupplier?.update(delta)
         particleEmitter.update(delta)
     }
 
     override fun stop() {
-        lifecycledSupport?.stop()
+        colorSupplier?.stop()
         particleEmitter.stop()
     }
 }

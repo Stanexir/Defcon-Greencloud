@@ -18,10 +18,6 @@
  */
 package me.mochibit.defcon.effects.explosion.generic
 
-import com.github.shynixn.mccoroutine.bukkit.launch
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.Defcon.Logger.err
 import me.mochibit.defcon.effects.AnimatedEffect
 import me.mochibit.defcon.effects.ParticleComponent
@@ -33,10 +29,13 @@ import me.mochibit.defcon.particles.templates.definition.ExplosionDustParticle
 import org.bukkit.Color
 import org.bukkit.Location
 import org.joml.Vector3f
+import kotlin.math.PI
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+
 
 class ShockwaveEffect(
     private val center: Location,
@@ -44,37 +43,65 @@ class ShockwaveEffect(
     private val initialRadius: Int = 0,
     private val expansionSpeed: Float = 50f,
     duration: Duration = ((shockwaveRadius - initialRadius) / expansionSpeed).roundToInt().seconds,
+    private val particleDensityFactor: Float = 1.0f, // Allows fine-tuning of particle density
 ) : AnimatedEffect(duration.toTicks()) {
 
     private val shockwave = ParticleComponent(
         ParticleEmitter(
-            center, 1000.0,
+            center, 300.0,
+            maxParticlesInitial = 2000, // Start with a higher initial value
             emitterShape = RingSurfaceShape(
                 ringRadius = initialRadius.toFloat(),
                 tubeRadius = 1f,
             ),
-            shapeMutator = SimpleFloorSnap(center.world),
+            shapeMutator = SimpleFloorSnap(center),
         ),
     ).addSpawnableParticle(
-        ExplosionDustParticle()
-            .color(Color.WHITE)
-            .scale(Vector3f(60.0f, 50.0f, 60.0f))
-            .maxLife(20),
+        ExplosionDustParticle().apply {
+            defaultColor = Color.WHITE
+            scale(60f, 50f, 60f)
+            maxLife = 20
+        }
     ).applyRadialVelocityFromCenter(
-        Vector3f(2f, .0f, 2f)
+        Vector3f(1f, .0f, 1f)
     )
 
     private val shockwaveShape = shockwave.shape
 
     init {
         effectComponents.add(shockwave)
-        shockwaveShape.density = 10f
-        Defcon.instance.launch(Dispatchers.IO) {
-            while (tickAlive / 20 < duration.inWholeSeconds) {
-                shockwave.maxParticles += 1000
 
-                delay(1.seconds)
-            }
+        // Initial density and particle count calculation
+        updateDensityAndParticles()
+        shockwave.particleRate(1000)
+    }
+
+    /**
+     * Updates both density and max particles based on the current radius
+     * This unified approach ensures consistent behavior
+     */
+
+    private val baseScale = Vector3f(60f, 40f, 60f)
+
+    private fun updateDensityAndParticles() {
+        try {
+            // Calculate circumference to determine appropriate particle count
+            val circumference = 2 * PI * shockwaveShape.ringRadius
+
+            // Set emitter spawn rate in particles per second
+
+            // Calculate appropriate particle count based on circumference with improved scaling
+            // Increased multiplier from 3.5 to 5.0 for better density
+            val particlesNeeded = (circumference * particleDensityFactor).roundToInt()
+
+            val newMaxParticles = max(500, particlesNeeded)
+
+            // Update particle scale
+
+            shockwave.maxParticles = newMaxParticles
+
+        } catch (e: Exception) {
+            err("Error updating shockwave parameters: ${e.message}")
         }
     }
 
@@ -92,7 +119,12 @@ class ShockwaveEffect(
                 shockwaveRadius.toFloat(),
                 shockwaveShape.ringRadius + shockwaveDelta
             )
+
+            // Update radius
             shockwaveShape.ringRadius = newRadius
+
+            updateDensityAndParticles()
+
         } catch (e: Exception) {
             err("Error in shockwave animation: ${e.message}")
         }

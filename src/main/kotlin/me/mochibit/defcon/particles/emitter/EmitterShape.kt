@@ -28,8 +28,17 @@ import kotlin.math.*
  * Handles the positioning of particles according to specific geometric distributions.
  */
 abstract class EmitterShape(
-    var density: Float = 1.0f
+    var density: Float = 1.0f,
 ) {
+    abstract val minHeight: Double
+    abstract val maxHeight: Double
+
+    abstract val minWidth: Double
+    abstract val maxWidth: Double
+
+    abstract val minDepth: Double
+    abstract val maxDepth: Double
+
     /**
      * Modifies the provided location vector according to the shape's distribution.
      * Higher density values will result in more particles being clustered together.
@@ -75,6 +84,18 @@ class SphereShape(
     var excludedYRadius: Double? = null,
     density: Float = 1.0f
 ) : EmitterShape(density) {
+    override val minHeight: Double
+        get() = minY
+    override val maxHeight: Double
+        get() = maxY
+    override val minWidth: Double
+        get() = minXZ
+    override val maxWidth: Double
+        get() = maxXZ
+    override val minDepth: Double
+        get() = minXZ
+    override val maxDepth: Double
+        get() = maxXZ
 
     override fun maskLoc(location: Vector3d) {
         if (minY > maxY) {
@@ -83,7 +104,7 @@ class SphereShape(
 
         // Use density to control radial distribution
         // Cube root for uniform volumetric distribution
-        val r = applyDensity(Math.random()).pow(1.0/3.0)
+        val r = applyDensity(Math.random()).pow(1.0 / 3.0)
 
         // Generate spherical coordinates
         val theta = Math.random() * MathFunctions.TAU
@@ -165,6 +186,18 @@ class SphereSurfaceShape(
 
             field = value
         }
+    override val minHeight: Double
+        get() = minY
+    override val maxHeight: Double
+        get() = maxY
+    override val minWidth: Double
+        get() = minXZ
+    override val maxWidth: Double
+        get() = maxXZ
+    override val minDepth: Double
+        get() = minXZ
+    override val maxDepth: Double
+        get() = maxXZ
 
     override fun maskLoc(location: Vector3d) {
         // Generate spherical coordinates with density adjustment
@@ -228,6 +261,18 @@ class CylinderShape(
     var excludedXZRadius: Double? = null,
     density: Float = 1.0f
 ) : EmitterShape(density) {
+    override val minHeight: Double
+        get() = 0.0
+    override val maxHeight: Double
+        get() = height.toDouble()
+    override val minWidth: Double
+        get() = minX
+    override val maxWidth: Double
+        get() = maxX
+    override val minDepth: Double
+        get() = minZ
+    override val maxDepth: Double
+        get() = maxZ
 
     override fun maskLoc(location: Vector3d) {
         // Generate cylindrical coordinates with density adjustment
@@ -267,6 +312,18 @@ class RingSurfaceShape(
     var tubeRadius: Float,
     density: Float = 1.0f
 ) : EmitterShape(density) {
+    override val minHeight: Double
+        get() = -tubeRadius.toDouble()
+    override val maxHeight: Double
+        get() = tubeRadius.toDouble()
+    override val minWidth: Double
+        get() = -ringRadius.toDouble()
+    override val maxWidth: Double
+        get() = ringRadius.toDouble()
+    override val minDepth: Double
+        get() = -ringRadius.toDouble()
+    override val maxDepth: Double
+        get() = ringRadius.toDouble()
 
     override fun maskLoc(location: Vector3d) {
         // Generate toroidal coordinates with density adjustment
@@ -305,6 +362,18 @@ class DiscShape(
     var excludedRadius: Double? = null,
     density: Float = 1.0f
 ) : EmitterShape(density) {
+    override val minHeight: Double
+        get() = 1.0
+    override val maxHeight: Double
+        get() = 1.0
+    override val minWidth: Double
+        get() = minX
+    override val maxWidth: Double
+        get() = maxX
+    override val minDepth: Double
+        get() = minZ
+    override val maxDepth: Double
+        get() = maxZ
 
     override fun maskLoc(location: Vector3d) {
         // Generate polar coordinates with density adjustment
@@ -345,6 +414,20 @@ class LineShape(
 ) : EmitterShape(density) {
 
     enum class Direction { X, Y, Z }
+
+    override val minHeight: Double
+        get() = 0.0
+    override val maxHeight: Double
+        get() = length.toDouble()
+
+    override val minWidth: Double
+        get() = 1.0
+    override val maxWidth: Double
+        get() = 1.0
+    override val minDepth: Double
+        get() = 1.0
+    override val maxDepth: Double
+        get() = 1.0
 
     override fun maskLoc(location: Vector3d) {
         // Apply density to control distribution along the line

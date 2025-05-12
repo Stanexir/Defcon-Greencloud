@@ -18,139 +18,79 @@
 
 package me.mochibit.defcon.particles.templates
 
-import net.kyori.adventure.text.TextComponent
 import org.bukkit.Color
 import org.bukkit.entity.Display
 import org.bukkit.entity.TextDisplay.TextAlignment
 import org.bukkit.inventory.ItemStack
 import org.joml.Quaternionf
+import org.joml.Vector3d
 import org.joml.Vector3f
 
 /**
  * Base class for defining generic particle properties.
  *
  * @property maxLife The maximum lifespan of the particle in ticks.
- * @property color The color of the particle.
+ * @property defaultColor The color of the particle.
  * @property scale The scale of the particle.
  */
-abstract class GenericParticleProperties(
+data class ParticleTemplateProperties(
     var maxLife: Long = 60,
-    var color: Color? = null,
-    var scale: Vector3f = Vector3f(1.0f, 1.0f, 1.0f)
-) : Cloneable {
+    var defaultColor: Color = Color.WHITE,
+    val colorSettings: ColorSettings = ColorSettings(),
+    val displayProperties: DisplayProperties = DisplayProperties(),
+    val itemMode: ItemMode? = null,
+    val textMode: TextMode? = null,
 
-    init {
-        require(maxLife > 0) { "maxLife must be greater than 0." }
-    }
-
-    public override fun clone(): GenericParticleProperties {
-        return super.clone() as GenericParticleProperties
-    }
+    val initialVelocity: Vector3d = Vector3d(0.0, 0.0, 0.0),
+    val initialAcceleration: Vector3d = Vector3d(0.0, 0.0, 0.0),
+    val initialDampening: Vector3d = Vector3d(0.0, 0.0, 0.0),
+    /**
+     * Position displacement, applied randomly based on the vector
+     */
+    val displacement: Vector3d = Vector3d(0.0, 0.0, 0.0),
+) {
+    data class ColorSettings(
+        var randomizeColorBrightness: Boolean = true,
+        var maxLightenFactor: Double = .2,
+        var minLightenFactor: Double = 0.0,
+        var maxDarkenFactor: Double = 1.0,
+        var minDarkenFactor: Double = 0.8,
+    )
 }
 
-/**
- * Represents the properties of a display particle.
- *
- * @property itemStack The item stack associated with the particle.
- * @property interpolationDelay The delay before interpolation begins (in ticks).
- * @property interpolationDuration The duration of the interpolation (in ticks).
- * @property teleportDuration The duration of the teleport (in ticks).
- * @property translation The translation vector of the particle.
- * @property rotationLeft The left rotation quaternion of the particle.
- * @property rotationRight The right rotation quaternion of the particle.
- * @property billboard The billboard type of the particle.
- * @property brightness The brightness level of the particle.
- * @property viewRange The view range of the particle.
- * @property shadowRadius The radius of the particle's shadow.
- * @property shadowStrength The strength of the particle's shadow.
- * @property width The width of the particle.
- * @property height The height of the particle.
- * @property persistent If true, the particle persists after unloading.
- * @property modelData Custom model data for the particle.
- * @property modelDataAnimation The animation properties for the particle's model data.
- */
-abstract class DisplayParticleProperties(
-    var itemStack: ItemStack? = null,
-
+data class DisplayProperties(
     var interpolationDelay: Int = 0,
     var interpolationDuration: Int = 0,
     var teleportDuration: Int = 1,
-
-    var translation: Vector3f = Vector3f(0.0f, 0.0f, 0.0f),
-    var rotationLeft: Quaternionf = Quaternionf(0.0f, 0.0f, 0.0f, 1.0f),
-    var rotationRight: Quaternionf = Quaternionf(0.0f, 0.0f, 0.0f, 1.0f),
-
+    val scale: Vector3f = Vector3f(1.0f, 1.0f, 1.0f),
+    val translation: Vector3f = Vector3f(0.0f, 0.0f, 0.0f),
+    val rotationLeft: Quaternionf = Quaternionf(0.0f, 0.0f, 0.0f, 1.0f),
+    val rotationRight: Quaternionf = Quaternionf(0.0f, 0.0f, 0.0f, 1.0f),
     var billboard: Display.Billboard = Display.Billboard.CENTER,
     var brightness: Display.Brightness = Display.Brightness(15, 15),
-
     var viewRange: Float = 100.0f,
     var shadowRadius: Float = 0.0f,
     var shadowStrength: Float = 0.0f,
-
     var width: Float = 0.0f,
     var height: Float = 0.0f,
-
     var persistent: Boolean = false,
+)
 
+data class ItemMode(
+    var itemStack: ItemStack,
+    @Deprecated("This is only for legacy support", ReplaceWith("modelName"), DeprecationLevel.WARNING)
     var modelData: Int? = null,
-    var modelDataAnimation: ModelDataAnimation? = null
-) : GenericParticleProperties() {
+    var modelName: String? = null,
+)
 
-    init {
-        require(viewRange > 0) { "viewRange must be greater than 0." }
-        require(width >= 0) { "width cannot be negative." }
-        require(height >= 0) { "height cannot be negative." }
-    }
-
-    override fun clone(): DisplayParticleProperties {
-        return super.clone() as DisplayParticleProperties
-    }
-
-    /**
-     * Defines the properties for animating model data.
-     *
-     * @property frameRate The frame rate of the animation in frames per second.
-     * @property frames The sequence of texture indices used in the animation.
-     */
-    data class ModelDataAnimation(
-        var frameRate: Int = 1,
-        var frames: Array<Int> = emptyArray()
-    ) {
-        init {
-            require(frameRate > 0) { "frameRate must be greater than 0." }
-            require(frames.isNotEmpty()) { "frames array cannot be empty." }
-        }
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as ModelDataAnimation
-
-            if (frameRate != other.frameRate) return false
-            if (!frames.contentEquals(other.frames)) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = frameRate
-            result = 31 * result + frames.contentHashCode()
-            return result
-        }
-    }
-}
-
-data class TextDisplayParticleProperties(
+data class TextMode(
     var text: String,
-
-    var lineWidth: Int = 200,
-    var backgroundColor: Color = Color.fromARGB(0,0,0,0),
+    var color: Color = Color.WHITE,
+    var backgroundColor: Color = Color.fromARGB(0, 0, 0, 0),
     var textOpacity: Byte = -1,
-
-    // Byte-mask values
-    var hasShadow : Boolean = false, // 0x01
-    var isSeeThrough : Boolean = false, // 0x02
-    var useDefaultBackground : Boolean = false, // 0x04
-    var alignment: TextAlignment = TextAlignment.CENTER // 0x08
-) : DisplayParticleProperties()
+    var hasShadow: Boolean = false,
+    var isSeeThrough: Boolean = false,
+    var useDefaultBackground: Boolean = false,
+    var alignment: TextAlignment = TextAlignment.CENTER,
+    var lineWidth: Int = 200,
+)

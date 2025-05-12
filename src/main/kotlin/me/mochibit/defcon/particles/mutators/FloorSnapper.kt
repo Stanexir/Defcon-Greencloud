@@ -39,8 +39,8 @@ class FloorSnapper(
     private val chunkCache = ChunkCache.getInstance(center.world)
 
     override fun mutateLoc(location: Vector3d) {
-        val x = location.x().toInt()
-        val z = location.z().toInt()
+        val x = (center.x + location.x()).toInt()
+        val z = (center.z + location.z()).toInt()
 
         // Cache the minimum Y values based on (x, z)
         val minY = cachedMinY.computeIfAbsent(x to z) {

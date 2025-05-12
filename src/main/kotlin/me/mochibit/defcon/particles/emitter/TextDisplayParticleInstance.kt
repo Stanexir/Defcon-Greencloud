@@ -24,10 +24,10 @@ import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes
 import com.github.retrooper.packetevents.protocol.entity.type.EntityType
 import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes
 import me.mochibit.defcon.extensions.toInt
-import me.mochibit.defcon.particles.templates.TextDisplayParticleProperties
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Color
+import org.bukkit.entity.TextDisplay
 import org.joml.Vector3d
 import org.joml.Vector3f
 
@@ -35,32 +35,46 @@ import org.joml.Vector3f
  * Text display particle implementation
  * Optimized for better performance with large particle counts
  */
+
+data class TextDisplayParticleProperties(
+    val text: String,
+    val lineWidth: Int = 0,
+    val backgroundColor: Color = Color.BLACK,
+    val textOpacity: Byte = 0,
+    val hasShadow: Boolean = false,
+    val isSeeThrough: Boolean = false,
+    val useDefaultBackground: Boolean = false,
+    val alignment: TextDisplay.TextAlignment = TextDisplay.TextAlignment.CENTER,
+)
+
 class TextDisplayParticleInstance(
-    particleProperties: TextDisplayParticleProperties,
+    textDisplayProperties: TextDisplayParticleProperties,
+    particleProperties: DisplayParticleProperties,
+    maxLife: Long = 20,
     position: Vector3d = Vector3d(0.0, 0.0, 0.0),
     velocity: Vector3d = Vector3d(0.0, 0.0, 0.0),
     damping: Vector3d = Vector3d(0.0, 0.0, 0.0),
     acceleration: Vector3f = Vector3f(0.0f, 0.0f, 0.0f),
-) : ClientSideParticleInstance(particleProperties, position, velocity, damping, acceleration) {
+) : ClientSideParticleInstance(maxLife, particleProperties, position, velocity, damping, acceleration) {
 
     // Cache text component as it doesn't change
     private val textComponent by lazy {
-        val color = TextColor.color((particleProperties.color ?: Color.BLACK).asRGB())
-        Component.text(particleProperties.text).color(color)
+        val textColor = TextColor.color(this.color.asRGB())
+        Component.text(textDisplayProperties.text).color(textColor)
     }
 
     // Cache metadata list
     private val textMetadataList: List<EntityData> by lazy {
-        val textFlags = (particleProperties.hasShadow.toInt() or
-                (particleProperties.isSeeThrough.toInt() shl 1) or
-                (particleProperties.useDefaultBackground.toInt() shl 2) or
-                (particleProperties.alignment.ordinal shl 3)).toByte()
+        val textFlags = (textDisplayProperties.hasShadow.toInt() or
+                (textDisplayProperties.isSeeThrough.toInt() shl 1) or
+                (textDisplayProperties.useDefaultBackground.toInt() shl 2) or
+                (textDisplayProperties.alignment.ordinal shl 3)).toByte()
 
         listOf(
             EntityData(23, EntityDataTypes.ADV_COMPONENT, textComponent),
-            EntityData(24, EntityDataTypes.INT, particleProperties.lineWidth),
-            EntityData(25, EntityDataTypes.INT, particleProperties.backgroundColor.asRGB()),
-            EntityData(26, EntityDataTypes.BYTE, particleProperties.textOpacity),
+            EntityData(24, EntityDataTypes.INT, textDisplayProperties.lineWidth),
+            EntityData(25, EntityDataTypes.INT, textDisplayProperties.backgroundColor.asRGB()),
+            EntityData(26, EntityDataTypes.BYTE, textDisplayProperties.textOpacity),
             EntityData(27, EntityDataTypes.BYTE, textFlags)
         )
     }

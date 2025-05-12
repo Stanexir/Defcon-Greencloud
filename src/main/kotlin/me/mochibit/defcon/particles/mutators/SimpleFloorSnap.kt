@@ -19,12 +19,15 @@
 
 package me.mochibit.defcon.particles.mutators
 
-import org.bukkit.World
+import org.bukkit.Location
 import org.joml.Vector3d
 import kotlin.math.roundToInt
 
-class SimpleFloorSnap(private val world: World): AbstractShapeMutator() {
+class SimpleFloorSnap(private val origin: Location) : AbstractShapeMutator() {
     override fun mutateLoc(location: Vector3d) {
-        location.y = world.getHighestBlockYAt(location.x.roundToInt(), location.z.roundToInt()).toDouble()
+        location.y = origin.world.getHighestBlockYAt(
+            origin.blockX + location.x.roundToInt(),
+            origin.blockZ + location.z.roundToInt()
+        ).toDouble()
     }
 }

@@ -48,14 +48,15 @@ class CondensationCloudVFX(private val nuclearComponent: ExplosionComponent, pri
             )
         )
     ).addSpawnableParticle(
-        ExplosionDustParticle()
-            .scale(Vector3f(60.0f, 60.0f, 60.0f))
-            .color(Color.WHITE)
+        ExplosionDustParticle().apply {
+            scale(60.0f, 60.0f, 60.0f)
+            defaultColor = Color.WHITE
+        }
     )
         .applyRadialVelocityFromCenter(Vector3f(6.0f, 0.0f, 6.0f))
         .translate(Vector3f(0.0f, 110.0f, 0.0f))
 
-    private val condensationRingShape = condensationRing.shape as RingSurfaceShape
+    private val condensationRingShape = condensationRing.shape
 
     private val condensationDome = ParticleComponent(
         particleEmitter = ParticleEmitter(
@@ -69,15 +70,17 @@ class CondensationCloudVFX(private val nuclearComponent: ExplosionComponent, pri
             )
         )
     ).addSpawnableParticle(
-        ExplosionDustParticle()
-            .scale(Vector3f(80.0f, 80.0f, 80.0f))
-            .color(Color.WHITE)
+        ExplosionDustParticle().apply {
+            scale(80.0f, 80.0f, 80.0f)
+            defaultColor = Color.WHITE
+        }
     )
         .applyRadialVelocityFromCenter(Vector3f(6.0f, 0.0f, 6.0f))
-        .translate(Vector3f(0.0f, 150.0f, 0.0f)
-    )
+        .translate(
+            Vector3f(0.0f, 150.0f, 0.0f)
+        )
 
-    private val condensationDomeShape = condensationDome.shape as SphereSurfaceShape
+    private val condensationDomeShape = condensationDome.shape
 
     init {
         effectComponents = mutableListOf(

@@ -34,7 +34,6 @@ import org.joml.Vector3f
 class NuclearFogVFX(private val nuclearComponent: ExplosionComponent, private val center: Location) :
     AnimatedEffect(3600) {
 
-
     private val nuclearFog = ParticleComponent(
         ParticleEmitter(
             center, 3000.0,
@@ -46,12 +45,12 @@ class NuclearFogVFX(private val nuclearComponent: ExplosionComponent, private va
             ),
             shapeMutator = FloorSnapper(center),
         ),
-        TemperatureComponent(temperatureCoolingRate = 300.0),
+        TemperatureComponent(baseCoolingRate = 300.0),
     ).addSpawnableParticle(
-        ExplosionDustParticle()
-            .scale(Vector3f(60.0f, 60.0f, 60.0f))
-            .displacement(Vector3f(.0f, .5f, .0f)),
-        attachColorSupplier = true,
+        ExplosionDustParticle().apply {
+            scale(60.0f, 60.0f, 60.0f)
+            displacement(.0, .5, .0)
+        }
     ).applyRadialVelocityFromCenter(
         Vector3f(-2f, -1.0f, -2f)
     )
@@ -66,12 +65,12 @@ class NuclearFogVFX(private val nuclearComponent: ExplosionComponent, private va
             ),
             shapeMutator = FloorSnapper(center, center.toVector3f()),
         ),
-        TemperatureComponent(temperatureCoolingRate = 300.0)
+        TemperatureComponent(baseCoolingRate = 300.0)
     ).addSpawnableParticle(
-        ExplosionDustParticle()
-            .scale(Vector3f(60.0f, 60.0f, 60.0f))
-            .displacement(Vector3f(.0f, .5f, .0f)),
-        attachColorSupplier = true,
+        ExplosionDustParticle().apply {
+            scale(60.0f, 60.0f, 60.0f)
+            displacement(.0, .5, .0)
+        }
     ).applyRadialVelocityFromCenter(
         Vector3f(-1.5f, -1f, -1.5f)
     )
@@ -85,12 +84,12 @@ class NuclearFogVFX(private val nuclearComponent: ExplosionComponent, private va
                 radiusZ = 30f,
             ),
         ),
-        TemperatureComponent(temperatureCoolingRate = 280.0)
+        TemperatureComponent(baseCoolingRate = 280.0)
     ).addSpawnableParticle(
-        ExplosionDustParticle()
-            .scale(Vector3f(60.0f, 60.0f, 60.0f))
-            .displacement(Vector3f(.0f, .5f, .0f)),
-        attachColorSupplier = true,
+        ExplosionDustParticle().apply {
+            scale(60.0f, 60.0f, 60.0f)
+            displacement(.0, .5, .0)
+        }
     ).applyRadialVelocityFromCenter(
         Vector3f(-1.5f, -1f, -1.5f)
     )

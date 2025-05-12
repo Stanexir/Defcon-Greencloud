@@ -138,7 +138,7 @@ class EntityShockwave(
 
         try {
             shockwaveEffect.instantiate(true)
-            delay(duration)
+            jobs.forEach { it.join() }
         } finally {
             // Cancel all jobs when we're done
             jobs.forEach { it.cancel() }
