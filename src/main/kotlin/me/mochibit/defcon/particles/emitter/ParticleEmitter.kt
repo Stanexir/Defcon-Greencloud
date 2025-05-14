@@ -1,5 +1,6 @@
 package me.mochibit.defcon.particles.emitter
 
+import com.github.shynixn.mccoroutine.bukkit.launch
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import me.mochibit.defcon.Defcon
@@ -18,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Coroutine-optimized ParticleEmitter designed to handle 15,000+ particles efficiently
@@ -34,7 +36,6 @@ class ParticleEmitter<T : EmitterShape>(
     val transform: Matrix4d = Matrix4d(),
     val spawnableParticles: MutableList<AbstractParticle> = mutableListOf(),
     var shapeMutator: AbstractShapeMutator? = null,
-
     var colorSupply: ColorSupply? = null,
     var positionColorSupply: PositionColorSupply? = null
 ) : Lifecycled {
@@ -52,14 +53,14 @@ class ParticleEmitter<T : EmitterShape>(
 
         // Batch processing constants
         private const val BATCH_SIZE = 1000
-        private const val PARTICLE_SPAWN_BATCH = 64
         private const val PARTICLE_UPDATE_BATCH = 256
-        private const val PLAYER_UPDATE_INTERVAL = 250L
-        private const val BURST_BATCH_SIZE = 250
-        private const val BURST_BATCH_DELAY = 10L
 
-        // Heartbeat interval for frozen particle detection
+        private const val PARTICLE_UPDATE_POSITION_INTERVAL = 15
+
+        private const val PLAYER_UPDATE_INTERVAL = 250L
         private const val HEARTBEAT_INTERVAL = 5000L
+
+        private const val FAST_SHAPE_UPDATE_INTERVAL = 1L
     }
 
     // Core position data
@@ -70,6 +71,7 @@ class ParticleEmitter<T : EmitterShape>(
     // State tracking
     private val activeCount = AtomicInteger(0)
     private val isRunning = AtomicBoolean(true)
+    private val isStopping = AtomicBoolean(false)
     private val hasPlayersInRange = AtomicBoolean(false)
     private val lastActivityTimestamp = AtomicInteger((System.currentTimeMillis() / 1000).toInt())
 
@@ -94,23 +96,10 @@ class ParticleEmitter<T : EmitterShape>(
             field = value.coerceIn(0.0f, 1.0f)
         }
 
+    // System identification flags
+    private var hasFastExpandingShape = false
+
     var maxParticles = maxParticlesInitial
-        set(value) {
-            val oldValue = field
-            field = value
-
-            // If maxParticles increased, trigger burst spawn
-            if (value > oldValue && isRunning.get() && visible) {
-                triggerBurstSpawn(oldValue, value)
-            }
-        }
-
-    // Emitter scope with limited parallelism for better resource usage
-    private val emitterScope = CoroutineScope(
-        SupervisorJob() +
-                Dispatchers.Default.limitedParallelism(2) +
-                CoroutineName("ParticleEmitter")
-    )
 
     // LOD tracking
     private data class PlayerLodInfo(val lodLevel: Int, val lastUpdate: Long = System.currentTimeMillis())
@@ -121,7 +110,7 @@ class ParticleEmitter<T : EmitterShape>(
             if (field == value) return
             field = value
 
-            emitterScope.launch {
+            Defcon.instance.launch(Dispatchers.Default) {
                 val currentPlayers = visiblePlayers.keys.toList()
                 val currentParticles = particles.values.filterIsInstance<ClientSideParticleInstance>()
 
@@ -143,36 +132,31 @@ class ParticleEmitter<T : EmitterShape>(
         }
 
     /**
-     * Trigger a burst of particle spawns when maxParticles increases
+     * Enable fast expanding shape mode which uses more frequent updates
      */
-    private fun triggerBurstSpawn(oldValue: Int, newValue: Int) {
+    fun enableFastExpandingMode() {
+        hasFastExpandingShape = true
+    }
+
+    /**
+     * Trigger a burst of particles to adapt to the new count
+     */
+    fun adaptParticleCount(atLeast: Int) {
         if (spawnableParticles.isEmpty()) return
 
-        val particlesToAdd = newValue - oldValue
-        val particlesToCreate = min(particlesToAdd, newValue - activeCount.get())
+        maxParticles = atLeast
+        val particlesToCreate = atLeast - activeCount.get()
 
         if (particlesToCreate <= 0) return
 
-        emitterScope.launch {
+        Defcon.instance.launch(Dispatchers.IO) {
             try {
-                var remaining = particlesToCreate
-
-                while (remaining > 0 && isRunning.get()) {
-                    val batchSize = min(BURST_BATCH_SIZE, remaining)
-                    val batch = ArrayList<AbstractParticle>(batchSize)
-
-                    repeat(batchSize) {
-                        val index = Random.nextInt(spawnableParticles.size)
-                        batch.add(spawnableParticles[index])
-                    }
-
-                    particleSpawnChannel.send(batch)
-                    remaining -= batchSize
-
-                    delay(BURST_BATCH_DELAY)
+                val particlesToSpawn = ArrayList<AbstractParticle>(particlesToCreate)
+                repeat(particlesToCreate) {
+                    val index = Random.nextInt(spawnableParticles.size)
+                    particlesToSpawn.add(spawnableParticles[index])
                 }
-
-                // Update activity timestamp
+                spawnParticleBatch(particlesToSpawn)
                 recordActivity()
             } catch (e: CancellationException) {
                 // Expected during cancel
@@ -195,13 +179,30 @@ class ParticleEmitter<T : EmitterShape>(
     private suspend fun processParticleSpawns() {
         for (particleBatch in particleSpawnChannel) {
             try {
-                spawnParticleBatch(particleBatch)
-                recordActivity()
+                if (!isStopping.get()) {
+                    spawnParticleBatch(particleBatch)
+                    recordActivity()
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Defcon.instance.logger.warning("Error in particle spawn processor: ${e.message}")
             }
+        }
+    }
+
+    private suspend fun processParticleCleanup() {
+        while (isRunning.get() && particles.isNotEmpty()) {
+            // Remove the particles that are dead and that don't get updated for a while
+            val currentTime = System.currentTimeMillis()
+            val particlesToRemove = particles.values.filter { particle ->
+                val lastUpdate = updateTimes[particle] ?: currentTime
+                (currentTime - lastUpdate) > 10000L // 10 seconds
+            }
+            if (particlesToRemove.isNotEmpty()) {
+                particleRemoveChannel.send(particlesToRemove)
+            }
+            delay(1.seconds)
         }
     }
 
@@ -227,29 +228,22 @@ class ParticleEmitter<T : EmitterShape>(
     private suspend fun processPositionUpdates() {
         for ((player, particleBatch) in positionUpdateChannel) {
             try {
-                // Process in optimized batches
-                val batchSize = PARTICLE_UPDATE_BATCH
+                if (!player.isValid || player.isDead) continue
 
-                if (particleBatch.size > BATCH_SIZE && hasPlayersInRange.get()) {
+                // Process in optimized batches
+
+                if (hasPlayersInRange.get()) {
                     // Parallel processing for large batches
                     withContext(Dispatchers.IO) {
-                        val batches = particleBatch.chunked(batchSize * 2)
+                        val batches = particleBatch.chunked(BATCH_SIZE)
                         batches.map { subBatch ->
                             async {
                                 for (particle in subBatch) {
+
                                     particle.updatePosition(player)
                                 }
                             }
                         }.awaitAll()
-                    }
-                } else {
-                    // Sequential processing for smaller batches
-                    for (i in particleBatch.indices step batchSize) {
-                        val end = min(i + batchSize, particleBatch.size)
-                        for (j in i until end) {
-                            particleBatch[j].updatePosition(player)
-                        }
-                        yield()
                     }
                 }
 
@@ -290,19 +284,23 @@ class ParticleEmitter<T : EmitterShape>(
                 val lastActivity = lastActivityTimestamp.get()
 
                 // If no activity for more than 10 seconds, restart the emitter
-                if (currentTime - lastActivity > 10 && isRunning.get()) {
+                if (currentTime - lastActivity > 10 && isRunning.get() && !isStopping.get()) {
                     Defcon.instance.logger.warning("Detected potential particle freeze - restarting emitter")
                     reset()
                 }
 
                 delay(HEARTBEAT_INTERVAL)
-                heartbeatChannel.send(Unit) // Schedule next heartbeat
+                if (isRunning.get()) {
+                    heartbeatChannel.send(Unit) // Schedule next heartbeat
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Defcon.instance.logger.warning("Error in heartbeat: ${e.message}")
                 delay(HEARTBEAT_INTERVAL)
-                heartbeatChannel.send(Unit) // Retry heartbeat
+                if (isRunning.get()) {
+                    heartbeatChannel.send(Unit) // Retry heartbeat
+                }
             }
         }
     }
@@ -313,28 +311,31 @@ class ParticleEmitter<T : EmitterShape>(
     private suspend fun processUpdateTicks() {
         for (delta in updateTickChannel) {
             try {
-                // Spawn new particles if needed
-                if (activeCount.get() < maxParticles &&
-                    isRunning.get() &&
-                    visible &&
-                    spawnableParticles.isNotEmpty() &&
-                    (spawnProbability >= 1.0f || Random.nextFloat() < spawnProbability)
-                ) {
-                    val availableCapacity = maxParticles - activeCount.get()
-                    if (availableCapacity > 0) {
-                        val particlesToCreate = min(particlesPerFrame, availableCapacity)
-                        val batch = ArrayList<AbstractParticle>(particlesToCreate)
+                // Only spawn particles if emitter is active and not stopping
+                if (!isStopping.get()) {
+                    // Spawn new particles if needed
+                    if (activeCount.get() < maxParticles &&
+                        isRunning.get() &&
+                        visible &&
+                        spawnableParticles.isNotEmpty() &&
+                        (spawnProbability >= 1.0f || Random.nextFloat() < spawnProbability)
+                    ) {
+                        val availableCapacity = maxParticles - activeCount.get()
+                        if (availableCapacity > 0) {
+                            val particlesToCreate = min(particlesPerFrame, availableCapacity)
+                            val batch = ArrayList<AbstractParticle>(particlesToCreate)
 
-                        repeat(particlesToCreate) {
-                            val index = Random.nextInt(spawnableParticles.size)
-                            batch.add(spawnableParticles[index])
+                            repeat(particlesToCreate) {
+                                val index = Random.nextInt(spawnableParticles.size)
+                                batch.add(spawnableParticles[index])
+                            }
+
+                            particleSpawnChannel.send(batch)
                         }
-
-                        particleSpawnChannel.send(batch)
                     }
                 }
 
-                // Process particles in optimized batches
+                // Process all particles (including when stopping - to ensure proper death)
                 val currentParticles = particles.values
                 val size = currentParticles.size
 
@@ -369,7 +370,7 @@ class ParticleEmitter<T : EmitterShape>(
      * Spawn particles in a batch with improved memory efficiency
      */
     private suspend fun spawnParticleBatch(particleBatch: List<AbstractParticle>) {
-        if (activeCount.get() >= maxParticles || !visible || !isRunning.get()) return
+        if (activeCount.get() >= maxParticles || !visible || !isRunning.get() || isStopping.get()) return
 
         val playersInRange = visiblePlayers.keys.toList()
         val particlesToSpawn = ArrayList<ParticleInstance>(particleBatch.size)
@@ -411,11 +412,9 @@ class ParticleEmitter<T : EmitterShape>(
                         }
                     }
                 }
-                val particleId = System.identityHashCode(newParticle)
-
 
                 // Add to collection
-                particles[particleId] = newParticle
+                particles[newParticle.particleID] = newParticle
                 activeCount.incrementAndGet()
                 particlesToSpawn.add(newParticle)
                 updateTimes[newParticle] = System.currentTimeMillis()
@@ -425,6 +424,8 @@ class ParticleEmitter<T : EmitterShape>(
             if (playersInRange.isNotEmpty() && particlesToSpawn.isNotEmpty()) {
                 withContext(Dispatchers.IO) {
                     for (player in playersInRange) {
+                        if (!player.isValid || player.isDead) continue
+
                         for (batch in particlesToSpawn.chunked(PARTICLE_UPDATE_BATCH)) {
                             for (particle in batch) {
                                 particle.show(player)
@@ -457,6 +458,8 @@ class ParticleEmitter<T : EmitterShape>(
             if (clientParticles.isNotEmpty() && playersInRange.isNotEmpty()) {
                 withContext(Dispatchers.IO) {
                     for (player in playersInRange) {
+                        if (!player.isValid || player.isDead) continue
+
                         try {
                             ClientSideParticleInstance.destroyParticlesInBatch(player, clientParticles)
                         } catch (e: Exception) {
@@ -468,13 +471,17 @@ class ParticleEmitter<T : EmitterShape>(
 
             // Remove particles from collections
             for (particle in particleBatch) {
-                val id = System.identityHashCode(particle)
-                particles.remove(id)
+                particles.remove(particle.particleID)
                 updateTimes.remove(particle)
             }
 
             // Update count
             activeCount.addAndGet(-particleBatch.size)
+
+            // If stopping and all particles have been removed, complete the shutdown
+            if (isStopping.get() && activeCount.get() == 0) {
+                completeShutdown()
+            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -518,12 +525,16 @@ class ParticleEmitter<T : EmitterShape>(
                     playerLodMap.values.maxOrNull() ?: LOD_FAR
                 }
 
-                // Apply LOD-based update schedule
-                val updateInterval = when (maxLodFactor) {
-                    LOD_CLOSE -> 12L
-                    LOD_MEDIUM -> 25L
-                    LOD_INACTIVE -> 1000L
-                    else -> 50L
+                // Apply LOD-based update schedule or fast update for expanding shapes
+                val updateInterval = if (hasFastExpandingShape) {
+                    FAST_SHAPE_UPDATE_INTERVAL
+                } else {
+                    when (maxLodFactor) {
+                        LOD_CLOSE -> 12L
+                        LOD_MEDIUM -> 25L
+                        LOD_INACTIVE -> 1000L
+                        else -> 50L
+                    }
                 }
 
                 // Track last update time
@@ -531,16 +542,19 @@ class ParticleEmitter<T : EmitterShape>(
 
                 if (currentTime - lastUpdate >= updateInterval) {
                     // Apply scaled delta based on LOD
-                    val scaledDelta = delta * maxLodFactor
+                    val scaledDelta = delta * when {
+                        hasFastExpandingShape -> maxLodFactor * 1.5
+                        else -> maxLodFactor.toDouble()
+                    }
+
                     val positionChanged = particle.update(scaledDelta)
                     updateTimes[particle] = currentTime
 
-                    // Add to position update list if needed
-                    if (positionChanged && particle is ClientSideParticleInstance) {
+                    val canUpdatePosition = particle.age and PARTICLE_UPDATE_POSITION_INTERVAL - 1 == 0
+                    if (positionChanged && particle is ClientSideParticleInstance && canUpdatePosition) {
                         particlesToUpdate.add(particle)
                     }
 
-                    // Add to removal list if needed
                     if (particle.isDead()) {
                         particlesToRemove.add(particle)
                     }
@@ -551,7 +565,9 @@ class ParticleEmitter<T : EmitterShape>(
             if (particlesToUpdate.isNotEmpty() && playersInRange.isNotEmpty()) {
                 // Group updates by player for better batching
                 for (player in playersInRange) {
-                    positionUpdateChannel.send(player to particlesToUpdate)
+                    if (player.isValid && !player.isDead) {
+                        positionUpdateChannel.send(player to particlesToUpdate)
+                    }
                 }
             }
 
@@ -596,7 +612,7 @@ class ParticleEmitter<T : EmitterShape>(
                 if (!player.isValid || player.isDead) continue
 
                 val playerLocation = player.location
-                if (playerLocation.world != world) continue
+                if (playerLocation.world.name != world.name) continue
 
                 val distSquared = origin.distanceSquared(
                     playerLocation.x.toFloat(),
@@ -662,6 +678,7 @@ class ParticleEmitter<T : EmitterShape>(
         // Initialize state
         activeCount.set(0)
         isRunning.set(true)
+        isStopping.set(false)
         recordActivity()
 
         // Clear collections
@@ -670,7 +687,7 @@ class ParticleEmitter<T : EmitterShape>(
         updateTimes.clear()
 
         // Start flow processors
-        emitterScope.launch {
+        Defcon.instance.launch(Dispatchers.Default) {
             try {
                 // Start all channel processors
                 launch { processParticleSpawns() }
@@ -679,31 +696,13 @@ class ParticleEmitter<T : EmitterShape>(
                 launch { processPlayerUpdates() }
                 launch { processUpdateTicks() }
                 launch { processHeartbeat() }
+                launch { processParticleCleanup() }
 
                 // Start player tracking
                 playerUpdateChannel.send(Unit)
 
                 // Start heartbeat monitor
                 heartbeatChannel.send(Unit)
-
-                // Pre-spawn particles if needed
-                if (visible && spawnableParticles.isNotEmpty()) {
-                    val initialParticles = min((maxParticles * 0.3).toInt(), 1500)
-                    val adaptiveBatchSize = min(BURST_BATCH_SIZE, initialParticles / 4)
-
-                    for (i in 0 until initialParticles step adaptiveBatchSize) {
-                        val batchEnd = min(i + adaptiveBatchSize, initialParticles)
-                        val batch = ArrayList<AbstractParticle>(batchEnd - i)
-
-                        for (j in i until batchEnd) {
-                            val index = Random.nextInt(spawnableParticles.size)
-                            batch.add(spawnableParticles[index])
-                        }
-
-                        particleSpawnChannel.send(batch)
-                        delay(5)
-                    }
-                }
             } catch (e: CancellationException) {
                 // Expected when scope is canceled
             } catch (e: Exception) {
@@ -730,17 +729,43 @@ class ParticleEmitter<T : EmitterShape>(
     }
 
     /**
-     * Stop the emitter and clean up resources
+     * Stop the emitter and let particles naturally die out
      */
     override fun stop() {
-        if (!isRunning.compareAndSet(true, false)) {
-            return // Already stopping or stopped
+        // Prevent multiple stops
+        if (isStopping.get() || !isRunning.compareAndSet(true, false)) {
+            return
         }
 
-        // Clean up in a controlled way
-        emitterScope.launch {
+        // Mark as stopping - we'll wait for particles to die naturally
+        isStopping.set(true)
+
+        Defcon.instance.launch(Dispatchers.IO) {
             try {
-                // Despawn particles for all players
+                // Wait for particles to die naturally with a timeout
+                withTimeoutOrNull(10000L) { // 10 second max wait time
+                    while (activeCount.get() > 0) {
+                        delay(500)
+                    }
+                }
+
+                // Complete shutdown regardless of whether all particles died naturally
+                completeShutdown()
+            } catch (e: Exception) {
+                Defcon.instance.logger.warning("Error during emitter shutdown: ${e.message}")
+                completeShutdown() // Ensure shutdown completes even on error
+            }
+        }
+    }
+
+    /**
+     * Complete the shutdown process by clearing all resources
+     */
+    private fun completeShutdown() {
+        // If there are any remaining particles, destroy them
+        Defcon.instance.launch(Dispatchers.IO) {
+            try {
+                // Despawn any remaining particles
                 val players = visiblePlayers.keys.toList()
                 if (players.isNotEmpty()) {
                     val clientParticles = particles.values.filterIsInstance<ClientSideParticleInstance>()
@@ -753,22 +778,16 @@ class ParticleEmitter<T : EmitterShape>(
                     }
                 }
 
-                // Wait briefly for any final operations
-                withTimeoutOrNull(500L) {
-                    delay(100)
-                }
-
                 // Clear collections
                 particles.clear()
                 visiblePlayers.clear()
                 updateTimes.clear()
                 activeCount.set(0)
 
+                // Reset flags but keep stopped
+                isStopping.set(false)
             } catch (e: Exception) {
-                Defcon.instance.logger.warning("Error during emitter shutdown: ${e.message}")
-            } finally {
-                // Cancel all coroutines
-                emitterScope.coroutineContext.cancelChildren()
+                Defcon.instance.logger.warning("Error during final emitter cleanup: ${e.message}")
             }
         }
     }
@@ -785,7 +804,8 @@ class ParticleEmitter<T : EmitterShape>(
         return mapOf(
             "activeParticles" to activeCount.get(),
             "playerCount" to visiblePlayers.size,
-            "lastActivity" to (System.currentTimeMillis() / 1000 - lastActivityTimestamp.get())
+            "lastActivity" to (System.currentTimeMillis() / 1000 - lastActivityTimestamp.get()),
+            "hasFastExpandingShape" to hasFastExpandingShape
         )
     }
 
@@ -799,57 +819,9 @@ class ParticleEmitter<T : EmitterShape>(
     /**
      * Reset the emitter with improved robustness
      */
-    fun reset() {
-        // Stop current operations
-        isRunning.set(false)
-
-        emitterScope.launch {
-            try {
-                // Despawn all particles
-                val players = getPlayersInRange()
-                if (players.isNotEmpty()) {
-                    val clientParticles = particles.values.filterIsInstance<ClientSideParticleInstance>()
-                    for (player in players) {
-                        try {
-                            ClientSideParticleInstance.destroyParticlesInBatch(player, clientParticles)
-                        } catch (e: Exception) {
-                            Defcon.instance.logger.warning("Error despawning particles during reset: ${e.message}")
-                        }
-                    }
-                }
-
-                // Wait for pending operations to complete or timeout
-                withTimeoutOrNull(500L) {
-                    delay(100) // Brief delay to allow any in-flight operations to complete
-                }
-
-                // Cancel jobs with proper cleanup
-                emitterScope.coroutineContext.cancelChildren()
-
-                // Clear collections
-                particles.clear()
-                visiblePlayers.clear()
-                updateTimes.clear()
-
-                // Reset counters
-                activeCount.set(0)
-                recordActivity()
-
-                // Wait briefly before restart to ensure clean state
-                delay(50)
-
-                // Restart
-                isRunning.set(true)
-                start()
-            } catch (e: Exception) {
-                Defcon.instance.logger.severe("Error during emitter reset: ${e.message}")
-                e.printStackTrace()
-
-                // Force restart even after error
-                isRunning.set(true)
-                start()
-            }
-        }
+    private fun reset() {
+        stop()
+        start()
     }
 
 
@@ -875,7 +847,7 @@ class ParticleEmitter<T : EmitterShape>(
         )
 
         // Force player update on next cycle
-        emitterScope.launch {
+        Defcon.instance.launch(Dispatchers.IO) {
             updateVisiblePlayers()
         }
     }

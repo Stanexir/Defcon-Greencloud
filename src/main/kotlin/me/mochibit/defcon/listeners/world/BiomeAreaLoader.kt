@@ -47,22 +47,22 @@ class BiomeChunkLoader : Listener {
 
     @EventHandler
     fun onChunkLoad(event: ChunkLoadEvent) {
-        val chunk = event.chunk
-        val chunkX = chunk.x
-        val chunkZ = chunk.z
-        val worldName = chunk.world.name
-        val chunkCoord = ChunkCoord(chunkX, chunkZ, worldName)
+        Defcon.instance.launch(Dispatchers.IO) {
+            val chunk = event.chunk
+            val chunkX = chunk.x
+            val chunkZ = chunk.z
+            val worldName = chunk.world.name
+            val chunkCoord = ChunkCoord(chunkX, chunkZ, worldName)
 
-        // Skip if this chunk has already been processed
-        if (processedChunks.computeIfAbsent(worldName) { mutableSetOf() }.contains(chunkCoord)) {
-            return
-        }
+            // Skip if this chunk has already been processed
+            if (processedChunks.computeIfAbsent(worldName) { mutableSetOf() }.contains(chunkCoord)) {
+                return@launch
+            }
 
-        // Mark as processed
-        processedChunks[worldName]?.add(chunkCoord)
+            // Mark as processed
+            processedChunks[worldName]?.add(chunkCoord)
 
-        // Check if there are any biomes intersecting this chunk
-        Defcon.instance.launch(Dispatchers.Default) {
+            // Check if there are any biomes intersecting this chunk
             // Make sure biome data is available for this world
             ensureWorldBiomesLoaded(worldName)
 
@@ -82,29 +82,33 @@ class BiomeChunkLoader : Listener {
 
     @EventHandler
     fun onChunkUnload(event: ChunkUnloadEvent) {
-        val chunk = event.chunk
-        val chunkX = chunk.x
-        val chunkZ = chunk.z
-        val worldName = chunk.world.name
-        val chunkCoord = ChunkCoord(chunkX, chunkZ, worldName)
+        Defcon.instance.launch(Dispatchers.IO) {
+            val chunk = event.chunk
+            val chunkX = chunk.x
+            val chunkZ = chunk.z
+            val worldName = chunk.world.name
+            val chunkCoord = ChunkCoord(chunkX, chunkZ, worldName)
 
-        // Remove this chunk from our tracking
-        chunkBiomeMap.remove(chunkCoord)
-        processedChunks[worldName]?.remove(chunkCoord)
+            // Remove this chunk from our tracking
+            chunkBiomeMap.remove(chunkCoord)
+            processedChunks[worldName]?.remove(chunkCoord)
+        }
     }
 
     @EventHandler
     fun onWorldUnload(event: WorldUnloadEvent) {
-        // Clean up all data for this world
-        val worldName = event.world.name
-        processedChunks.remove(worldName)
+        Defcon.instance.launch(Dispatchers.IO) {
+            // Clean up all data for this world
+            val worldName = event.world.name
+            processedChunks.remove(worldName)
 
-        // Remove all chunk data for this world
-        val chunksToRemove = chunkBiomeMap.keys.filter { it.world == worldName }
-        chunksToRemove.forEach { chunkBiomeMap.remove(it) }
+            // Remove all chunk data for this world
+            val chunksToRemove = chunkBiomeMap.keys.filter { it.world == worldName }
+            chunksToRemove.forEach { chunkBiomeMap.remove(it) }
 
-        // Unload the biomes from the handler
-        CustomBiomeHandler.unloadBiomesForWorld(worldName)
+            // Unload the biomes from the handler
+            CustomBiomeHandler.unloadBiomesForWorld(worldName)
+        }
     }
 
     /**
@@ -134,25 +138,32 @@ class BiomeChunkLoader : Listener {
     /**
      * Updates players in the vicinity of a chunk to see the biomes
      */
-    private fun updatePlayersAroundChunk(world: org.bukkit.World, chunkX: Int, chunkZ: Int, biomes: Set<CustomBiomeHandler.CustomBiomeBoundary>) {
-        // Get players within a reasonable distance of this chunk
-        val potentialPlayers = world.players.filter { player ->
-            val playerChunkX = player.location.blockX shr 4
-            val playerChunkZ = player.location.blockZ shr 4
-            val viewDistance = player.viewDistance.coerceAtMost(10)
+    private fun updatePlayersAroundChunk(
+        world: org.bukkit.World,
+        chunkX: Int,
+        chunkZ: Int,
+        biomes: Set<CustomBiomeHandler.CustomBiomeBoundary>
+    ) {
+        Defcon.instance.launch(Dispatchers.IO) {
+            // Get players within a reasonable distance of this chunk
+            val potentialPlayers = world.players.filter { player ->
+                val playerChunkX = player.location.blockX shr 4
+                val playerChunkZ = player.location.blockZ shr 4
+                val viewDistance = player.viewDistance.coerceAtMost(10)
 
-            val deltaX = playerChunkX - chunkX
-            val deltaZ = playerChunkZ - chunkZ
-            val distanceSquared = deltaX * deltaX + deltaZ * deltaZ
+                val deltaX = playerChunkX - chunkX
+                val deltaZ = playerChunkZ - chunkZ
+                val distanceSquared = deltaX * deltaX + deltaZ * deltaZ
 
-            // Check if the chunk is within view distance of the player
-            distanceSquared <= viewDistance * viewDistance
-        }
+                // Check if the chunk is within view distance of the player
+                distanceSquared <= viewDistance * viewDistance
+            }
 
-        // For each player, make these biomes visible
-        for (player in potentialPlayers) {
-            for (biome in biomes) {
-                CustomBiomeHandler.makeBiomeVisibleToPlayer(player.uniqueId, biome.uuid)
+            // For each player, make these biomes visible
+            for (player in potentialPlayers) {
+                for (biome in biomes) {
+                    CustomBiomeHandler.makeBiomeVisibleToPlayer(player.uniqueId, biome.uuid)
+                }
             }
         }
     }

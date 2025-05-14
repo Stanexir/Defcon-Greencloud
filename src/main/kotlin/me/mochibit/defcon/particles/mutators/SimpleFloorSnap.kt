@@ -25,9 +25,11 @@ import kotlin.math.roundToInt
 
 class SimpleFloorSnap(private val origin: Location) : AbstractShapeMutator() {
     override fun mutateLoc(location: Vector3d) {
-        location.y = origin.world.getHighestBlockYAt(
-            origin.blockX + location.x.roundToInt(),
-            origin.blockZ + location.z.roundToInt()
+        val minY = origin.world.getHighestBlockYAt(
+            (origin.blockX + location.x).roundToInt(),
+            (origin.blockZ + location.z).roundToInt()
         ).toDouble()
+
+        location.y = minY + (location.y() - origin.y())
     }
 }

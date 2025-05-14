@@ -21,16 +21,21 @@ package me.mochibit.defcon.effects
 
 import me.mochibit.defcon.lifecycle.CycledObject
 import me.mochibit.defcon.observer.Loadable
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
-abstract class AnimatedEffect(maxAliveTick: Long = 200, protected var effectComponents: MutableList<EffectComponent> = mutableListOf()) : CycledObject(maxAliveTick), Loadable<Unit>
-{
+abstract class AnimatedEffect(
+    async: Boolean = true,
+    maxAliveDuration: Duration = 10.seconds,
+    protected var effectComponents: MutableList<EffectComponent> = mutableListOf()
+) : CycledObject(async, maxAliveDuration), Loadable<Unit> {
     override var isLoaded: Boolean = false
     override val observers: MutableList<(Unit) -> Unit> = mutableListOf()
 
     abstract fun animate(delta: Float)
 
     override fun start() {
-        if (!isLoaded) { // This part is useful for preloading
+        if (!isLoaded) {
             loadPromise().join()
         }
         effectComponents.forEach { it.start() }
@@ -47,14 +52,13 @@ abstract class AnimatedEffect(maxAliveTick: Long = 200, protected var effectComp
     }
 
 
-
     override fun load() {
         // Get effect components which are Loadable
         val loadableEffectComponents = effectComponents.filterIsInstance<Loadable<Unit>>()
         waitForOthers(loadableEffectComponents).thenAccept {
             isLoaded = true
             observers.forEach { it.invoke(Unit) }
-        }.exceptionally{ex->
+        }.exceptionally { ex ->
             println("Error loading effect components: ${ex.message}")
             null
         }

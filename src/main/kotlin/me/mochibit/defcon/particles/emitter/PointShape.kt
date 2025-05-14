@@ -21,7 +21,7 @@ package me.mochibit.defcon.particles.emitter
 
 import org.joml.Vector3d
 
-object PointShape : EmitterShape() {
+data object PointShape : EmitterShape() {
     override val minHeight: Double
         get() = 1.0
     override val maxHeight: Double

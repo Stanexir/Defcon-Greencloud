@@ -39,7 +39,7 @@ import me.mochibit.defcon.explosions.effects.BlindFlashEffect
 import me.mochibit.defcon.explosions.processor.*
 import me.mochibit.defcon.extensions.toVector3i
 import me.mochibit.defcon.radiation.RadiationAreaFactory
-import me.mochibit.defcon.threading.scheduling.runLaterAsync
+import me.mochibit.defcon.threading.scheduling.runLater
 import org.bukkit.Location
 import org.joml.Vector3i
 import java.time.Instant
@@ -81,9 +81,9 @@ class NuclearExplosion(center: Location, private val nuclearComponent: Explosion
             val condensationCloud = CondensationCloudVFX(nuclearComponent, center)
             val nuclearFog = NuclearFogVFX(nuclearComponent, center)
 
-            nuclearExplosion.instantiate(async = true)
-            nuclearFog.instantiate(async = true)
-            condensationCloud.instantiate(async = true)
+            nuclearExplosion.instantiate()
+            nuclearFog.instantiate()
+            condensationCloud.instantiate()
 
             launch(Dispatchers.IO) {
                 val duration = 10.seconds
@@ -139,7 +139,7 @@ class NuclearExplosion(center: Location, private val nuclearComponent: Explosion
                 )
             }
 
-            runLaterAsync(1.minutes) {
+            runLater(1.minutes, Dispatchers.Default) {
                 RadiationAreaFactory.fromCenter(
                     center.toVector3i(), center.world, 5.0, 20000,
                     Vector3i(

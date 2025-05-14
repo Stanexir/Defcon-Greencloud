@@ -21,6 +21,7 @@ package me.mochibit.defcon.threading.scheduling
 
 import com.github.shynixn.mccoroutine.bukkit.asyncDispatcher
 import com.github.shynixn.mccoroutine.bukkit.launch
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -28,22 +29,11 @@ import me.mochibit.defcon.Defcon
 import org.bukkit.scheduler.BukkitTask
 import java.io.Closeable
 import java.util.concurrent.Future
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 private val plugin = Defcon.instance
-
-fun <T> runSyncMethod(task: () -> T): Future<T> {
-    return plugin.server.scheduler.callSyncMethod(plugin, task)
-}
-
-fun intervalWithTask(delay: Long, period: Long, task: (BukkitTask) -> Unit) {
-    plugin.server.scheduler.runTaskTimer(plugin, task, delay, period)
-}
-
-fun intervalAsyncWithTask(delay: Long, period: Long, task: (BukkitTask) -> Unit) {
-    plugin.server.scheduler.runTaskTimerAsynchronously(plugin, task, delay, period)
-}
 
 fun interval(period: Duration, delay: Duration = 0.seconds, task: suspend () -> Unit): Closeable {
     val job = plugin.launch {
@@ -79,12 +69,13 @@ fun runLater (
     return Closeable { job.cancel() }
 }
 
-fun runLaterAsync(
-    delay: Duration, task: suspend () -> Unit,
-): Closeable {
-    val job = plugin.launch(plugin.asyncDispatcher) {
+fun runLater(
+    delay: Duration,
+    dispatcher: CoroutineContext = Dispatchers.IO,
+    task: suspend () -> Unit,
+): Job {
+    return plugin.launch(dispatcher) {
         delay(delay)
         task()
     }
-    return Closeable { job.cancel() }
 }

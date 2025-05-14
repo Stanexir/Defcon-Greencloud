@@ -41,7 +41,7 @@ abstract class ParticleInstance(
     private var acceleration: Vector3f = Vector3f(0.0f, 0.0f, 0.0f),
     var color: Color = Color.WHITE
 ) {
-    private var age: Int = 0
+    var age: Int = 0
     val particleID: Int = ENTITY_ID_COUNTER.getAndIncrement()
     protected val particleUUID: UUID = UUID.randomUUID() // Consider lazily initializing if needed
 
@@ -130,10 +130,6 @@ abstract class ParticleInstance(
 //            }
         }
 
-        // Only update position for significant changes or on interval
-        // (using mod is cheaper than % operator for powers of 2)
-        val needsPositionUpdate = (isMoving && (age and (UPDATE_INTERVAL - 1)) == 0)
-
         age++
 
         // Mark as removed if reached end of life
@@ -141,7 +137,7 @@ abstract class ParticleInstance(
             removed = true
         }
 
-        return needsPositionUpdate
+        return isMoving
     }
 
     /**
@@ -160,8 +156,6 @@ abstract class ParticleInstance(
     abstract fun updatePosition(player: Player)
 
     companion object {
-        const val UPDATE_INTERVAL = 16
-
         @JvmStatic
         private val ENTITY_ID_COUNTER = AtomicInteger(ThreadLocalRandom.current().nextInt(10000, Int.MAX_VALUE / 4))
     }

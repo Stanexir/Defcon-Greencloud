@@ -30,9 +30,15 @@ import me.mochibit.defcon.particles.mutators.FloorSnapper
 import me.mochibit.defcon.particles.templates.definition.ExplosionDustParticle
 import org.bukkit.Location
 import org.joml.Vector3f
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
-class NuclearFogVFX(private val nuclearComponent: ExplosionComponent, private val center: Location) :
-    AnimatedEffect(3600) {
+class NuclearFogVFX(
+    private val nuclearComponent: ExplosionComponent,
+    center: Location,
+    duration: Duration = 2.minutes
+) :
+    AnimatedEffect(maxAliveDuration = duration) {
 
     private val nuclearFog = ParticleComponent(
         ParticleEmitter(
@@ -45,7 +51,7 @@ class NuclearFogVFX(private val nuclearComponent: ExplosionComponent, private va
             ),
             shapeMutator = FloorSnapper(center),
         ),
-        TemperatureComponent(baseCoolingRate = 300.0),
+        TemperatureComponent(baseCoolingRate = 300.0, maxTemperature = 6000.0),
     ).addSpawnableParticle(
         ExplosionDustParticle().apply {
             scale(60.0f, 60.0f, 60.0f)
@@ -65,7 +71,7 @@ class NuclearFogVFX(private val nuclearComponent: ExplosionComponent, private va
             ),
             shapeMutator = FloorSnapper(center, center.toVector3f()),
         ),
-        TemperatureComponent(baseCoolingRate = 300.0)
+        TemperatureComponent(baseCoolingRate = 300.0, maxTemperature = 6000.0)
     ).addSpawnableParticle(
         ExplosionDustParticle().apply {
             scale(60.0f, 60.0f, 60.0f)
@@ -84,14 +90,14 @@ class NuclearFogVFX(private val nuclearComponent: ExplosionComponent, private va
                 radiusZ = 30f,
             ),
         ),
-        TemperatureComponent(baseCoolingRate = 280.0)
+        TemperatureComponent(baseCoolingRate = 450.0, maxTemperature = 4000.0)
     ).addSpawnableParticle(
         ExplosionDustParticle().apply {
             scale(60.0f, 60.0f, 60.0f)
             displacement(.0, .5, .0)
         }
     ).applyRadialVelocityFromCenter(
-        Vector3f(-1.5f, -1f, -1.5f)
+        Vector3f(1.5f, 1f, 1.5f)
     )
 
     init {

@@ -22,83 +22,127 @@ import com.github.shynixn.mccoroutine.bukkit.launch
 import com.github.shynixn.mccoroutine.bukkit.minecraftDispatcher
 import kotlinx.coroutines.*
 import me.mochibit.defcon.Defcon
-import org.bukkit.Bukkit
-import kotlin.coroutines.CoroutineContext
+import me.mochibit.defcon.threading.scheduling.runLater
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
-abstract class CycledObject(private val maxAliveTicks: Long = 200) : Lifecycled {
-    private var isDestroyed = false
-    var tickAlive: Double = 0.0
+/**
+ * An abstract class that provides lifecycle management with regular update cycles.
+ * @param asyncHandling Whether to run on an asynchronous dispatcher or main thread
+ * @param maxAliveDuration Optional maximum lifetime for this object before automatic destruction
+ * @param tickRate How frequently updates should occur in milliseconds (default: 50ms)
+ */
+abstract class CycledObject(
+    private val asyncHandling: Boolean = true,
+    private val maxAliveDuration: Duration? = 10.seconds,
+    private val tickRate: Long = 50
+) : Lifecycled {
+    // Thread-safe flag for tracking destruction state
+    private val isDestroyed = AtomicBoolean(false)
+
+    // Time tracking for delta calculations
     private var lastTickTime = System.currentTimeMillis()
-    private var currentTickTime = System.currentTimeMillis()
+
+    // Lazy initialization of the dispatcher to avoid unnecessary allocation
+    private val dispatcher by lazy {
+        if (asyncHandling) {
+            Dispatchers.Default
+        } else {
+            Defcon.instance.minecraftDispatcher
+        }
+    }
 
     // Job reference to control the coroutine lifecycle
     private var tickJob: Job? = null
+    private var lifetimeJob: Job? = null
 
     /**
      * Instantiates the cycled object and starts its lifecycle.
-     * @param async Whether to run on Minecraft async dispatcher or main thread dispatcher
      */
-    fun instantiate(async: Boolean) {
-        // Use MCCoroutine to launch our coroutine
-        Defcon.instance.launch {
-            // Initialize on the appropriate dispatcher
-            initialize(async)
+    fun instantiate() {
+        if (isDestroyed.get()) {
+            return
+        }
 
-            val dispatcher = if (async) {
-                Dispatchers.IO
-            } else {
-                Defcon.instance.minecraftDispatcher
-            }
+        Defcon.instance.launch(dispatcher) {
+            try {
+                initialize()
 
-            tickJob = launch(dispatcher) {
-                while (isActive && !isDestroyed) {
-                    currentTickTime = System.currentTimeMillis()
-                    val deltaTime = (currentTickTime - lastTickTime).coerceAtLeast(50) / 1000.0f
-                    update(deltaTime)
+                tickJob = launch(dispatcher) {
+                    try {
+                        while (isActive && !isDestroyed.get()) {
+                            val currentTime = System.currentTimeMillis()
+                            val deltaTime = (currentTime - lastTickTime) / 1000.0f
 
-                    tickAlive++
-                    if (maxAliveTicks > 0 && tickAlive > maxAliveTicks) {
-                        destroy()
-                        break
+                            update(deltaTime)
+
+                            lastTickTime = currentTime
+                            delay(tickRate)
+                        }
+                    } catch (e: CancellationException) {
+                        // Expected when job is cancelled
+                    } catch (e: Exception) {
+                        Defcon.instance.logger.severe("Error in update cycle: ${e.message}")
+                        e.printStackTrace()
                     }
-
-                    lastTickTime = currentTickTime
-
-                    // Wait 50ms (1 tick) before the next iteration
-                    delay(50)
                 }
+
+                // Set up max lifetime if specified
+                maxAliveDuration?.let { duration ->
+                    lifetimeJob = runLater(duration, dispatcher) {
+                        destroy()
+                    }
+                }
+            } catch (e: Exception) {
+                Defcon.instance.logger.severe("Failed to initialize cycled object: ${e.message}")
+                e.printStackTrace()
+                destroy()
             }
         }
     }
 
     /**
-     * Initializes the object respecting the async parameter.
-     * @param async Whether to run initialization on async dispatcher or main thread
+     * Initializes the object on the appropriate dispatcher.
      */
-    private suspend fun initialize(async: Boolean) {
-        val dispatcher = if (async) {
-            Dispatchers.IO
-        } else {
-            Defcon.instance.minecraftDispatcher
-        }
-
-        withContext(dispatcher) {
+    private suspend fun initialize() {
+        coroutineScope {
             start()
             lastTickTime = System.currentTimeMillis()
         }
     }
 
     /**
-     * Cancels the coroutine and cleans up resources.
+     * Cancels all coroutines and cleans up resources.
+     * Safe to call multiple times.
      */
     fun destroy() {
-        if (!isDestroyed) {
-            isDestroyed = true
-            tickJob?.cancel()
+        // Only proceed with destruction once
+        if (!isDestroyed.compareAndSet(false, true)) {
+            return
+        }
 
-            // Launch stop callback on the appropriate thread
-            Defcon.instance.launch {
+        Defcon.instance.launch(dispatcher) {
+            try {
+                // Cancel the lifetime job if it exists
+                lifetimeJob?.cancelAndJoin()
+
+                // Cancel the tick job with a timeout
+                tickJob?.let { job ->
+                    job.cancel()
+                    withTimeoutOrNull(30.seconds) {
+                        job.join() // Wait for cancellation to complete
+                    }
+                }
+
+                // Clean up resources
                 stop()
+            } catch (e: Exception) {
+                Defcon.instance.logger.severe("Error during object destruction: ${e.message}")
+                e.printStackTrace()
+            } finally {
+                tickJob = null
+                lifetimeJob = null
             }
         }
     }

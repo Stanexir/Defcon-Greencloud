@@ -29,10 +29,16 @@ import me.mochibit.defcon.particles.templates.definition.ExplosionDustParticle
 import org.bukkit.Color
 import org.bukkit.Location
 import org.joml.Vector3f
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 
-class CondensationCloudVFX(private val nuclearComponent: ExplosionComponent, private val position: Location) :
-    AnimatedEffect(20 * 40) {
+class CondensationCloudVFX(
+    private val nuclearComponent: ExplosionComponent,
+    position: Location,
+    duration: Duration = 40.seconds,
+) :
+    AnimatedEffect(maxAliveDuration = duration) {
     private var riseSpeed = 6.0f
     private var ringRiseSpeed = 3.0f
     private var expandSpeed = 10.0f

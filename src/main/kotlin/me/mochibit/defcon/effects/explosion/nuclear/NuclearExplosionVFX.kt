@@ -31,31 +31,56 @@ import me.mochibit.defcon.particles.templates.definition.ExplosionDustParticle
 import org.bukkit.Color
 import org.bukkit.Location
 import org.joml.Vector3f
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val center: Location) :
-    AnimatedEffect(3600) {
-    private val maxHeight = 250.0
+
+class NuclearExplosionVFX(
+    private val nuclearComponent: ExplosionComponent,
+    val center: Location,
+    duration: Duration = 2.minutes,
+) :
+    AnimatedEffect(maxAliveDuration = duration) {
+    private val riseSpeed = 4.0f
+
+    // Reduced maximum height the explosion can reach
+    private val maxHeight = 350.0
+
+    // Component height offsets, now representing initial local positions
+    private val coreOffset = -25f
+    private val secondaryOffset = -25.0f
+    private val tertiaryOffset = -30.0f
+    private val quaternaryOffset = -15.0f
+    private val neckSkirtOffset = -75.0f
+
+    // Track current progress of the rise animation (0.0 to 1.0)
+    private var riseProgress = 0.0f
+
+    // Track the current height for stem calculation
     private var currentHeight = 0.0f
-    private var riseSpeed = 5.0f
+
+    // Position tracking for components
+    private val componentInitialPositions = mutableMapOf<ParticleComponent<*>, Vector3f>()
+
 
     private val coreCloud = ParticleComponent(
         ParticleEmitter(
             center, 8000.0,
             emitterShape = SphereShape(
-                xzRadius = 30.0f,
-                yRadius = 50.0f
+                xzRadius = 45.0f,
+                yRadius = 50.0f,
+                minY = 0.0,
             ),
         ),
-        TemperatureComponent()
+        TemperatureComponent(baseCoolingRate = 15.0)
     ).addSpawnableParticle(
         ExplosionDustParticle()
             .apply {
                 scale(30.0f, 30.0f, 30.0f)
-                initialVelocity(0.0, 1.0, 0.0)
+                initialVelocity(0.0, -1.5, 0.0)
             }
     )
-
 
     private val secondaryCloud = ParticleComponent(
         ParticleEmitter(
@@ -63,13 +88,14 @@ class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val 
             emitterShape = SphereSurfaceShape(
                 xzRadius = 50.0f,
                 yRadius = 50.0f,
+                minY = 0.0,
             ),
         ),
-        TemperatureComponent(baseCoolingRate = 15.0)
+        TemperatureComponent(baseCoolingRate = 40.0)
     ).addSpawnableParticle(
         ExplosionDustParticle().apply {
             scale(45.0f, 45.0f, 45.0f)
-            initialVelocity(0.0, .8, 0.0)
+            initialVelocity(0.0, -2.0, 0.0)
         }
     )
 
@@ -79,23 +105,26 @@ class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val 
             emitterShape = SphereSurfaceShape(
                 xzRadius = 70.0f,
                 yRadius = 70.0f,
+                minY = 0.0
             ),
         ),
-        TemperatureComponent(baseCoolingRate = 40.0)
+        TemperatureComponent(baseCoolingRate = 45.0)
     ).addSpawnableParticle(
         ExplosionDustParticle()
             .apply {
                 scale(50.0f, 50.0f, 50.0f)
-                initialVelocity(0.0, .6, 0.0)
+                initialVelocity(0.0, 3.5, 0.0)
             }
     )
 
-    private val quaterniaryCloud = ParticleComponent(
+    private val quaternaryCloud = ParticleComponent(
         ParticleEmitter(
             center, 8000.0,
-            emitterShape = SphereSurfaceShape(
+            emitterShape = SphereShape(
                 xzRadius = 90.0f,
                 yRadius = 60.0f,
+                minY = 20.0,
+                excludedXZRadius = 70.0,
             ),
         ),
         TemperatureComponent(baseCoolingRate = 50.0)
@@ -103,50 +132,32 @@ class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val 
         ExplosionDustParticle()
             .apply {
                 scale(55.0f, 55.0f, 55.0f)
-                initialVelocity(0.0, -1.0, 0.0)
+                initialVelocity(0.0, -5.5, 0.0)
             }
     )
-        .translate(Vector3f(0.0f, -5.0f, 0.0f))
-
-    private val coreNeck = ParticleComponent(
-        ParticleEmitter(
-            center, 8000.0,
-            emitterShape = CylinderShape(
-                radiusX = 30.0f,
-                radiusZ = 30.0f,
-                height = 60.0f,
-            ),
-        ),
-        TemperatureComponent(baseCoolingRate = 8.0)
-    ).addSpawnableParticle(
-        ExplosionDustParticle()
-            .apply {
-                initialVelocity(0.0, -1.2, 0.0)
-            }
-    )
-        .translate(Vector3f(0.0f, -30.0f, 0.0f))
 
     private val neckSkirt = ParticleComponent(
         ParticleEmitter(
             center, 8000.0,
-            emitterShape = SphereShape(
-                xzRadius = 40.0f,
-                yRadius = 70.0f,
-                minY = -15.0
+            emitterShape = SphereSurfaceShape(
+                xzRadius = 45.0f,
+                yRadius = 65.0f,
+                minY = 65.0,
             ),
         ),
+        TemperatureComponent(baseCoolingRate = 25.0, maxTemperature = 5000.0)
     ).addSpawnableParticle(
         ExplosionDustParticle()
             .apply {
                 defaultColor = Color.GRAY
-                initialVelocity(0.0, -5.0, 0.0)
+                initialVelocity(0.0, -1.0, 0.0)
+                scale(30.0f, 30.0f, 30.0f)
             }
     )
         .apply {
             visible = false
         }
-        .translate(Vector3f(0.0f, -60.0f, 0.0f))
-        .setVisibilityAfterDelay(true, 50.seconds)
+        .setVisibilityAfterDelay(true, 40.seconds)
         .applyRadialVelocityFromCenter(Vector3f(5.0f, 0f, 5.0f))
 
     private val stem = ParticleComponent(
@@ -158,12 +169,12 @@ class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val 
                 height = 1f,
             ),
         ),
-        TemperatureComponent(baseCoolingRate = 30.0)
+        TemperatureComponent(baseCoolingRate = 20.0, turbulenceFactor = 0.05)
     ).addSpawnableParticle(
         ExplosionDustParticle()
             .apply {
                 scale(40.0f, 40.0f, 40.0f)
-                initialVelocity(0.0, 1.0, 0.0)
+                initialVelocity(0.0, 2.0, 0.0)
             }
     ).apply {
         positionBasedColoring = true
@@ -174,43 +185,68 @@ class NuclearExplosionVFX(private val nuclearComponent: ExplosionComponent, val 
 
 
     init {
+        componentInitialPositions[coreCloud] = Vector3f(0f, coreOffset, 0f)
+        componentInitialPositions[secondaryCloud] = Vector3f(0f, secondaryOffset, 0f)
+        componentInitialPositions[tertiaryCloud] = Vector3f(0f, tertiaryOffset, 0f)
+        componentInitialPositions[quaternaryCloud] = Vector3f(0f, quaternaryOffset, 0f)
+        componentInitialPositions[neckSkirt] = Vector3f(0f, neckSkirtOffset, 0f)
+
+        // Apply initial positions
+        componentInitialPositions.forEach { (component, position) ->
+            component.translate(position)
+        }
+
         effectComponents.addAll(
             listOf(
                 coreCloud,
-                coreNeck,
                 secondaryCloud,
                 tertiaryCloud,
-                quaterniaryCloud,
+                quaternaryCloud,
                 neckSkirt,
                 stem
             )
         )
-
     }
 
     override fun animate(delta: Float) {
-        processRise(delta)
-    }
-
-
-    private fun processRise(delta: Float) {
-        if (currentHeight > maxHeight) return
+        // Calculate movement for this frame based on single rise speed
         val deltaMovement = riseSpeed * delta
-        val movementVector = Vector3f(0.0f, deltaMovement, 0.0f)
-        // Elevate the sphere using transform translation
-        coreCloud.translate(movementVector)
-        coreNeck.translate(movementVector)
-        secondaryCloud.translate(movementVector)
-        tertiaryCloud.translate(movementVector)
-        quaterniaryCloud.translate(movementVector)
-        neckSkirt.translate(movementVector)
-        currentHeight += deltaMovement
 
-        // Gradually increase the displayed height of the cone to simulate the nuke skirt
-        if (neckSkirt.visible)
-            neckConeShape.maxY += deltaMovement / 5
+        // Update rise progress (capped at 1.0)
+        riseProgress = (riseProgress + (deltaMovement / maxHeight.toFloat())).coerceAtMost(1.0f)
 
-        stemShape.height = (currentHeight - 70)
+        // Calculate current height based on progress
+        val newHeight = riseProgress * maxHeight.toFloat()
+
+        // Calculate the delta height for this frame
+        val heightDelta = newHeight - currentHeight
+
+        // Update current height for next frame
+        currentHeight = newHeight
+
+        // Move each component by the delta height
+        moveComponent(coreCloud, heightDelta)
+        moveComponent(secondaryCloud, heightDelta)
+        moveComponent(tertiaryCloud, heightDelta)
+        moveComponent(quaternaryCloud, heightDelta)
+        moveComponent(neckSkirt, heightDelta)
+
+        if (neckSkirt.visible && neckConeShape.minY > 0) {
+            neckConeShape.minY -= (riseSpeed * 2 * delta)
+        }
+
+        // Adjust stem height to match current explosion height
+        stemShape.height = (currentHeight - 40).coerceAtLeast(1f)
     }
 
+    /**
+     * Moves a component by the specified delta height
+     */
+    private fun moveComponent(
+        component: ParticleComponent<*>,
+        heightDelta: Float
+    ) {
+        // Apply only the delta movement for this frame
+        component.translate(Vector3f(0.0f, heightDelta, 0.0f))
+    }
 }

@@ -19,11 +19,11 @@
 
 package me.mochibit.defcon.explosions.processor
 
-import com.github.shynixn.mccoroutine.bukkit.launch
 import com.github.shynixn.mccoroutine.bukkit.minecraftDispatcher
 import kotlinx.coroutines.*
 import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.Defcon.Logger.err
+import me.mochibit.defcon.Defcon.Logger.info
 import me.mochibit.defcon.effects.explosion.generic.ShockwaveEffect
 import me.mochibit.defcon.explosions.effects.CameraShake
 import me.mochibit.defcon.explosions.effects.CameraShakeOptions
@@ -38,8 +38,23 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.sqrt
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * Simulates a shockwave from an explosion that affects entities within range
+ *
+ * @param center The center location of the explosion
+ * @param shockwaveHeight The maximum height above center that the shockwave reaches
+ * @param baseShockwaveGroundPenetration How far below center the shockwave penetrates (before terrain factors)
+ * @param shockwaveRadius The maximum radius the shockwave will reach
+ * @param initialRadius The starting radius of the shockwave
+ * @param shockwaveSpeed The speed at which the shockwave expands in blocks per second
+ * @param aboveSeaLevelPenetrationFactor Multiplier for ground penetration above sea level
+ * @param belowSeaLevelPenetrationFactor Multiplier for ground penetration below sea level
+ * @param entitySearchRadius Maximum distance from players to search for additional entities
+ * @param entitySearchInterval How often to refresh the entity search in seconds
+ */
 class EntityShockwave(
     private val center: Location,
     private val shockwaveHeight: Int,
@@ -50,8 +65,10 @@ class EntityShockwave(
     private val aboveSeaLevelPenetrationFactor: Float = 1.5f,
     private val belowSeaLevelPenetrationFactor: Float = 0.8f,
     private val entitySearchRadius: Double = 50.0,
-    private val entitySearchInterval: Long = 30L
+    private val entitySearchInterval: Long = 30L,
+    private val baseDamage: Double = 80.0
 ) {
+    // Visual effect for the shockwave
     private val shockwaveEffect = ShockwaveEffect(
         center,
         shockwaveRadius,
@@ -59,13 +76,17 @@ class EntityShockwave(
         shockwaveSpeed,
     )
 
-    private val worldPlayers = ConcurrentHashMap<UUID, Player>()
-    private val nearbyEntities = ConcurrentHashMap<UUID, MutableSet<LivingEntity>>()
+    // How long the shockwave will last
+    val duration = ((shockwaveRadius - initialRadius) / shockwaveSpeed).toInt().seconds
 
-    val duration =
-        ((shockwaveRadius - initialRadius) / shockwaveSpeed).toInt().seconds
-
+    // Track elapsed time for radius calculations
     private val secondElapsed = AtomicInteger(0)
+
+    // Track which entities have been processed to avoid duplicates
+    private val processedEntities = ConcurrentHashMap.newKeySet<UUID>()
+
+    // Cache of entities by chunk to improve lookup performance
+    private val entityCache = ConcurrentHashMap<ChunkCoordinate, MutableSet<LivingEntity>>()
 
     // Calculate actual ground penetration based on sea level
     private val shockwaveGroundPenetration: Int by lazy {
@@ -77,188 +98,244 @@ class EntityShockwave(
         }
     }
 
-    suspend fun process() {
-        val jobs = mutableListOf<Job>()
+    private val computationDispatcher = Dispatchers.Default.limitedParallelism(4)
 
-        // Player update job
-        jobs.add(Defcon.instance.launch(Dispatchers.IO) {
-            while (secondElapsed.get() < duration.inWholeSeconds) {
-                try {
-                    val players = center.world.players
-                    // Remove offline players from our tracking map
-                    worldPlayers.entries.removeIf { entry ->
-                        val player = entry.value
-                        !player.isOnline || !players.contains(player)
-                    }
-
-                    // Add new players
-                    for (player in players) {
-                        if (player.isOnline && !worldPlayers.containsKey(player.uniqueId)) {
-                            worldPlayers[player.uniqueId] = player
-                        }
-                    }
-                } catch (e: Exception) {
-                    err("Error updating player list: ${e.message}")
-                }
-                delay(10.seconds)
-            }
-        })
-
-        // Entity search job - finds entities near each player
-        jobs.add(Defcon.instance.launch(Dispatchers.IO) {
-            while (secondElapsed.get() < duration.inWholeSeconds) {
-                try {
-                    updateNearbyEntities()
-                } catch (e: Exception) {
-                    err("Error updating nearby entities: ${e.message}")
-                }
-                delay(entitySearchInterval.seconds)
-            }
-        })
-
-        // Time tracker job
-        jobs.add(Defcon.instance.launch(Dispatchers.IO) {
-            while (secondElapsed.get() < duration.inWholeSeconds) {
-                delay(1.seconds)
-                secondElapsed.incrementAndGet()
-            }
-        })
-
-        // Damage processor job
-        jobs.add(Defcon.instance.launch(Dispatchers.IO) {
-            while (secondElapsed.get() < duration.inWholeSeconds) {
-                try {
-                    checkDamageEntities()
-                } catch (e: Exception) {
-                    err("Error processing entity damage: ${e.message}")
-                }
-                delay(0.5.seconds)
-            }
-        })
-
+    /**
+     * Starts the shockwave processing
+     */
+    suspend fun process() = coroutineScope {
         try {
-            shockwaveEffect.instantiate(true)
-            jobs.forEach { it.join() }
-        } finally {
-            // Cancel all jobs when we're done
-            jobs.forEach { it.cancel() }
+            // Initialize the visual effect
+            shockwaveEffect.instantiate()
+
+            // Timer job to track elapsed time
+            val timerJob = launch(Dispatchers.IO) {
+                while (isActive && secondElapsed.get() < duration.inWholeSeconds) {
+                    delay(1.seconds)
+                    secondElapsed.incrementAndGet()
+                }
+            }
+
+            // Entity discovery job
+            val entityDiscoveryJob = launch(Dispatchers.IO) {
+                while (isActive && secondElapsed.get() < duration.inWholeSeconds) {
+                    try {
+                        refreshEntityCache()
+                        delay(entitySearchInterval.seconds)
+                    } catch (e: Exception) {
+                        err("Error refreshing entity cache: ${e.message}")
+                        e.printStackTrace()
+                    }
+                }
+            }
+
+            // Main shockwave processing job
+            val processingJob = launch(computationDispatcher) {
+                while (isActive && secondElapsed.get() < duration.inWholeSeconds) {
+                    try {
+                        processShockwaveEffects()
+                        delay(500.milliseconds)  // Process twice per second
+                    } catch (e: Exception) {
+                        err("Error processing shockwave effects: ${e.message}")
+                        e.printStackTrace()
+                    }
+                }
+            }
+
+            // Wait for the shockwave to complete
+            timerJob.join()
+
+            // Cancel all jobs when done
+            entityDiscoveryJob.cancel()
+            processingJob.cancel()
+        } catch (e: Exception) {
+            err("Fatal error in shockwave processing: ${e.message}")
+            e.printStackTrace()
+            throw e
         }
     }
 
-    private suspend fun updateNearbyEntities() = coroutineScope {
-        // Clear previous entity lists
-        nearbyEntities.clear()
+    /**
+     * Refreshes the cache of nearby entities
+     */
+    private suspend fun refreshEntityCache() = withContext(Dispatchers.IO) {
+        // Clear the previous cache
+        entityCache.clear()
 
-        // For each online player, find nearby entities
-        for (player in worldPlayers.values) {
-            if (!player.isOnline) continue
+        // Start with all players in the world
+        val players = center.world.players.filter { it.isOnline }
 
-            val playerEntities = mutableSetOf<LivingEntity>()
-            val entitiesNearPlayer = async(Defcon.instance.minecraftDispatcher) {player.location.world.getNearbyEntities(
-                player.location,
-                entitySearchRadius,
-                entitySearchRadius,
-                entitySearchRadius
-            ).filterIsInstance<LivingEntity>()}
+        // Add all players to the cache
+        players.forEach { player ->
+            val chunk = ChunkCoordinate(player.location.chunk.x, player.location.chunk.z)
+            entityCache.computeIfAbsent(chunk) { mutableSetOf() }.add(player)
+        }
 
-            // Don't include players in this list
-            playerEntities.addAll(entitiesNearPlayer.await().filter { it !is Player })
+        // For each player, find nearby entities and add them to the cache
+        players.forEach { player ->
+            val nearbyEntities = withContext(Defcon.instance.minecraftDispatcher) {
+                player.location.world.getNearbyEntities(
+                    player.location,
+                    entitySearchRadius,
+                    entitySearchRadius,
+                    entitySearchRadius
+                ).filterIsInstance<LivingEntity>()
+            }
 
-            // Store the entities for this player
-            nearbyEntities[player.uniqueId] = playerEntities
+            // Group entities by chunk for more efficient lookup
+            nearbyEntities.forEach { entity ->
+                if (entity !is Player) {  // Skip players as they're already added
+                    val chunk = ChunkCoordinate(entity.location.chunk.x, entity.location.chunk.z)
+                    entityCache.computeIfAbsent(chunk) { mutableSetOf() }.add(entity)
+                }
+            }
         }
     }
 
-    private suspend fun checkDamageEntities() {
-        val currentShockwaveRadius = min(
+    /**
+     * Process all entities that should be affected by the shockwave
+     */
+    private suspend fun processShockwaveEffects() {
+        val currentShockwaveRadius = calculateCurrentRadius()
+
+        // Convert the radius to chunks for more efficient entity filtering
+        val chunkRadius = (currentShockwaveRadius / 16.0).toInt() + 1
+
+        // Get relevant chunks within the current radius
+        val centerChunkX = center.chunk.x
+        val centerChunkZ = center.chunk.z
+
+        // Process entities chunk by chunk
+        for (x in -chunkRadius..chunkRadius) {
+            for (z in -chunkRadius..chunkRadius) {
+                val chunk = ChunkCoordinate(centerChunkX + x, centerChunkZ + z)
+                val entitiesInChunk = entityCache[chunk] ?: continue
+
+                // Process each entity in the chunk
+                entitiesInChunk.forEach { entity ->
+                    try {
+                        if (entity.isValid && !processedEntities.contains(entity.uniqueId)) {
+                            if (isEntityAffectedByShockwave(entity, currentShockwaveRadius)) {
+                                processEntity(entity, currentShockwaveRadius)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        err("Error processing entity ${entity.uniqueId}: ${e.message}")
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Determines if an entity should be affected by the current shockwave
+     */
+    private fun isEntityAffectedByShockwave(entity: Entity, currentRadius: Int): Boolean {
+        val entityLocation = entity.location
+        val distanceFromCenter = entityLocation.distance(center)
+
+        // Check horizontal distance
+        if (distanceFromCenter > currentRadius) return false
+
+        // Check vertical range
+        val entityHeight = entityLocation.y
+        return !(entityHeight < center.y - shockwaveGroundPenetration ||
+                entityHeight > center.y + shockwaveHeight)
+    }
+
+    /**
+     * Calculate the current radius of the shockwave based on elapsed time
+     */
+    private fun calculateCurrentRadius(): Int {
+        return min(
             shockwaveRadius.toFloat(),
             initialRadius + (shockwaveSpeed * secondElapsed.get())
         ).toInt()
-
-        // Process players
-        for (player in worldPlayers.values) {
-            if (!player.isOnline) continue
-
-            // Process the player
-            processEntity(player, currentShockwaveRadius)
-
-            // Process entities near this player
-            nearbyEntities[player.uniqueId]?.forEach { entity ->
-                if (entity.isValid) {
-                    processEntity(entity, currentShockwaveRadius)
-                }
-            }
-        }
     }
 
+    /**
+     * Process an affected entity by applying knockback and damage
+     */
     private suspend fun processEntity(entity: Entity, currentShockwaveRadius: Int) {
+        // Mark this entity as processed
+        processedEntities.add(entity.uniqueId)
+
         val entityDistanceFromCenter = entity.location.distance(center)
-        // Skip entities outside the current shockwave radius
-        if (entityDistanceFromCenter > currentShockwaveRadius) return
 
-        val entityHeight = entity.location.y
-        // Skip entities outside the vertical range of the shockwave
-        if (entityHeight < center.y - shockwaveGroundPenetration ||
-            entityHeight > center.y + shockwaveHeight
-        ) return
-
-        // Calculate normalized power based on distance
+        // Calculate explosion power based on distance from center
         val explosionPowerNormalized = ((shockwaveRadius - entityDistanceFromCenter) / shockwaveRadius)
             .coerceIn(0.0, 1.0)
             .toFloat()
 
-        applyExplosionKnockback(
-            entity,
-            explosionPowerNormalized * shockwaveSpeed
-        )
+        // Apply knockback and damage
+        applyExplosionEffects(entity, explosionPowerNormalized)
+    }
 
-        // Apply camera shake only to players
-        if (entity is Player) {
-            try {
+    /**
+     * Apply explosion effects (knockback, damage, visual/audio effects)
+     */
+    private suspend fun applyExplosionEffects(
+        entity: Entity,
+        explosionPower: Float
+    ) = withContext(Defcon.instance.minecraftDispatcher) {
+        try {
+            // Calculate knockback vector
+            val knockbackVector = calculateKnockbackVector(entity, explosionPower)
+
+            // Apply damage to living entities
+            if (entity is LivingEntity) {
+                val scaledDamage = baseDamage * explosionPower.coerceIn(0f, 1f)
+                entity.damage(scaledDamage)
+            }
+
+            // Apply knockback
+            entity.velocity = knockbackVector
+
+            // Apply camera shake and sound effects for players
+            if (entity is Player) {
                 ExplosionSoundManager.playSounds(ExplosionSoundManager.DefaultSounds.ShockwaveHitSound, entity)
                 CameraShake(
                     entity,
                     CameraShakeOptions(
-                        2.6f,
-                        0.04f,
-                        3.7f * explosionPowerNormalized,
-                        3.0f * explosionPowerNormalized
+                        magnitude = 2.6f,
+                        decay = 0.04f,
+                        pitchPeriod = 3.7f * explosionPower,
+                        yawPeriod = 3.0f * explosionPower
                     )
                 )
-            } catch (e: Exception) {
-                err("Error applying effects to player ${entity.name}: ${e.message}")
             }
+        } catch (e: Exception) {
+            err("Error applying explosion effects to entity ${entity.uniqueId}: ${e.message}")
         }
     }
 
-    private suspend fun applyExplosionKnockback(
-        entity: Entity,
-        explosionPower: Float
-    ) {
-        // Calculate knockback vector components
-        val dx = entity.location.x - center.x
-        val dy = entity.location.y - center.y
-        val dz = entity.location.z - center.z
+    /**
+     * Calculate the knockback vector for an entity
+     */
+    private fun calculateKnockbackVector(entity: Entity, explosionPower: Float): Vector {
+        val entityLoc = entity.location
 
-        val distance = sqrt(dx * dx + dz * dz).coerceAtLeast(0.1) // Avoid division by zero
+        // Calculate direction vector from explosion to entity
+        val dx = entityLoc.x - center.x
+        val dy = entityLoc.y - center.y
+        val dz = entityLoc.z - center.z
 
-        val knockbackPower = explosionPower * 2 // Increased for better effect
-        val knockbackX = knockbackPower * (dx / distance)
+        // Calculate horizontal distance (avoid division by zero)
+        val horizontalDistance = sqrt(dx * dx + dz * dz).coerceAtLeast(0.1)
+
+        // Scale knockback power by explosion power
+        val knockbackPower = explosionPower * 2
+
+        // Calculate knockback components
+        val knockbackX = knockbackPower * (dx / horizontalDistance)
         val knockbackY = if (dy != 0.0) knockbackPower / (abs(dy) * 2) + 1.2 else 1.2
-        val knockbackZ = knockbackPower * (dz / distance)
+        val knockbackZ = knockbackPower * (dz / horizontalDistance)
 
-        // Apply knockback and damage on the Minecraft thread
-        withContext(Defcon.instance.minecraftDispatcher) {
-            try {
-                if (entity is LivingEntity) {
-                    val baseDamage = 80.0
-                    val scaledDamage = baseDamage * explosionPower.coerceIn(0f, 1f)
-                    entity.damage(scaledDamage)
-                }
-                entity.velocity = Vector(knockbackX, knockbackY, knockbackZ)
-            } catch (e: Exception) {
-                err("Error applying knockback to entity ${entity.uniqueId}: ${e.message}")
-            }
-        }
+        return Vector(knockbackX, knockbackY, knockbackZ)
     }
+
+    /**
+     * Data class to represent chunk coordinates for caching entities
+     */
+    private data class ChunkCoordinate(val x: Int, val z: Int)
 }
