@@ -37,10 +37,11 @@ open class ParticleComponent<T: EmitterShape>(
         }
 
 
-    fun adaptAtLeast(particleCount: Int) {
-        particleEmitter.setSpawnRate(particleCount)
-        particleEmitter.adaptParticleCount(particleCount)
-    }
+    var maxParticles
+        get() = particleEmitter.maxParticles
+        set(value) {
+            particleEmitter.maxParticles = value
+        }
 
     /**
      * Adds a spawnable particle with optional color supplier attachment.
@@ -108,7 +109,6 @@ open class ParticleComponent<T: EmitterShape>(
 
     override fun update(delta: Float) {
         colorSupplier?.update(delta)
-        particleEmitter.update(delta)
     }
 
     override fun stop() {

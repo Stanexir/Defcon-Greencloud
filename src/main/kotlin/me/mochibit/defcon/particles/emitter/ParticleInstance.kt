@@ -48,6 +48,8 @@ abstract class ParticleInstance(
     private var summoned = false
     private var removed = false
 
+    var lastUpdateTime: Long = 0
+
     private val isMoving
         get() = velocity.x != 0.0 || velocity.y != 0.0 || velocity.z != 0.0 ||
                 acceleration.x != 0f || acceleration.y != 0f || acceleration.z != 0f
@@ -136,6 +138,8 @@ abstract class ParticleInstance(
         if (isDead()) {
             removed = true
         }
+
+        lastUpdateTime = System.currentTimeMillis()
 
         return isMoving
     }

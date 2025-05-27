@@ -60,8 +60,6 @@ class ShockwaveEffect(
 
     // Cache the last radius to avoid unnecessary updates
     private var lastUpdatedRadius: Float = initialRadius.toFloat()
-    // Minimum particles to maintain visual consistency
-    private val minParticleCount = 8
 
     init {
         val emitter = ParticleEmitter(
@@ -71,59 +69,24 @@ class ShockwaveEffect(
                 ringRadius = initialRadius.toFloat(),
                 tubeRadius = 0.8f, // Slightly reduced for better performance
             ),
-            shapeMutator = SimpleFloorSnap(center),
-        ).apply {
-            enableFastExpandingMode()
-        }
+//            shapeMutator = SimpleFloorSnap(center),
+            maxParticlesInitial = 10000,
+        )
 
         shockwave = ParticleComponent(emitter).addSpawnableParticle(
             ExplosionDustParticle().apply {
-                defaultColor = Color.WHITE
-                scale(60f, 50f, 60f)
+                defaultColor = Color.GRAY
+                scale(30f, 20f, 30f)
                 maxLife = 20
             }
         ).applyRadialVelocityFromCenter(
-            Vector3f(3f, 0f, 3f)
+            Vector3f(10f, 0f, 10f)
         )
 
-        shockwaveShape = emitter.emitterShape as RingSurfaceShape
+        shockwaveShape = emitter.emitterShape
         effectComponents.add(shockwave)
-
-        updateDensityAndParticles()
     }
 
-    private fun updateDensityAndParticles() {
-        try {
-            val currentRadius = shockwaveShape.ringRadius
-
-            // Only update density if radius has changed enough
-            if (Math.abs(currentRadius - lastUpdatedRadius) < 1f) {
-                return
-            }
-
-            lastUpdatedRadius = currentRadius
-
-            // Calculate circumference for base particle count
-            val circumference = 2 * PI * currentRadius
-
-            // Calculate density factor that decreases as radius increases
-            // Density = initialDensity * (1 / (1 + (radius/maxRadius * densityDecayFactor)))
-            val progress = currentRadius / shockwaveRadius
-            val densityMultiplier = 1f / (1f + (progress * densityDecayFactor))
-
-            // Calculate particle count with decreasing density
-            val targetParticleCount = max(
-                minParticleCount,
-                (circumference * initialDensityFactor * densityMultiplier).roundToInt()
-            )
-
-            // Update emitter with new particle count
-            shockwave.adaptAtLeast(targetParticleCount)
-
-        } catch (e: Exception) {
-            err("Error updating shockwave parameters: ${e.message ?: "Unknown error"}")
-        }
-    }
 
     override fun animate(delta: Float) {
         try {
@@ -143,10 +106,6 @@ class ShockwaveEffect(
 
             // Update radius
             shockwaveShape.ringRadius = newRadius
-
-            // Update particle density based on new radius
-            updateDensityAndParticles()
-
         } catch (e: Exception) {
             err("Error in shockwave animation: ${e.message ?: "Unknown error"}")
         }

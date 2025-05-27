@@ -29,6 +29,7 @@ import me.mochibit.defcon.biomes.CustomBiomeHandler
 import me.mochibit.defcon.biomes.definitions.BurningAirBiome
 import me.mochibit.defcon.biomes.definitions.NuclearFalloutBiome
 import me.mochibit.defcon.classes.PluginConfiguration
+import me.mochibit.defcon.effects.explosion.generic.ShockwaveEffect
 import me.mochibit.defcon.effects.explosion.nuclear.CondensationCloudVFX
 import me.mochibit.defcon.effects.explosion.nuclear.NuclearExplosionVFX
 import me.mochibit.defcon.effects.explosion.nuclear.NuclearFogVFX
@@ -80,44 +81,53 @@ class NuclearExplosion(center: Location, private val nuclearComponent: Explosion
             val nuclearExplosion = NuclearExplosionVFX(nuclearComponent, center)
             val condensationCloud = CondensationCloudVFX(nuclearComponent, center)
             val nuclearFog = NuclearFogVFX(nuclearComponent, center)
+            val shockwaveEffect = ShockwaveEffect(
+                center,
+                shockwaveRadius,
+                craterRadius/4,
+                50f,
+            )
 
             nuclearExplosion.instantiate()
             nuclearFog.instantiate()
             condensationCloud.instantiate()
+            shockwaveEffect.instantiate()
 
-//            launch(Dispatchers.IO) {
-//                val duration = 10.seconds
-//                val blindEffect = BlindFlashEffect(center, flashReach, 200, duration)
-//                blindEffect.start()
-//
-//                val thermalRadiationBurn = ThermalRadiationBurn(center, thermalRadius, duration = 30.seconds)
-//                thermalRadiationBurn.start()
-//            }
-//
-//            launch(Dispatchers.IO) {
-//                val players = center.world.players
-//
-//                for (player in players) {
-//                    val playerDistance = player.location.distance(center)
-//
-//                    if (playerDistance < shockwaveRadius) {
-//                        ExplosionSoundManager.startRepeatingSounds(
-//                            ExplosionSoundManager.DefaultSounds.LargeExplosionWindBackground,
-//                            player,
-//                            2.minutes,
-//                            6.seconds
-//                        )
-//                    }
-//                }
-//
-//                ExplosionSoundManager.playSoundsWithDelay(
-//                    ExplosionSoundManager.DefaultSounds.DistantExplosion,
-//                    players,
-//                    center,
-//                    soundSpeed.toFloat(),
-//                )
-//            }
-//
+
+
+            launch(Dispatchers.IO) {
+                val duration = 10.seconds
+                val blindEffect = BlindFlashEffect(center, flashReach, 200, duration)
+                blindEffect.start()
+
+                val thermalRadiationBurn = ThermalRadiationBurn(center, thermalRadius, duration = 30.seconds)
+                thermalRadiationBurn.start()
+            }
+
+            launch(Dispatchers.IO) {
+                val players = center.world.players
+
+                for (player in players) {
+                    val playerDistance = player.location.distance(center)
+
+                    if (playerDistance < shockwaveRadius) {
+                        ExplosionSoundManager.startRepeatingSounds(
+                            ExplosionSoundManager.DefaultSounds.LargeExplosionWindBackground,
+                            player,
+                            2.minutes,
+                            6.seconds
+                        )
+                    }
+                }
+
+                ExplosionSoundManager.playSoundsWithDelay(
+                    ExplosionSoundManager.DefaultSounds.DistantExplosion,
+                    players,
+                    center,
+                    soundSpeed.toFloat(),
+                )
+            }
+
 //            launch(Dispatchers.Default) {
 //                val burningBiomeUUID = CustomBiomeHandler.createBiomeArea(
 //                    center,
@@ -155,16 +165,16 @@ class NuclearExplosion(center: Location, private val nuclearComponent: Explosion
 //                )
 //            }
 //
-//            launch(Dispatchers.Default) {
-//                EntityShockwave(
-//                    center,
-//                    shockwaveHeight,
-//                    craterRadius / 6,
-//                    shockwaveRadius,
-//                    craterRadius / 4,
-//                    50f
-//                ).process()
-//            }
+            launch(Dispatchers.Default) {
+                EntityShockwave(
+                    center,
+                    shockwaveHeight,
+                    craterRadius / 6,
+                    shockwaveRadius,
+                    craterRadius / 4,
+                    50f
+                ).process()
+            }
 
             launch(Dispatchers.Default) {
                 val players = center.world.players
