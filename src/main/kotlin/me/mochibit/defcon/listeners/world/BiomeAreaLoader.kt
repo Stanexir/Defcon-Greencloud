@@ -1,5 +1,4 @@
 /*
- *
  * DEFCON: Nuclear warfare plugin for minecraft servers.
  * Copyright (c) 2025 mochibit.
  *
@@ -7,14 +6,6 @@
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package me.mochibit.defcon.listeners.world
@@ -26,145 +17,216 @@ import me.mochibit.defcon.Defcon.Logger
 import me.mochibit.defcon.biomes.CustomBiomeHandler
 import me.mochibit.defcon.save.savedata.BiomeAreaSave
 import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.world.ChunkLoadEvent
 import org.bukkit.event.world.ChunkUnloadEvent
 import org.bukkit.event.world.WorldUnloadEvent
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Handles loading of custom biomes when chunks are loaded.
- * Only loads biomes that intersect with the loaded chunks.
+ * Optimized chunk-based biome loader that reduces server lag and fixes cross-world issues.
  */
 class BiomeChunkLoader : Listener {
-    // Track which chunks have been checked for biomes in each world
-    private val processedChunks = ConcurrentHashMap<String, MutableSet<ChunkCoord>>()
+    // Per-world tracking to prevent cross-world contamination
+    private val processedChunks = ConcurrentHashMap<String, ConcurrentHashMap<ChunkCoord, Boolean>>()
+    private val chunkBiomeMap =
+        ConcurrentHashMap<String, ConcurrentHashMap<ChunkCoord, MutableSet<CustomBiomeHandler.CustomBiomeBoundary>>>()
 
-    // Track which biomes are active in which chunks
-    private val chunkBiomeMap = ConcurrentHashMap<ChunkCoord, MutableSet<CustomBiomeHandler.CustomBiomeBoundary>>()
 
-    data class ChunkCoord(val x: Int, val z: Int, val world: String)
+    // Add a loading states tracker to prevent spam
+    private val worldLoadingStates = ConcurrentHashMap<String, Boolean>()
 
-    @EventHandler
+    // Add cooldown for player updates
+    private val playerUpdateCooldown = ConcurrentHashMap<UUID, Long>()
+    private val PLAYER_UPDATE_COOLDOWN_MS = 1000L // 1 second cooldown
+
+    data class ChunkCoord(val x: Int, val z: Int) {
+        override fun hashCode(): Int = x * 31 + z
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is ChunkCoord) return false
+            return x == other.x && z == other.z
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     fun onChunkLoad(event: ChunkLoadEvent) {
+        val chunk = event.chunk
+        val worldName = chunk.world.name
+        val chunkCoord = ChunkCoord(chunk.x, chunk.z)
+
+        // Get or create world-specific maps
+        val worldProcessedChunks = processedChunks.computeIfAbsent(worldName) { ConcurrentHashMap() }
+        val worldChunkBiomes = chunkBiomeMap.computeIfAbsent(worldName) { ConcurrentHashMap() }
+
+        // Skip if already processed
+        if (worldProcessedChunks.containsKey(chunkCoord)) {
+            return
+        }
+
+        worldProcessedChunks[chunkCoord] = true
+
         Defcon.instance.launch(Dispatchers.IO) {
-            val chunk = event.chunk
-            val chunkX = chunk.x
-            val chunkZ = chunk.z
-            val worldName = chunk.world.name
-            val chunkCoord = ChunkCoord(chunkX, chunkZ, worldName)
+            processChunkBiomes(worldName, chunkCoord, worldChunkBiomes)
+        }
+    }
 
-            // Skip if this chunk has already been processed
-            if (processedChunks.computeIfAbsent(worldName) { mutableSetOf() }.contains(chunkCoord)) {
-                return@launch
-            }
+    @EventHandler(priority = EventPriority.MONITOR)
+    fun onChunkUnload(event: ChunkUnloadEvent) {
+        val worldName = event.chunk.world.name
+        val chunkCoord = ChunkCoord(event.chunk.x, event.chunk.z)
 
-            // Mark as processed
-            processedChunks[worldName]?.add(chunkCoord)
+        // Clean up chunk data for this specific world
+        chunkBiomeMap[worldName]?.remove(chunkCoord)
+        processedChunks[worldName]?.remove(chunkCoord)
+    }
 
-            // Check if there are any biomes intersecting this chunk
-            // Make sure biome data is available for this world
+    @EventHandler(priority = EventPriority.MONITOR)
+    fun onWorldUnload(event: WorldUnloadEvent) {
+        val worldName = event.world.name
+
+        // Clean up all data for this world
+        processedChunks.remove(worldName)
+        chunkBiomeMap.remove(worldName)
+
+        // Notify biome handler to unload world-specific data
+        CustomBiomeHandler.unloadBiomesForWorld(worldName)
+
+        Logger.debug("Cleaned up biome data for unloaded world: $worldName")
+    }
+
+    /**
+     * Processes biome intersections for a specific chunk.
+     * This method is called asynchronously to prevent main thread blocking.
+     */
+    private suspend fun processChunkBiomes(
+        worldName: String,
+        chunkCoord: ChunkCoord,
+        worldChunkBiomes: ConcurrentHashMap<ChunkCoord, MutableSet<CustomBiomeHandler.CustomBiomeBoundary>>
+    ) {
+        try {
+            // Ensure world biomes are loaded
             ensureWorldBiomesLoaded(worldName)
 
+            // Get biomes for this specific world only
+            val worldBiomes = CustomBiomeHandler.getAllActiveBiomesInWorld(worldName)
+            if (worldBiomes.isEmpty()) {
+                return
+            }
+
             // Find biomes that intersect with this chunk
-            val intersectingBiomes = CustomBiomeHandler.getAllActiveBiomes().filter { biome ->
-                biome.worldName == worldName && biome.intersectsChunk(chunkX, chunkZ)
-            }.toSet()
+            val intersectingBiomes = worldBiomes.filter { biome ->
+                biome.intersectsChunk(chunkCoord.x, chunkCoord.z)
+            }.toMutableSet()
 
             if (intersectingBiomes.isNotEmpty()) {
-                chunkBiomeMap[chunkCoord] = intersectingBiomes.toMutableSet()
+                worldChunkBiomes[chunkCoord] = intersectingBiomes
 
-                // Update any players in or near this chunk to see these biomes
-                updatePlayersAroundChunk(chunk.world, chunkX, chunkZ, intersectingBiomes)
+                // Update players in this world only
+                updatePlayersInWorld(worldName, chunkCoord, intersectingBiomes)
             }
-        }
-    }
-
-    @EventHandler
-    fun onChunkUnload(event: ChunkUnloadEvent) {
-        Defcon.instance.launch(Dispatchers.IO) {
-            val chunk = event.chunk
-            val chunkX = chunk.x
-            val chunkZ = chunk.z
-            val worldName = chunk.world.name
-            val chunkCoord = ChunkCoord(chunkX, chunkZ, worldName)
-
-            // Remove this chunk from our tracking
-            chunkBiomeMap.remove(chunkCoord)
-            processedChunks[worldName]?.remove(chunkCoord)
-        }
-    }
-
-    @EventHandler
-    fun onWorldUnload(event: WorldUnloadEvent) {
-        Defcon.instance.launch(Dispatchers.IO) {
-            // Clean up all data for this world
-            val worldName = event.world.name
-            processedChunks.remove(worldName)
-
-            // Remove all chunk data for this world
-            val chunksToRemove = chunkBiomeMap.keys.filter { it.world == worldName }
-            chunksToRemove.forEach { chunkBiomeMap.remove(it) }
-
-            // Unload the biomes from the handler
-            CustomBiomeHandler.unloadBiomesForWorld(worldName)
+        } catch (e: Exception) {
+            Logger.warn("Failed to process biomes for chunk ${chunkCoord.x},${chunkCoord.z} in world $worldName: ${e.message}")
         }
     }
 
     /**
-     * Ensures the biome data for a world is loaded
+     * Ensures biome data for a world is loaded, with improved error handling.
      */
     private suspend fun ensureWorldBiomesLoaded(worldName: String) {
-        // Only load if not already loaded
-        if (!CustomBiomeHandler.isWorldLoaded(worldName)) {
-            Logger.info("Loading biomes for world: $worldName")
+        if (worldLoadingStates.putIfAbsent(worldName, true) != null) {
+            return
+        }
+
+        try {
+            if (CustomBiomeHandler.isWorldLoaded(worldName)) {
+                worldLoadingStates[worldName] = false
+                return
+            }
+            Logger.debug("Loading biomes for world: $worldName")
             val biomeSave = BiomeAreaSave.getSave(worldName)
+            val savedBiomes = biomeSave.getAll()
 
-            try {
-                val savedBiomes = biomeSave.getAll()
+            // Batch activate biomes to reduce individual calls
+            if (savedBiomes.isNotEmpty()) {
+                CustomBiomeHandler.activateBiomes(worldName, savedBiomes)
+                Logger.debug("Loaded ${savedBiomes.size} biomes for world: $worldName")
+            }
 
-                for (biome in savedBiomes) {
-                    CustomBiomeHandler.activateBiome(biome)
+            CustomBiomeHandler.markWorldAsLoaded(worldName)
+        } catch (e: Exception) {
+            Logger.err("Failed to load biomes for world $worldName")
+            e.printStackTrace()
+        } finally {
+            worldLoadingStates.remove(worldName)
+        }
+    }
+
+    /**
+     * Updates players in a specific world only, preventing cross-world contamination.
+     */
+    private fun updatePlayersInWorld(
+        worldName: String,
+        chunkCoord: ChunkCoord,
+        biomes: Set<CustomBiomeHandler.CustomBiomeBoundary>
+    ) {
+        val world = Defcon.instance.server.getWorld(worldName) ?: return
+
+        // Only get players from this specific world
+        val worldPlayers = world.players
+        if (worldPlayers.isEmpty()) return
+
+        // Filter players based on view distance more efficiently
+        val now = System.currentTimeMillis()
+        val nearbyPlayers = worldPlayers.filter { player ->
+            // Check cooldown first
+            val lastUpdate = playerUpdateCooldown[player.uniqueId] ?: 0
+            if (now - lastUpdate < PLAYER_UPDATE_COOLDOWN_MS) {
+                return@filter false
+            }
+
+            val playerChunkX = player.location.blockX shr 4
+            val playerChunkZ = player.location.blockZ shr 4
+            val viewDistance = minOf(player.viewDistance, 8) // Reduced from 10
+
+            val deltaX = playerChunkX - chunkCoord.x
+            val deltaZ = playerChunkZ - chunkCoord.z
+            val distanceSquared = deltaX * deltaX + deltaZ * deltaZ
+
+            distanceSquared <= viewDistance * viewDistance
+        }
+
+        if (nearbyPlayers.isNotEmpty()) {
+            for (player in nearbyPlayers) {
+                playerUpdateCooldown[player.uniqueId] = now
+                for (biome in biomes) {
+                    CustomBiomeHandler.addBiomeVisibilityForPlayer(player.uniqueId, biome.uuid, worldName)
                 }
-
-                CustomBiomeHandler.markWorldAsLoaded(worldName)
-            } catch (e: Exception) {
-                Logger.warn("Failed to load biomes for world $worldName: ${e.message}")
-                e.printStackTrace()
             }
         }
     }
 
     /**
-     * Updates players in the vicinity of a chunk to see the biomes
+     * Gets biomes active in a specific chunk of a specific world.
      */
-    private fun updatePlayersAroundChunk(
-        world: org.bukkit.World,
-        chunkX: Int,
-        chunkZ: Int,
-        biomes: Set<CustomBiomeHandler.CustomBiomeBoundary>
-    ) {
-        Defcon.instance.launch(Dispatchers.IO) {
-            // Get players within a reasonable distance of this chunk
-            val potentialPlayers = world.players.filter { player ->
-                val playerChunkX = player.location.blockX shr 4
-                val playerChunkZ = player.location.blockZ shr 4
-                val viewDistance = player.viewDistance.coerceAtMost(10)
+    fun getChunkBiomes(worldName: String, chunkX: Int, chunkZ: Int): Set<CustomBiomeHandler.CustomBiomeBoundary>? {
+        return chunkBiomeMap[worldName]?.get(ChunkCoord(chunkX, chunkZ))?.toSet()
+    }
 
-                val deltaX = playerChunkX - chunkX
-                val deltaZ = playerChunkZ - chunkZ
-                val distanceSquared = deltaX * deltaX + deltaZ * deltaZ
+    /**
+     * Gets all processed chunks for a world (for debugging/monitoring).
+     */
+    fun getProcessedChunksForWorld(worldName: String): Set<ChunkCoord> {
+        return processedChunks[worldName]?.keys?.toSet() ?: emptySet()
+    }
 
-                // Check if the chunk is within view distance of the player
-                distanceSquared <= viewDistance * viewDistance
-            }
-
-            // For each player, make these biomes visible
-            for (player in potentialPlayers) {
-                for (biome in biomes) {
-                    CustomBiomeHandler.makeBiomeVisibleToPlayer(player.uniqueId, biome.uuid)
-                }
-            }
-        }
+    /**
+     * Clears processed chunks for a world (useful for reloading).
+     */
+    fun clearProcessedChunksForWorld(worldName: String) {
+        processedChunks[worldName]?.clear()
+        chunkBiomeMap[worldName]?.clear()
     }
 }

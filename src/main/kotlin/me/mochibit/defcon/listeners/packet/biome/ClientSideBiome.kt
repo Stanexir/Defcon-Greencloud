@@ -25,6 +25,8 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType
 import com.github.retrooper.packetevents.protocol.world.chunk.impl.v_1_18.Chunk_v1_18
 import com.github.retrooper.packetevents.resources.ResourceLocation
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerChunkData
+import io.github.retrooper.packetevents.util.SpigotConversionUtil
+import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.biomes.CustomBiomeHandler
 
 
@@ -33,7 +35,12 @@ class ClientSideBiome : PacketListener {
         if (event.packetType != PacketType.Play.Server.CHUNK_DATA) return
 
         val user = event.user
-        val playerBiomes = CustomBiomeHandler.getPlayerVisibleBiomes(user.uuid)
+        val player = Defcon.instance.server.getPlayer(user.uuid)
+        if (player == null || !player.isOnline) {
+            // Player is offline, skip processing
+            return
+        }
+        val playerBiomes = CustomBiomeHandler.getPlayerVisibleBiomes(user.uuid, player.world.name)
         if (playerBiomes.isEmpty()) return
 
         // Get the biome boundary for the player (with the highest priority)

@@ -127,6 +127,15 @@ class TransformationRule(
             Material.POWDER_SNOW
         )
 
+        val STRUCTURAL_BLOCKS = EnumSet.noneOf(Material::class.java).apply {
+            // Add all stone blocks, and wood blocks
+            addAll(
+                Material.entries.filter {
+                    it.name.contains("STONE") || it.name.endsWith("_WOOD") || it.name.endsWith("_LOG") || it.name.endsWith("_PLANKS")
+                }
+            )
+        }
+
         val PLANTS: EnumSet<Material> = EnumSet.noneOf(Material::class.java).apply {
             // Group related plants for better readability
             // Grass types

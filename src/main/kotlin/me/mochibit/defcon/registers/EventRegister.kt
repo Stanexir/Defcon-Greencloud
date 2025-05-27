@@ -21,6 +21,7 @@ package me.mochibit.defcon.registers
 import com.github.retrooper.packetevents.PacketEvents
 import com.github.retrooper.packetevents.event.PacketListener
 import com.github.retrooper.packetevents.event.PacketListenerPriority
+import com.github.shynixn.mccoroutine.bukkit.registerSuspendingEvents
 import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.registers.listener.UniversalVersionIndicator
 import me.mochibit.defcon.registers.listener.VersionIndicator
@@ -119,7 +120,7 @@ object EventRegister {
                     try {
                         logger.info("Registering Bukkit listener: ${listenerClass.simpleName}")
                         val listenerObj = listenerClass.getDeclaredConstructor().newInstance()
-                        bukkitManager.registerEvents(listenerObj, plugin)
+                        bukkitManager.registerSuspendingEvents(listenerObj, plugin)
                         registeredListeners.add(listenerClass)
                     } catch (e: Exception) {
                         logger.warning("Failed to register listener ${listenerClass.simpleName}: ${e.message}")

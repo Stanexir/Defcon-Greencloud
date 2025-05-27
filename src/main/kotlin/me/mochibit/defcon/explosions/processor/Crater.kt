@@ -7,44 +7,30 @@ import me.mochibit.defcon.utils.Geometry
 import me.mochibit.defcon.utils.Geometry.wangNoise
 import org.bukkit.Location
 import org.bukkit.Material
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlin.math.*
 
+/**
+ * Optimized crater generation with improved performance and cleaner architecture
+ */
 class Crater(
-    val center: Location,
+    private val center: Location,
     private val radiusX: Int,
-    private val radiusY: Int, // This will be depth for the paraboloid
+    private val radiusY: Int, // Depth for the paraboloid
     private val radiusZ: Int,
     private val transformationRule: TransformationRule,
     private val destructionHeight: Int,
 ) {
-    private val world = center.world
+    // Immutable configuration
+    private val config = CraterConfig(center, radiusX, radiusY, radiusZ, destructionHeight)
+    private val world = center.world!!
     private val chunkCache = ChunkCache.getInstance(world)
-    private val centerX = center.blockX
-    private val centerY = min(center.blockY, world.seaLevel)
-    private val centerZ = center.blockZ
-    private val maxRadius = maxOf(radiusX, radiusZ)
+    private val blockChanger = BlockChanger.getInstance(world)
 
-    // Pre-calculate bounding box for optimization
-    private val minX = centerX - radiusX - 2
-    private val maxX = centerX + radiusX + 2
-    private val minZ = centerZ - radiusZ - 2
-    private val maxZ = centerZ + radiusZ + 2
-    private val minY = max(centerY - radiusY, world.minHeight)
-    private val maxY = min(centerY + destructionHeight, world.maxHeight - 1)
-
-    // Pre-calculated squared radiuses for faster distance checks
-    private val radiusXSquared = radiusX * radiusX.toDouble()
-    private val radiusZSquared = radiusZ * radiusZ.toDouble()
-    private val invRadiusXSquared = 1.0 / radiusXSquared
-    private val invRadiusZSquared = 1.0 / radiusZSquared
-    private val invRadiusX = 1.0 / radiusX
-    private val invRadiusZ = 1.0 / radiusZ
-
-    // Ordered from least to most scorched
-    private val scorchMaterials = listOf(
+    // Optimized scorch materials (ordered from least to most intense)
+    private val scorchMaterials = arrayOf(
         Material.TUFF,
         Material.DEEPSLATE,
         Material.BASALT,
@@ -54,113 +40,88 @@ class Crater(
         Material.BLACK_CONCRETE,
     )
 
-    private val blockChanger = BlockChanger.getInstance(world)
-
-    // Define chunk dimensions as constants to avoid repeated calculations
-    private val CHUNK_SIZE = 16
-
-    // Cache the directions for rim detection
-    private val RIM_DIRECTIONS = arrayOf(
-        1 to 0, -1 to 0, 0 to 1, 0 to -1,
-        1 to 1, 1 to -1, -1 to 1, -1 to -1
-    )
-
     suspend fun create(): Int {
-        try {
-            return createOptimizedCrater()
+        return try {
+            createOptimizedCrater()
         } catch (e: Exception) {
             e.printStackTrace()
-            return max(radiusX, radiusZ)
+            maxOf(radiusX, radiusZ)
         } finally {
             chunkCache.cleanupCache()
         }
     }
 
     private suspend fun createOptimizedCrater(): Int = coroutineScope {
-        // Use a direct bitset representation instead of HashMap for crater shape
-        // This allows us to track which (x,z) coordinates are part of the crater
-        val craterBounds = IntArray((maxX - minX + 1) * (maxZ - minZ + 1))
+        // Use BitSet for more memory-efficient crater tracking
+        val craterShape = CraterShape(config)
 
-        // Generate crater shape and immediately process chunks
-        val effectiveRadius = processCraterInParallel(craterBounds)
+        // Process crater in optimized chunks
+        val effectiveRadius = processInParallelChunks(craterShape)
+
+        // Apply rim effects after main processing
+        applyRimEffects(craterShape)
 
         effectiveRadius
     }
 
-    private suspend fun processCraterInParallel(craterBounds: IntArray): Int = coroutineScope {
-        // Divide the work by chunk regions for better parallelism
-        val chunkRegions = mutableListOf<ChunkRegion>()
+    private suspend fun processInParallelChunks(craterShape: CraterShape): Int = coroutineScope {
+        val chunkRegions = generateChunkRegions()
 
-        for (chunkX in minX / CHUNK_SIZE..maxX / CHUNK_SIZE) {
-            for (chunkZ in minZ / CHUNK_SIZE..maxZ / CHUNK_SIZE) {
-                val startX = chunkX * CHUNK_SIZE
-                val startZ = chunkZ * CHUNK_SIZE
-                val endX = min(startX + CHUNK_SIZE - 1, maxX)
-                val endZ = min(startZ + CHUNK_SIZE - 1, maxZ)
+        // Process regions with limited concurrency to avoid overwhelming the server
+        val semaphore = Semaphore(min(chunkRegions.size, 4)) // Limit concurrent chunks
 
-                chunkRegions.add(ChunkRegion(startX, startZ, endX, endZ))
-            }
-        }
-
-        // Process all regions in parallel - combining shape generation and processing
         val regionJobs = chunkRegions.map { region ->
             async {
-                processRegion(region, craterBounds)
+                semaphore.withPermit {
+                    processRegion(region, craterShape)
+                }
             }
         }
 
-        // Calculate maximum effective radius from all processed regions
         val results = regionJobs.awaitAll()
         val maxDistSq = results.maxOfOrNull { it } ?: 0.0
-
-        // Apply rim scorching as a second pass once we know the crater shape
-        applyRimScorching(craterBounds)
 
         sqrt(maxDistSq).roundToInt()
     }
 
-    private data class ChunkRegion(val startX: Int, val startZ: Int, val endX: Int, val endZ: Int)
+    private fun generateChunkRegions(): List<ChunkRegion> {
+        val regions = mutableListOf<ChunkRegion>()
+        val chunkMinX = config.minX shr 4
+        val chunkMaxX = config.maxX shr 4
+        val chunkMinZ = config.minZ shr 4
+        val chunkMaxZ = config.maxZ shr 4
 
-    private suspend fun processRegion(region: ChunkRegion, craterBounds: IntArray): Double {
+        for (chunkX in chunkMinX..chunkMaxX) {
+            for (chunkZ in chunkMinZ..chunkMaxZ) {
+                val startX = maxOf(chunkX shl 4, config.minX)
+                val startZ = maxOf(chunkZ shl 4, config.minZ)
+                val endX = minOf((chunkX shl 4) + 15, config.maxX)
+                val endZ = minOf((chunkZ shl 4) + 15, config.maxZ)
+
+                regions.add(ChunkRegion(startX, startZ, endX, endZ))
+            }
+        }
+        return regions
+    }
+
+    private suspend fun processRegion(region: ChunkRegion, craterShape: CraterShape): Double {
         var maxDistSq = 0.0
 
         for (x in region.startX..region.endX) {
-            val xDist = x - centerX
-            val xComponent = xDist * xDist * invRadiusXSquared
+            val xOffset = x - config.centerX
+            val xComponent = xOffset * xOffset * config.invRadiusXSquared
 
             if (xComponent > 1.0) continue
 
             for (z in region.startZ..region.endZ) {
-                val zDist = z - centerZ
-                val zComponent = zDist * zDist * invRadiusZSquared
+                val zOffset = z - config.centerZ
+                val zComponent = zOffset * zOffset * config.invRadiusZSquared
+                val normalizedDistSq = xComponent + zComponent
 
-                val normalizedDistSquared = xComponent + zComponent
-
-                // Only process points inside the elliptical boundary
-                if (normalizedDistSquared <= 1.0) {
-                    // Calculate depth at this point (paraboloid equation)
-                    val depth = radiusY * (1.0 - normalizedDistSquared)
-                    val craterFloorY = (centerY - depth).roundToInt()
-
-                    // Mark this position as part of the crater for rim detection later
-                    val indexX = x - minX
-                    val indexZ = z - minZ
-                    val index = indexX * (maxZ - minZ + 1) + indexZ
-                    craterBounds[index] = craterFloorY
-
-                    // Only process if floor is within valid range
-                    if (craterFloorY >= minY) {
-                        // Process crater floor scorching
-                        val scorchDist = applyFloorScorching(x, z, craterFloorY, normalizedDistSquared)
-                        maxDistSq = max(maxDistSq, scorchDist)
-
-                        // Remove blocks from the floor up to the destruction height
-                        for (y in craterFloorY + 1..min(centerY + destructionHeight, maxY)) {
-                            val blockType = chunkCache.getBlockMaterial(x, y, z)
-                            if (!blockType.isAir && blockType !in TransformationRule.BLOCK_TRANSFORMATION_BLACKLIST) {
-                                blockChanger.addBlockChange(x, y, z, Material.AIR, updateBlock = false)
-                            }
-                        }
+                if (normalizedDistSq <= 1.0) {
+                    val result = processPoint(x, z, normalizedDistSq, craterShape)
+                    if (result > 0) {
+                        maxDistSq = maxOf(maxDistSq, result)
                     }
                 }
             }
@@ -169,42 +130,58 @@ class Crater(
         return maxDistSq
     }
 
-    private suspend fun applyFloorScorching(x: Int, z: Int, floorY: Int, normalizedDistSquared: Double): Double {
-        if (floorY < minY) return 0.0
+    private suspend fun processPoint(x: Int, z: Int, normalizedDistSq: Double, craterShape: CraterShape): Double {
+        // Calculate crater floor depth using paraboloid equation
+        val depth = config.radiusY * (1.0 - normalizedDistSq)
+        val floorY = (config.centerY - depth).roundToInt()
 
+        // Mark position in crater shape for rim detection
+        craterShape.markPosition(x, z, floorY)
+
+        if (floorY < config.minY) return 0.0
+
+        // Apply floor scorching and get distance
+        val scorchDist = applyFloorScorching(x, z, floorY, normalizedDistSq)
+
+        // Remove blocks above crater floor
+        removeBlocksAboveFloor(x, z, floorY)
+
+        return scorchDist
+    }
+
+    private suspend fun applyFloorScorching(x: Int, z: Int, floorY: Int, normalizedDistSq: Double): Double {
         val blockType = chunkCache.getBlockMaterial(x, floorY, z)
 
-        // Found a valid block to scorch
-        if (!blockType.isAir &&
-            blockType !in TransformationRule.LIQUID_MATERIALS &&
-            blockType !in TransformationRule.BLOCK_TRANSFORMATION_BLACKLIST
-        ) {
-            val normalizedDist = sqrt(normalizedDistSquared)
-            val scorchMaterial = selectScorchMaterial(normalizedDist, x, z)
-            blockChanger.addBlockChange(x, floorY, z, scorchMaterial, updateBlock = false)
+        if (canScorchBlock(blockType)) {
+            val material = selectScorchMaterial(sqrt(normalizedDistSq), x, z)
+            blockChanger.addBlockChange(x, floorY, z, material, updateBlock = false)
 
-            return (x - centerX).toDouble().pow(2) + (z - centerZ).toDouble().pow(2)
+            val xDist = x - config.centerX
+            val zDist = z - config.centerZ
+            return (xDist * xDist + zDist * zDist).toDouble()
         }
 
         return 0.0
     }
 
-    private suspend fun applyRimScorching(craterBounds: IntArray) = coroutineScope {
-        // Process rim positions in parallel - batch them by rows for better performance
-        val rimJobs = (minX..maxX).map { x ->
+    private suspend fun removeBlocksAboveFloor(x: Int, z: Int, floorY: Int) {
+        val maxRemovalY = minOf(config.centerY + destructionHeight, config.maxY)
+
+        for (y in (floorY + 1)..maxRemovalY) {
+            val blockType = chunkCache.getBlockMaterial(x, y, z)
+            if (canRemoveBlock(blockType)) {
+                blockChanger.addBlockChange(x, y, z, Material.AIR, updateBlock = false)
+            }
+        }
+    }
+
+    private suspend fun applyRimEffects(craterShape: CraterShape) = coroutineScope {
+        // Process rim in parallel with limited concurrency
+        val rimJobs = (config.minX..config.maxX step 4).map { startX ->
             async {
-                for (z in minZ..maxZ) {
-                    val indexX = x - minX
-                    val indexZ = z - minZ
-                    val index = indexX * (maxZ - minZ + 1) + indexZ
-
-                    // Skip if this position is inside the crater
-                    if (index >= 0 && index < craterBounds.size && craterBounds[index] != 0) continue
-
-                    // Check if this position is adjacent to the crater
-                    if (isRimPosition(x, z, craterBounds)) {
-                        processRimPosition(x, z)
-                    }
+                val endX = minOf(startX + 3, config.maxX)
+                for (x in startX..endX) {
+                    processRimColumn(x, craterShape)
                 }
             }
         }
@@ -212,21 +189,30 @@ class Crater(
         rimJobs.awaitAll()
     }
 
-    private fun isRimPosition(x: Int, z: Int, craterBounds: IntArray): Boolean {
-        // Check surrounding positions to see if any are part of the crater
-        for ((dx, dz) in RIM_DIRECTIONS) {
-            val nx = x + dx
-            val nz = z + dz
+    private suspend fun processRimColumn(x: Int, craterShape: CraterShape) {
+        for (z in config.minZ..config.maxZ) {
+            if (!craterShape.isInCrater(x, z) && isRimPosition(x, z, craterShape)) {
+                processRimPosition(x, z)
+            }
+        }
+    }
 
-            // Skip if out of bounds
-            if (nx < minX || nx > maxX || nz < minZ || nz > maxZ) continue
+    private fun isRimPosition(x: Int, z: Int, craterShape: CraterShape): Boolean {
+        // Check 8-directional neighbors
+        val offsets = arrayOf(-1, 0, 1)
 
-            val indexX = nx - minX
-            val indexZ = nz - minZ
-            val index = indexX * (maxZ - minZ + 1) + indexZ
+        for (dx in offsets) {
+            for (dz in offsets) {
+                if (dx == 0 && dz == 0) continue
 
-            if (index >= 0 && index < craterBounds.size && craterBounds[index] != 0) {
-                return true
+                val nx = x + dx
+                val nz = z + dz
+
+                if (nx in config.minX..config.maxX &&
+                    nz in config.minZ..config.maxZ &&
+                    craterShape.isInCrater(nx, nz)) {
+                    return true
+                }
             }
         }
 
@@ -234,86 +220,146 @@ class Crater(
     }
 
     private suspend fun processRimPosition(x: Int, z: Int) {
-        // Find top non-air block in this rim column
-        var topY = -1
+        val topY = findTopBlock(x, z) ?: return
 
-        // Binary search to find the top block - faster than sequential search
-        var low = minY
-        var high = maxY
+        // Calculate rim scorch intensity
+        val distance = calculateNormalizedDistance(x, z)
+        val rimThreshold = 1.4
+
+        if (distance < rimThreshold) {
+            val intensity = maxOf(0.0, 1.0 - (distance / rimThreshold))
+            val material = selectScorchMaterial(1.0 - intensity, x, z)
+            blockChanger.addBlockChange(x, topY, z, material, updateBlock = true)
+        }
+    }
+
+    private fun findTopBlock(x: Int, z: Int): Int? {
+        // Use binary search for efficiency
+        val low = config.minY
+        var high = config.maxY
+        var result: Int? = null
 
         while (low <= high) {
             val mid = (low + high) / 2
-            val isAir = isAirColumn(x, z, mid, maxY)
+            val hasBlock = hasNonAirBlock(x, z, mid, config.maxY)
 
-            if (isAir) {
-                // Look lower
-                high = mid - 1
-            } else {
-                // Found a potential top block
-                topY = mid
+            if (hasBlock) {
+                result = findExactTopBlock(x, z, mid, config.maxY)
                 break
+            } else {
+                high = mid - 1
             }
         }
 
-        // If binary search didn't find a block, perform a focused linear search
-        if (topY == -1) {
-            for (y in maxY downTo minY) {
-                val blockType = chunkCache.getBlockMaterial(x, y, z)
-                if (!blockType.isAir &&
-                    blockType !in TransformationRule.LIQUID_MATERIALS &&
-                    blockType !in TransformationRule.BLOCK_TRANSFORMATION_BLACKLIST
-                ) {
-                    topY = y
-                    break
-                }
-            }
-        }
-
-        // If found a block to scorch
-        if (topY != -1) {
-            // Calculate distance from center for rim intensity
-            val xNorm = (x - centerX) * invRadiusX
-            val zNorm = (z - centerZ) * invRadiusZ
-            val distance = sqrt(xNorm * xNorm + zNorm * zNorm)
-
-            // Apply gradually increasing scorch effect based on distance from rim
-            val offsetDist = 1.4
-            if (distance < offsetDist) {
-                // Calculate scorch intensity
-                val intensity = max(0.0, 1.0 - (distance / offsetDist))
-                val material = selectScorchMaterial(1.0 - intensity, x, z)
-                blockChanger.addBlockChange(x, topY, z, material, updateBlock = true)
-            }
-        }
+        return result
     }
 
-    // Helper method to check if a column from y to maxY is all air blocks
-    private fun isAirColumn(x: Int, z:Int, fromY: Int, toY: Int): Boolean {
+    private fun hasNonAirBlock(x: Int, z: Int, fromY: Int, toY: Int): Boolean {
         for (y in fromY..toY) {
             val blockType = chunkCache.getBlockMaterial(x, y, z)
-            if (!blockType.isAir) {
-                return false
+            if (canScorchBlock(blockType)) {
+                return true
             }
         }
-        return true
+        return false
     }
 
-    /**
-     * Optimized scorch material selection with cached calculations
-     */
+    private fun findExactTopBlock(x: Int, z: Int, fromY: Int, toY: Int): Int? {
+        for (y in toY downTo fromY) {
+            val blockType = chunkCache.getBlockMaterial(x, y, z)
+            if (canScorchBlock(blockType)) {
+                return y
+            }
+        }
+        return null
+    }
+
+    private fun calculateNormalizedDistance(x: Int, z: Int): Double {
+        val xNorm = (x - config.centerX) * config.invRadiusX
+        val zNorm = (z - config.centerZ) * config.invRadiusZ
+        return sqrt(xNorm * xNorm + zNorm * zNorm)
+    }
+
     private fun selectScorchMaterial(normalizedDistance: Double, x: Int, z: Int): Material {
         val clampedDistance = normalizedDistance.coerceIn(0.0, 1.0)
 
-        // Add some noise for variation
-        val variation = 0.25
+        // Add noise variation
         val noise = wangNoise(x, 0, z)
-        val distortion = (noise - 0.5) * variation
-        val distortedDistance = (clampedDistance + distortion).coerceIn(0.0, 1.0)
+        val distortion = (noise - 0.5) * 0.25
+        val finalDistance = (clampedDistance + distortion).coerceIn(0.0, 1.0)
 
-        // Select material based on distance - closer to center means more intense scorching
-        val materialIndex = ((1.0 - distortedDistance) * (scorchMaterials.size - 1)).roundToInt()
-            .coerceIn(0, scorchMaterials.size - 1)
+        // Select material based on intensity
+        val index = ((1.0 - finalDistance) * (scorchMaterials.size - 1))
+            .roundToInt()
+            .coerceIn(0, scorchMaterials.lastIndex)
 
-        return scorchMaterials[materialIndex]
+        return scorchMaterials[index]
+    }
+
+    private fun canScorchBlock(material: Material): Boolean {
+        return !material.isAir &&
+               material !in TransformationRule.LIQUID_MATERIALS &&
+               material !in TransformationRule.BLOCK_TRANSFORMATION_BLACKLIST
+    }
+
+    private fun canRemoveBlock(material: Material): Boolean {
+        return canScorchBlock(material)
+    }
+
+    // Data classes for better organization
+    private data class ChunkRegion(val startX: Int, val startZ: Int, val endX: Int, val endZ: Int)
+
+    private class CraterConfig(
+        center: Location,
+        val radiusX: Int,
+        val radiusY: Int,
+        val radiusZ: Int,
+        destructionHeight: Int
+    ) {
+        val world = center.world!!
+        val centerX = center.blockX
+        val centerY = minOf(center.blockY, world.seaLevel)
+        val centerZ = center.blockZ
+
+        val minX = centerX - radiusX - 2
+        val maxX = centerX + radiusX + 2
+        val minZ = centerZ - radiusZ - 2
+        val maxZ = centerZ + radiusZ + 2
+        val minY = maxOf(centerY - radiusY, world.minHeight)
+        val maxY = minOf(centerY + destructionHeight, world.maxHeight - 1)
+
+        val invRadiusX = 1.0 / radiusX
+        val invRadiusZ = 1.0 / radiusZ
+        val invRadiusXSquared = 1.0 / (radiusX * radiusX)
+        val invRadiusZSquared = 1.0 / (radiusZ * radiusZ)
+    }
+
+    private class CraterShape(private val config: CraterConfig) {
+        private val width = config.maxX - config.minX + 1
+        private val height = config.maxZ - config.minZ + 1
+        private val craterData = IntArray(width * height) // 0 = not in crater, >0 = floor Y
+
+        fun markPosition(x: Int, z: Int, floorY: Int) {
+            val index = getIndex(x, z)
+            if (index >= 0) {
+                craterData[index] = maxOf(floorY, config.minY)
+            }
+        }
+
+        fun isInCrater(x: Int, z: Int): Boolean {
+            val index = getIndex(x, z)
+            return index >= 0 && craterData[index] > 0
+        }
+
+        private fun getIndex(x: Int, z: Int): Int {
+            val localX = x - config.minX
+            val localZ = z - config.minZ
+
+            return if (localX in 0 until width && localZ in 0 until height) {
+                localX * height + localZ
+            } else {
+                -1
+            }
+        }
     }
 }

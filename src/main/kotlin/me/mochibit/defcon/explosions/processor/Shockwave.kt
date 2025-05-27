@@ -1,58 +1,54 @@
 package me.mochibit.defcon.explosions.processor
 
 import com.github.shynixn.mccoroutine.bukkit.launch
-import com.github.shynixn.mccoroutine.bukkit.minecraftDispatcher
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.explosions.TransformationRule
-import me.mochibit.defcon.explosions.effects.CameraShake
-import me.mochibit.defcon.explosions.effects.CameraShakeOptions
 import me.mochibit.defcon.extensions.toVector3i
 import me.mochibit.defcon.observer.Completable
 import me.mochibit.defcon.observer.CompletionDispatcher
 import me.mochibit.defcon.utils.*
 import org.bukkit.Location
 import org.bukkit.Material
-import org.bukkit.Particle
-import org.bukkit.entity.Entity
-import org.bukkit.entity.LivingEntity
-import org.bukkit.entity.Player
-import org.bukkit.util.Vector
 import org.joml.SimplexNoise
 import org.joml.Vector3i
-import java.util.*
+import org.joml.Vector3ic
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.abs
 import kotlin.math.pow
-import kotlin.math.sqrt
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
+import kotlin.math.roundToInt
 
 class Shockwave(
     private val center: Location,
     private val radiusStart: Int,
     private val shockwaveRadius: Int,
     private val shockwaveHeight: Int,
-    private val shockwaveSpeed: Long = 1000L,
     private val minDestructionPower: Double = 2.0,
     private val maxDestructionPower: Double = 5.0,
     private val transformationRule: TransformationRule = TransformationRule(maxDestructionPower),
 ) : Completable by CompletionDispatcher() {
-    private val maximumDistanceForAction = 4.0
-    private val world = center.world
+    companion object {
+        private val BASE_DIRECTIONS = arrayOf(
+            Vector3i(1, 0, 0),  // East
+            Vector3i(-1, 0, 0), // West
+            Vector3i(0, 0, 1),  // South
+            Vector3i(0, 0, -1)  // North
+        )
 
-    // Cache rule sets for faster access
-    private val transformBlacklist = TransformationRule.BLOCK_TRANSFORMATION_BLACKLIST
-    private val liquidMaterials = TransformationRule.LIQUID_MATERIALS
-    private val attachedBlockCache = TransformationRule.ATTACHED_BLOCKS
-    private val slabs = TransformationRule.SLABS
-    private val walls = TransformationRule.WALLS
-    private val stairs = TransformationRule.STAIRS
+
+        private const val FLOW_BUFFER_SIZE = 256
+
+        // Channel capacity for work coordination
+        private const val CHANNEL_CAPACITY = 512
+    }
+
+    private val world = center.world
 
     // Services
     private val treeBurner = TreeBurner(world, center.toVector3i(), maxDestructionPower)
@@ -60,32 +56,39 @@ class Shockwave(
     private val rayCaster = RayCaster(world)
     private val blockChanger = BlockChanger.getInstance(world)
 
-
-    // Processed rings counter for progress tracking
-    private val processedRings = AtomicInteger(0)
-
-    // Cache base directions for wall detection
-    private val baseDirections = arrayOf(
-        Vector3i(1, 0, 0),  // East
-        Vector3i(-1, 0, 0), // West
-        Vector3i(0, 0, 1),  // South
-        Vector3i(0, 0, -1)  // North
-    )
-
     private val processedBlocks = ConcurrentHashMap.newKeySet<Long>()
 
     private fun isBlockProcessed(x: Int, y: Int, z: Int): Boolean {
         return !processedBlocks.add(Geometry.packIntegerCoordinates(x, y, z))
     }
 
+
+    // Processed rings counter for progress tracking
+    private val processedRings = AtomicInteger(0)
+
+
     fun explode(): Job {
         val blockProcessingDispatcher = Dispatchers.Default
-
         val ringCounter = AtomicInteger(0)
 
         return Defcon.instance.launch(Dispatchers.Default) {
             try {
-                // Original visual/block shockwave processing at normal speed
+                val workChannel = Channel<Pair<Vector3i, Double>>(CHANNEL_CAPACITY)
+
+                // Block processors
+                val processors = List(4) {
+                    launch(blockProcessingDispatcher) {
+                        for ((location, power) in workChannel) {
+                            if (treeBurner.isTreeBlock(location)) {
+                                processTrees(location, power)
+                            } else {
+                                processBlock(location, power)
+                            }
+                        }
+                    }
+                }
+
+                // Process shockwave by radius
                 for (radius in radiusStart..shockwaveRadius) {
                     val radiusProgress = radius.toDouble() / shockwaveRadius.toDouble()
                     val explosionPower = MathFunctions.lerp(
@@ -95,37 +98,18 @@ class Shockwave(
                     )
 
                     // Generate columns for this radius and process visual effects and blocks
-                    val columns = generateShockwaveCircleAsFlow(radius).buffer(128).toList()
-
-
-                    // Process blocks in parallel (don't wait)
-                    launch(blockProcessingDispatcher) {
-                        // Split tree blocks from regular blocks
-                        val (treeBlocks, nonTreeBlocks) = columns.partition { treeBurner.isTreeBlock(it) }
-
-                        // Process tree blocks in parallel batches
-                        treeBlocks.chunked(32).forEach { chunk ->
-                            launch {
-                                chunk.forEach { location ->
-                                    treeBurner.processTreeBurn(location, explosionPower)
-                                    treeBurner.processTreeBurn(treeBurner.getTreeTerrain(location), explosionPower)
-                                }
-                            }
+                    generateShockwaveCircleAsFlow(radius)
+                        .buffer(FLOW_BUFFER_SIZE)
+                        .collect { loc ->
+                            workChannel.send(loc to explosionPower)
                         }
-
-                        // Process non-tree blocks in parallel batches
-                        nonTreeBlocks.chunked(32).forEach { chunk ->
-                            launch {
-                                chunk.forEach { location ->
-                                    processBlock(location, explosionPower)
-                                }
-                            }
-                        }
-                    }
 
                     ringCounter.incrementAndGet()
-                    delay(1.milliseconds)
                 }
+
+                workChannel.close()
+                processors.forEach { it.join() }
+
             } finally {
                 processedRings.set(ringCounter.get())
                 cleanup()
@@ -133,17 +117,23 @@ class Shockwave(
         }
     }
 
+    private suspend fun processTrees(location: Vector3i, explosionPower: Double) {
+        treeBurner.processTreeBurn(location, explosionPower)
+        treeBurner.processTreeBurn(treeBurner.getTreeTerrain(location), explosionPower)
+    }
+
+
     // Fast wall detection using cached materials
     private fun detectWall(x: Int, y: Int, z: Int): Boolean {
-        return baseDirections.any { dir ->
+        return BASE_DIRECTIONS.any { dir ->
             chunkCache.getBlockMaterial(x + dir.x, y, z + dir.z) == Material.AIR
         }
     }
 
     // Check if a block has attached blocks (signs, torches, etc)
     private fun detectAttached(x: Int, y: Int, z: Int): Boolean {
-        return baseDirections.any { dir ->
-            chunkCache.getBlockMaterial(x + dir.x, y + dir.y, z + dir.z) in attachedBlockCache
+        return BASE_DIRECTIONS.any { dir ->
+            chunkCache.getBlockMaterial(x + dir.x, y + dir.y, z + dir.z) in TransformationRule.ATTACHED_BLOCKS
         }
     }
 
@@ -151,9 +141,46 @@ class Shockwave(
         blockLocation: Vector3i,
         normalizedExplosionPower: Double
     ) {
-        val material = world.getBlockData(blockLocation.x, blockLocation.y, blockLocation.z).material
-        val transformedMat = transformationRule.transformMaterial(material, normalizedExplosionPower)
-        blockChanger.addBlockChange(blockLocation, transformedMat)
+        // Skip if power is too low - lowering threshold to allow more distant effects
+        if (normalizedExplosionPower < 0.02) return
+
+        // Enhanced penetration with exponential scaling for more realistic results
+        val powerFactor = normalizedExplosionPower.pow(1.2)
+        val basePenetration = (powerFactor * 12).roundToInt().coerceIn(1, 15)
+
+
+        // Use simplex noise for more natural terrain-like variation
+        val noiseX = blockLocation.x * 0.1
+        val noiseY = blockLocation.y * 0.1
+        val noiseZ = blockLocation.z * 0.1
+
+        // Generate noise values in range [-1, 1]
+        val noise = SimplexNoise.noise(noiseX.toFloat(), noiseY.toFloat(), noiseZ.toFloat())
+
+        // Use noise for variation (transforms noise from [-1,1] to [0,1] range)
+        val noiseFactor = (noise + 1) * 0.5
+
+        // Randomize penetration with noise
+        val varianceFactor = (normalizedExplosionPower * 0.6).coerceIn(0.2, 0.5)
+        val distanceNormalized = 1.0 - normalizedExplosionPower.coerceIn(0.0, 1.0)
+
+        // Use noise instead of random for more coherent patterns
+        val randomOffset = (noiseFactor * 2 - 1) * basePenetration * varianceFactor * (1 - distanceNormalized * 0.5)
+
+        // Calculate max penetration - ensure at least 1 block penetration even at low power
+        val maxPenetration = (basePenetration + randomOffset).roundToInt()
+            .coerceIn(1, (basePenetration * 1.4).toInt())
+
+        // Optimized wall detection
+        val isWall = detectWall(blockLocation.x, blockLocation.y, blockLocation.z) ||
+                detectWall(blockLocation.x, blockLocation.y - 1, blockLocation.z)
+
+        // Process differently based on structure type
+        if (isWall) {
+            processWall(blockLocation, normalizedExplosionPower)
+        } else {
+            processRoof(blockLocation, normalizedExplosionPower, maxPenetration)
+        }
     }
 
     // Process vertical walls more efficiently with simplex noise
@@ -179,10 +206,10 @@ class Shockwave(
             val blockType = chunkCache.getBlockMaterial(x, currentY, z)
 
             // Skip blacklisted materials
-            if (blockType in transformBlacklist || blockType == Material.AIR) continue
+            if (blockType in TransformationRule.BLOCK_TRANSFORMATION_BLACKLIST || blockType == Material.AIR) continue
 
             // Stop at liquids
-            if (blockType in liquidMaterials) break
+            if (blockType in TransformationRule.LIQUID_MATERIALS) break
 
             // Use simplex noise for material determination
             val noiseValue = (SimplexNoise.noise(x * 0.3f, currentY * 0.3f, z * 0.3f) + 1) * 0.5
@@ -195,7 +222,7 @@ class Shockwave(
             }
 
             // Check if we need to copy block data
-            val shouldCopyData = finalMaterial in slabs || finalMaterial in walls || finalMaterial in stairs
+            val shouldCopyData = finalMaterial in TransformationRule.SLABS || finalMaterial in TransformationRule.WALLS || finalMaterial in TransformationRule.STAIRS
 
             // Add to batch
             blockChanger.addBlockChange(
@@ -227,7 +254,7 @@ class Shockwave(
             val surfaceNoise = (SimplexNoise.noise(x * 0.5f, currentY * 0.5f, z * 0.5f) + 1) * 0.5
             if (surfaceNoise < normalizedExplosionPower * 10) {  // Scale up chance for low power
                 val blockType = chunkCache.getBlockMaterial(x, currentY, z)
-                if (blockType != Material.AIR && blockType !in transformBlacklist && blockType !in liquidMaterials) {
+                if (blockType != Material.AIR && blockType !in TransformationRule.BLOCK_TRANSFORMATION_BLACKLIST && blockType !in TransformationRule.LIQUID_MATERIALS) {
                     // Apply surface transformation
                     val surfaceMaterial = if (surfaceNoise < normalizedExplosionPower * 5) {
                         Material.AIR
@@ -236,7 +263,7 @@ class Shockwave(
                     }
 
                     val shouldCopyData =
-                        surfaceMaterial in slabs || surfaceMaterial in walls || surfaceMaterial in stairs
+                        surfaceMaterial in TransformationRule.SLABS || surfaceMaterial in TransformationRule.WALLS || surfaceMaterial in TransformationRule.STAIRS
                     blockChanger.addBlockChange(x, currentY, z, surfaceMaterial, shouldCopyData, true)
                 }
             }
@@ -341,14 +368,14 @@ class Shockwave(
         val updatePhysics = penetrationCount == 0 ||
                 (finalMaterial != Material.AIR && noiseValue < 0.2)
 
-        val shouldCopyData = finalMaterial in slabs ||
-                finalMaterial in walls ||
-                finalMaterial in stairs
+        val shouldCopyData = finalMaterial in TransformationRule.SLABS ||
+                finalMaterial in TransformationRule.STAIRS ||
+                finalMaterial in TransformationRule.WALLS
 
         // Add to block change queue
         if (!isBlockProcessed(x, y + 1, z)) {
             val topBlock = chunkCache.getBlockMaterial(x, y + 1, z)
-            if ((topBlock != Material.AIR && (topBlock in TransformationRule.PLANTS || topBlock in TransformationRule.LIGHT_WEIGHT_BLOCKS)) && topBlock !in liquidMaterials) {
+            if ((topBlock != Material.AIR && (topBlock in TransformationRule.PLANTS || topBlock in TransformationRule.LIGHT_WEIGHT_BLOCKS)) && topBlock !in TransformationRule.LIQUID_MATERIALS) {
                 if (blockType.isFlammable) {
                     blockChanger.addBlockChange(x, y + 1, z, Material.FIRE, updateBlock = true)
                 } else {
@@ -374,63 +401,40 @@ class Shockwave(
             return@flow
         }
 
-        // Bresenham's circle algorithm implementation
-        var x = 0
-        var z = radius
-        var d = 1 - radius
+        // For a Minecraft circle perimeter, we need to check if points are near the edge
+        // Use a tolerance value to determine how thick the perimeter should be
+        val tolerance = 0.5 // Can be adjusted to change the thickness of the perimeter
+        val outerRadiusSquared = (radius + 0.5) * (radius + 0.5)
+        val innerRadiusSquared = (radius - tolerance) * (radius - tolerance)
 
-        // Process points as we go
-        while (x <= z) {
-            // Process all 8-way symmetric points
-            val pointsToProcess = listOf(
-                Pair(x, z), Pair(z, x),
-                Pair(z, -x), Pair(x, -z),
-                Pair(-x, -z), Pair(-z, -x),
-                Pair(-z, x), Pair(-x, z)
-            )
+        // Iterate through all blocks in the bounding square
+        for (x in -radius..radius) {
+            for (z in -radius..radius) {
+                // Calculate distance squared from center
+                val distanceSquared = x * x + z * z
 
-            // Handle potential duplicates when x == z
-            val uniquePoints = if (x == z) {
-                pointsToProcess.take(4) // Take only half the points when x == z to avoid duplicates
-            } else {
-                pointsToProcess
-            }
-
-            // Process each point
-            uniquePoints.forEach { (xOffset, zOffset) ->
-                try {
-                    // Apply center offset to coordinates
-                    val worldX = centerX + xOffset
-                    val worldZ = centerZ + zOffset
-
-                    val highestY = chunkCache.highestBlockYAt(worldX, worldZ)
-                    emit(Vector3i(worldX, highestY, worldZ))
-                } catch (e: Exception) {
-                    // Log the error but continue processing other points
-                    Defcon.instance.logger.warning("Error processing point ($xOffset, $zOffset): ${e.message}")
+                // If the block is close to the circle perimeter
+                if (distanceSquared <= outerRadiusSquared && distanceSquared >= innerRadiusSquared) {
+                    try {
+                        // Apply center offset to coordinates
+                        val worldX = centerX + x
+                        val worldZ = centerZ + z
+                        val highestY = chunkCache.highestBlockYAt(worldX, worldZ)
+                        emit(Vector3i(worldX, highestY, worldZ))
+                    } catch (e: Exception) {
+                        // Log the error but continue processing other points
+                        Defcon.instance.logger.warning("Error processing point ($x, $z): ${e.message}")
+                    }
                 }
-            }
-
-            // Move to next point using Bresenham's circle algorithm
-            x++
-            if (d < 0) {
-                d += 2 * x + 1
-            } else {
-                z--
-                d += 2 * (x - z) + 1
             }
         }
     }
 
-
     // Clean up resources
     private fun cleanup() {
-
         // Clean up services
         chunkCache.cleanupCache()
-
         processedBlocks.clear()
-        // Signal completion
         complete()
     }
 }
