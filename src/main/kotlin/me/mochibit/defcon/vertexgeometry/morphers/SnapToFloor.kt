@@ -51,7 +51,7 @@ class SnapToFloor(
             val distance = basis.globalPosition.distance(easeFromPoint)
             val maxDistance = 80.0
 
-            val t = MathFunctions.clamp(distance / maxDistance, 0.0, 1.0)
+            val t = (distance / maxDistance).coerceIn(0.0 .. 1.0)
             val smoothT = if (t < 0.5) {
                 4 * t * t * t
             } else {

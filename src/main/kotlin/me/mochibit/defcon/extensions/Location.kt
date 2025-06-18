@@ -22,6 +22,7 @@ package me.mochibit.defcon.extensions
 import me.mochibit.defcon.enums.BlockDataKey
 import me.mochibit.defcon.utils.MathFunctions
 import me.mochibit.defcon.utils.MetaManager
+import me.mochibit.defcon.utils.lerp
 import org.bukkit.Location
 import org.joml.Vector3d
 import org.joml.Vector3f
@@ -50,11 +51,11 @@ fun Location.toVector3d(): Vector3d {
 fun Location.lerp(other: Location, t: Double): Location {
     return Location(
         world,
-        MathFunctions.lerp(x, other.x, t),
-        MathFunctions.lerp(y, other.y, t),
-        MathFunctions.lerp(z, other.z, t),
-        MathFunctions.lerp(yaw, other.yaw, t),
-        MathFunctions.lerp(pitch, other.pitch, t)
+        lerp(x, other.x, t),
+        lerp(y, other.y, t),
+        lerp(z, other.z, t),
+        lerp(yaw, other.yaw, t),
+        lerp(pitch, other.pitch, t)
     )
 }
 

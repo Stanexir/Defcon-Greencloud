@@ -125,4 +125,9 @@ class ChunkCache private constructor(
         if (y < 0 || y > 255) return Bukkit.createBlockData(Material.AIR)
         return getChunkSnapshot(x, z).getBlockData(x and 15, y, z and 15)
     }
+
+    fun getSkyLightLevel(x: Int, y: Int, z: Int): Int {
+        if (y < 0 || y > 255) return 0
+        return getChunkSnapshot(x, z).getBlockSkyLight(x and 15, y, z and 15)
+    }
 }

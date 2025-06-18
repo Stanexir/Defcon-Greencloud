@@ -301,7 +301,7 @@ object ResourcePackRegister : PackRegister(true) {
                         createItemModelFile(minecraftPath, itemModelInstance.modelData)
                     } catch (e: Exception) {
                         err("Error processing item model ${itemModelClass.simpleName}: ${e.message}")
-                        e.printStackTrace()
+                        err("Stack trace:" + e.stackTraceToString())
                     }
                 }
             } else {

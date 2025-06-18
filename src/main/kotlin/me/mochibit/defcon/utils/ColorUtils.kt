@@ -19,13 +19,9 @@
 
 package me.mochibit.defcon.utils
 
-import com.google.common.collect.ImmutableList
-import me.mochibit.defcon.utils.MathFunctions.lerp
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Color
 import java.util.regex.Pattern
-import kotlin.math.ln
-import kotlin.math.pow
 import kotlin.random.Random
 
 object ColorUtils {

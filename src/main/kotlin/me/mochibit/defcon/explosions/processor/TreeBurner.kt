@@ -31,15 +31,12 @@ import kotlin.math.roundToInt
 class TreeBurner(
     private val world: World,
     private val center: Vector3i,
-    private val maxExplosionPower: Double,
+    val distanceRatioCompletelyDestroy: Double = 0.5,
 ) {
     companion object {
         private const val LEAF_SUFFIX = "_LEAVES"
         private const val LOG_SUFFIX = "_LOG"
         private const val WOOD_SUFFIX = "_WOOD"
-
-        // Optimized properties for the tree falling feature
-        private const val MIN_POWER_FOR_AUTOMATIC_DESTRUCTION = 0.4
 
         // Maximum tree height to process
         private const val MAX_TREE_HEIGHT = 60
@@ -66,8 +63,6 @@ class TreeBurner(
 
     suspend fun processTreeBurn(initialBlock: Vector3i, explosionPower: Double) {
         try {
-            val normalizedExplosionPower = explosionPower / maxExplosionPower
-
             // Early exit if block is not part of a tree
             if (!isTreeBlock(initialBlock)) {
                 return
@@ -104,6 +99,7 @@ class TreeBurner(
                         // Process leaves - always remove them
                         blockChanger.addBlockChange(currentX, y, currentZ, Material.AIR, updateBlock = true)
                     }
+
                     in LOG_BLOCKS, in WOOD_BLOCKS -> {
                         // Process both log and wood blocks with tilt based on height
                         processWoodBlock(
@@ -112,9 +108,10 @@ class TreeBurner(
                             treeMinHeight,
                             heightRange,
                             shockwaveDirection,
-                            normalizedExplosionPower
+                            explosionPower
                         )
                     }
+
                     else -> {
                         continue
                     }
@@ -177,10 +174,10 @@ class TreeBurner(
         treeMinHeight: Int,
         heightRange: Int,
         shockwaveDirection: Vector3f,
-        normalizedExplosionPower: Double
+        burnerDistanceRatio: Double
     ) {
         // Completely destroy wood blocks if explosion power is strong enough
-        if (normalizedExplosionPower > MIN_POWER_FOR_AUTOMATIC_DESTRUCTION) {
+        if (burnerDistanceRatio <= distanceRatioCompletelyDestroy) {
             blockChanger.addBlockChange(x, y, z, Material.AIR, updateBlock = true)
             return
         }
@@ -191,7 +188,7 @@ class TreeBurner(
         val tiltFactor = if (y == treeMinHeight) {
             0.0 // Base of tree doesn't move
         } else {
-            heightFactor * normalizedExplosionPower * 6 // Smooth gradient tilt
+            heightFactor * (1-burnerDistanceRatio) * 6 // Smooth gradient tilt
         }
 
         val newX = (x + shockwaveDirection.x * tiltFactor).roundToInt()
