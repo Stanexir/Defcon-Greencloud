@@ -28,7 +28,6 @@ import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.classes.PluginConfiguration
 import me.mochibit.defcon.enums.ConfigurationStorage
 import me.mochibit.defcon.explosions.ExplosionComponent
-import me.mochibit.defcon.explosions.MaterialTransformer
 import me.mochibit.defcon.explosions.processor.Crater
 import me.mochibit.defcon.explosions.processor.Shockwave
 import org.bukkit.Location
@@ -51,8 +50,9 @@ class NuclearExplosion(center: Location, private val nuclearComponent: Explosion
             val configFalloutSpreadAir = pluginConfiguration.getInt("nuke_fallout_spread_air")
             val configFalloutSpreadUnderground = pluginConfiguration.getInt("nuke_fallout_spread_underground")
 
-            val shockwaveRadius = if (configShockwave <= 0) 800 else configShockwave
+            if (configShockwave <= 0) 800 else configShockwave
             val shockwaveHeight = if (configShockwave <= 0) 300 else configShockwaveHeight
+            val shockwaveRadius = if (configShockwave <= 0) 800 else configShockwave
             val craterRadius = if (configCrater <= 0) 180 else configCrater
             if (configFallout <= 0) 1600 else configFallout
             if (configFlashReach <= 0) 1000 else configFlashReach
@@ -173,23 +173,22 @@ class NuclearExplosion(center: Location, private val nuclearComponent: Explosion
                     }
                 }
 
-                val effectiveRadius = Crater(
+//                Crater(
+//                    center,
+//                    craterRadius,
+//                    craterRadius / 6,
+//                    craterRadius,
+//                    shockwaveHeight * 2
+//                ).create()
+
+
+                val shockwaveJob = Shockwave(
                     center,
                     craterRadius,
-                    craterRadius / 6,
-                    craterRadius,
-                    MaterialTransformer(),
-                    shockwaveHeight * 2
-                ).create()
-
-
-//                val shockwaveJob = Shockwave(
-//                    center,
-//                    effectiveRadius,
-//                    shockwaveRadius,
-//                    shockwaveHeight,
-//                ).explode()
-//                shockwaveJob.join()
+                    shockwaveRadius,
+                    shockwaveHeight,
+                ).explode()
+                shockwaveJob.join()
             }
         }
 

@@ -26,11 +26,11 @@ import org.joml.Vector3i
 class RayCaster(world: World) {
     private val chunkCache by lazy { ChunkCache.getInstance(world) }
 
-    fun cachedRayTrace(x: Int, y: Int, z: Int, maxDistance: Double = 200.0): Int {
+    suspend fun cachedRayTrace(x: Int, y: Int, z: Int, maxDistance: Double = 200.0): Int {
         var currentDepth = 0
         var currentY = y
         while (currentDepth < maxDistance) {
-            val blockType = chunkCache.getBlockMaterial(x, currentY, z)
+            val blockType = chunkCache.getBlockMaterialAsync(x, currentY, z)
 
             if (blockType != Material.AIR) {
                 return currentY
@@ -43,7 +43,7 @@ class RayCaster(world: World) {
         return currentY
     }
 
-    fun cachedRayTrace(location: Vector3i, maxDistance: Double = 200.0): Int {
+    suspend fun cachedRayTrace(location: Vector3i, maxDistance: Double = 200.0): Int {
         return cachedRayTrace(location.x, location.y, location.z, maxDistance)
     }
 }

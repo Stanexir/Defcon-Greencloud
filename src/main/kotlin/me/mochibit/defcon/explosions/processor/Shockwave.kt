@@ -16,9 +16,12 @@ import me.mochibit.defcon.observer.Completable
 import me.mochibit.defcon.observer.CompletionDispatcher
 import me.mochibit.defcon.utils.BlockChanger
 import me.mochibit.defcon.utils.ChunkCache
+import org.bukkit.Chunk
 import org.bukkit.Location
 import org.bukkit.Material
 import org.joml.Vector3i
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlin.random.Random
 
 class Shockwave(
@@ -61,14 +64,17 @@ class Shockwave(
 
                     // Process blocks in chunks to reduce memory pressure
                     generateShockwaveCirclePrecise(currentRadius)
-                        .chunked(50000) // Process in batches of 100 locations
+                        .chunked(50000)
                         .flowOn(Dispatchers.Default)
                         .collect { locationBatch ->
+
                             locationBatch.forEach { loc ->
-                                if (treeBurner.isTreeBlock(loc)) {
-                                    processTrees(loc, radiusProgress)
+                                loc.y = chunkCache.highestBlockYAtAsync(loc.x, loc.z)
+                                val firstMaterial = chunkCache.getBlockMaterialAsync(loc.x, loc.y, loc.z)
+                                if (treeBurner.isTreeBlock(firstMaterial)) {
+                                    processTrees(loc, radiusProgress, firstMaterial)
                                 } else {
-                                    processBlock(loc, radiusProgress)
+                                    processBlock(loc, radiusProgress, firstMaterial)
                                 }
                             }
                         }
@@ -79,14 +85,15 @@ class Shockwave(
         }
     }
 
-    private suspend fun processTrees(location: Vector3i, radiusProgress: Float) {
+    private suspend fun processTrees(location: Vector3i, radiusProgress: Float, first: Material) {
         treeBurner.processTreeBurn(location, radiusProgress.toDouble())
-        processBlock(treeBurner.getTreeTerrain(location), radiusProgress)
+        processBlock(treeBurner.getTreeTerrain(location), radiusProgress, first)
     }
 
     private suspend fun processBlock(
         blockLocation: Vector3i,
-        radiusProgress: Float
+        radiusProgress: Float,
+        firstBlockType : Material,
     ) {
         val x = blockLocation.x
         val y = blockLocation.y
@@ -94,7 +101,7 @@ class Shockwave(
 
         // Pre-calculate values to avoid repeated calculations
         val randomOffset = (1..5).random()
-        val convertToAirMinY = (worldSeaLevel + randomOffset) + (shockwaveHeight/2) * radiusProgress
+        val convertToAirMinY = (worldSeaLevel + randomOffset) + (shockwaveHeight / 2) * radiusProgress
         val seaLevelMinus3 = worldSeaLevel - 3
         val seaLevelPlus5 = worldSeaLevel + 5
 
@@ -112,7 +119,15 @@ class Shockwave(
         var consecutiveBlacklisted = 0
 
         for (currentY in y downTo seaLevelMinus3) {
-            val currentBlock = chunkCache.getBlockMaterial(x, currentY, z)
+            if (treeBurner.isPosProcessed(x, currentY, z)) {
+                continue
+            }
+
+            val currentBlock = if (currentY == y) {
+                firstBlockType // Use the first block type for the initial position
+            } else {
+                chunkCache.getBlockMaterialAsync(x, currentY, z)
+            }
 
             // Early exit conditions using when for better performance
             when (currentBlock) {
@@ -150,7 +165,7 @@ class Shockwave(
             val shouldConvertToAir = currentY > convertToAirMinY
 
             // Get skylight level for this position (used for both walls and transformations)
-            val skylightLevel = chunkCache.getSkyLightLevel(x, currentY, z)
+            val skylightLevel = chunkCache.getSkyLightLevelAsync(x, currentY, z)
 
             // Handle wall blocks with skylight detection
             if (isHeuristicallyWallBlock(x, currentY, z)) {
@@ -199,7 +214,7 @@ class Shockwave(
                         blockChanger.addBlockChange(x, currentY, z, Material.AIR, updateBlock = true)
                         val adjacentNoise = generateTerrainNoise(x, currentY - 1, z, terrainNoiseStrength * 0.5f)
                         if (adjacentNoise > 0.15f) { // Lowered threshold from 0.2f
-                            val belowMaterial = chunkCache.getBlockMaterial(x, currentY - 1, z)
+                            val belowMaterial = chunkCache.getBlockMaterialAsync(x, currentY - 1, z)
                             if (belowMaterial in MaterialCategories.TERRAIN_BLOCKS) {
                                 blockChanger.addBlockChange(x, currentY - 1, z, Material.AIR, updateBlock = true)
                             }
@@ -218,9 +233,9 @@ class Shockwave(
                 blockChanger.addBlockChange(x, currentY, z, transformedBlock)
 
                 // Process block above if it exists - with noise and light consideration
-                val aboveMaterial = chunkCache.getBlockMaterial(x, currentY + 1, z)
+                val aboveMaterial = chunkCache.getBlockMaterialAsync(x, currentY + 1, z)
                 if (aboveMaterial != Material.AIR) {
-                    val aboveSkylightLevel = chunkCache.getSkyLightLevel(x, currentY + 1, z)
+                    val aboveSkylightLevel = chunkCache.getSkyLightLevelAsync(x, currentY + 1, z)
                     val aboveNoise = generateTerrainNoise(x, currentY + 1, z, terrainNoiseStrength * 0.7f)
                     val aboveLightInfluence = (aboveSkylightLevel / 15.0f) * 0.15f
                     val aboveTransformationStrength = radiusProgress + (aboveNoise * 0.2f) + aboveLightInfluence
@@ -268,19 +283,19 @@ class Shockwave(
         return (combinedNoise * strength).toFloat().coerceIn(-1.0f, 1.0f)
     }
 
-    private fun isHeuristicallyWallBlock(x: Int, y: Int, z: Int): Boolean {
+    private suspend fun isHeuristicallyWallBlock(x: Int, y: Int, z: Int): Boolean {
         var airBlockCount = 0
 
         // Unrolled loop for better performance - check 4 cardinal directions
-        if (chunkCache.getBlockMaterial(x + 1, y, z) == Material.AIR) airBlockCount++
+        if (chunkCache.getBlockMaterialAsync(x + 1, y, z) == Material.AIR) airBlockCount++
 
-        if (chunkCache.getBlockMaterial(x - 1, y, z) == Material.AIR) airBlockCount++
+        if (chunkCache.getBlockMaterialAsync(x - 1, y, z) == Material.AIR) airBlockCount++
         if (airBlockCount >= 2) return true
 
-        if (chunkCache.getBlockMaterial(x, y, z + 1) == Material.AIR) airBlockCount++
+        if (chunkCache.getBlockMaterialAsync(x, y, z + 1) == Material.AIR) airBlockCount++
         if (airBlockCount >= 2) return true
 
-        if (chunkCache.getBlockMaterial(x, y, z - 1) == Material.AIR) airBlockCount++
+        if (chunkCache.getBlockMaterialAsync(x, y, z - 1) == Material.AIR) airBlockCount++
 
         return airBlockCount >= 2
     }
@@ -291,8 +306,7 @@ class Shockwave(
 
         // Special case for radius 0
         if (radius == 0) {
-            val highestY = chunkCache.highestBlockYAt(centerX, centerZ)
-            emit(Vector3i(centerX, highestY, centerZ))
+            emit(Vector3i(centerX, world.maxHeight, centerZ))
             return@flow
         }
 
@@ -318,8 +332,7 @@ class Shockwave(
 
                     if (emittedPositions.add(worldX to worldZ)) {
                         try {
-                            val y = chunkCache.highestBlockYAt(worldX, worldZ)
-                            emit(Vector3i(worldX, y, worldZ))
+                            emit(Vector3i(worldX, world.maxHeight, worldZ))
                         } catch (e: Exception) {
                             Defcon.instance.logger.warning("Error processing point ($worldX, $worldZ): ${e.message}")
                         }
@@ -330,7 +343,7 @@ class Shockwave(
     }
 
     private fun cleanup() {
-        chunkCache.cleanupCache()
+        chunkCache.cleanup()
         complete()
     }
 }

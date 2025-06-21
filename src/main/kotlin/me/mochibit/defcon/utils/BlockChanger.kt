@@ -181,11 +181,10 @@ class BlockChanger private constructor(
     /**
      * Apply a single block change efficiently
      */
-    private fun applyBlockChange(change: BlockChange) {
+    private suspend fun applyBlockChange(change: BlockChange) {
         try {
-            // Skip if block is already the target material (fast path using cache)
-            if (change.newMaterial != null &&
-                chunkCache.getBlockMaterial(change.x, change.y, change.z) == change.newMaterial
+            val oldBlockData = chunkCache.getBlockDataAsync(change.x, change.y, change.z)
+            if (change.newMaterial != null && oldBlockData.material == change.newMaterial
             ) {
                 return
             }
@@ -193,16 +192,13 @@ class BlockChanger private constructor(
             // Get block and apply changes
             val block = world.getBlockAt(change.x, change.y, change.z)
 
-            // Capture block data before changing material if needed
-            val oldBlockData = if (change.copyBlockData) block.blockData else null
-
             // Apply material change
             change.newMaterial?.let {
-                block.setType(it,  change.updateBlock)
+                block.setType(it, change.updateBlock)
             }
 
             // Apply block data if needed
-            if (change.copyBlockData && oldBlockData != null && change.newMaterial != null) {
+            if (change.copyBlockData && change.newMaterial != null) {
                 try {
                     val newBlockData = block.blockData
                     copyRelevantBlockData(oldBlockData, newBlockData)

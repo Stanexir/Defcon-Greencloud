@@ -32,7 +32,7 @@ import kotlin.math.sqrt
 class FloorSnapper(
     private val center: Location,
     private val easeFromPoint: Vector3f? = null,
-    private val peakHeight : Float = easeFromPoint?.y() ?: 0.0f,
+    private val peakHeight: Float = easeFromPoint?.y() ?: 0.0f,
     private val maxDistance: Float = 80.0f
 ) : AbstractShapeMutator() {
     private val cachedMinY: ConcurrentMap<Pair<Int, Int>, Float> = ConcurrentHashMap()
@@ -44,7 +44,8 @@ class FloorSnapper(
 
         // Cache the minimum Y values based on (x, z)
         val minY = cachedMinY.computeIfAbsent(x to z) {
-            val baseY = chunkCache.highestBlockYAt(x, z).toFloat()
+//            val baseY = chunkCache.highestBlockYAt(x, z).toFloat()
+            val baseY = center.world.getHighestBlockYAt(x, z).toFloat()
             if (easeFromPoint != null) {
                 // Calculate distance from easing point in the X-Z plane
                 val dx = x.toFloat() - easeFromPoint.x()
