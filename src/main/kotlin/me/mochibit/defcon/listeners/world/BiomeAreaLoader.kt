@@ -13,7 +13,7 @@ package me.mochibit.defcon.listeners.world
 import com.github.shynixn.mccoroutine.bukkit.launch
 import kotlinx.coroutines.Dispatchers
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.Defcon.Logger
+import me.mochibit.defcon.utils.Logger
 import me.mochibit.defcon.biomes.CustomBiomeHandler
 import me.mochibit.defcon.save.savedata.BiomeAreaSave
 import org.bukkit.event.EventHandler

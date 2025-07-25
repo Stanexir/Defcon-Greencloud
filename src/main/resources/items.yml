@@ -1,24 +1,4 @@
-# This file configuration stores all the items and their behaviours.
-# Every item has a specific utility and usage, and it can be defined with some booleans (see below).
 
-# item-id: The unique definitions id.
-# item-name: The name of the item.
-# item-description: The description of the item.
-
-# item-minecraft-id: The minecraft id of the item.
-# legacy-minecraft-id: The legacy id of the item (for older versions of Minecraft).
-# item-model: The model of the item to be used in the resource pack
-# item-model-id: The model id of the item to be used in the resource pack (legacy)
-# definitions-block-id: Let the system know that this item is a definitions block.
-
-# is-usable: If true, the item can be used to consume other items.
-# is-equipable: If true, the item can be equipped.
-# equip-slot-type: The slot type of the item. DEFAULT: ARMOR
-# equip-slot-number: The slot number of the item. DEFAULT: 0
-
-# is-droppable: If true, the item can be dropped.
-# max-stack-size: Number of how much stacks this item can compose.
-# is-transportable: If true, the item can be carried in the inventory.
 
 #------------------------------------------------------------------------------
 # SPECIFIC ITEMS FUNCTION
@@ -43,16 +23,13 @@ enabled-items:
   - bomb-interface
 
 
-#------------------------------------------------------------------------------
-# ITEMS
-#------------------------------------------------------------------------------
+# Definition of the items
 gas-mask:
-  item-name: "Gas mask"
-  item-description: "Protects you from toxic gases"
-  item-minecraft-id: LEATHER_HELMET
+  name: "Gas mask"
+  minecraft-id: LEATHER_HELMET
   legacy-minecraft-id: LEATHER_BOOTS # A different item because if you equip the helmet it isn't visible as a model (<= 1.21.1)
-  item-model: "leather_gas_mask"
-  item-model-id: 1
+  model: "leather_gas_mask"
+  model-id: 1
   is-usable: true
   is-equipable: true
   equip-slot: "head"
@@ -62,56 +39,33 @@ gas-mask:
   behaviour: "gas_mask"
 
 geiger:
-  item-name: "<gradient:#34e89e:#0f3443>Geiger Counter</gradient>"
-  item-description: "This item measures the radiation levels"
-  item-minecraft-id: COMPASS
+  name: "Geiger Counter"
+  description: "Produces a <red>clicking sound</red> while holding \n
+     <yellow>RIGHT CLICK</yellow> to read the radiation values"
+  minecraft-id: COMPASS
   is-usable: true
-  is-equipable: false
-  is-droppable: true
   max-stack-size: 1
-  is-transportable: true
   behaviour: "geiger_counter"
 
 wrench:
-  item-name: "Wrench"
-  item-description: "Used to assemble structures"
-  item-minecraft-id: IRON_PICKAXE
-  item-data-model-id: 2
+  name: "<gradient:#fff3a3:#adadad>Wrench</gradient>"
+  description: "It hurts when you hit with it"
+  minecraft-id: STONE_SWORD
   is-usable: true
-  is-equipable: false
-  is-droppable: true
   max-stack-size: 1
-  is-transportable: true
   behaviour: "wrench"
 
-#------------------------------------------------------------------------------
-# BLOCK ITEMS
-#------------------------------------------------------------------------------
-bomb-casing:
-  item-name: "Bomb casing"
-  item-description: "Used to create a bomb casing"
-  item-minecraft-id: IRON_BLOCK
-  item-data-model-id: 1000
-  is-usable: true
-  is-equipable: true
-  is-droppable: true
-  is-transportable: true
-  max-stack-size: 64
-  custom-block-id: bomb-casing
-  behaviour: "block"
 
-bomb-core:
-  item-name: "Bomb core"
-  item-description: "The core of the bomb"
-  item-minecraft-id: BEACON
-  item-data-model-id: 1001
+# Definition of the blocks
+fission-bomb-core:
+  name: ""
+  description: "The core of the bomb"
+  minecraft-id: BEACON
+  model: "bomb_core"
+  model-id: 1001
   is-usable: true
-  is-equipable: true
-  is-droppable: true
-  is-transportable: true
-  max-stack-size: 64
-  custom-block-id: bomb-core
   behaviour: "block"
+  block-behaviour: ""
 
 bomb-interface:
   item-name: "Bomb interface"

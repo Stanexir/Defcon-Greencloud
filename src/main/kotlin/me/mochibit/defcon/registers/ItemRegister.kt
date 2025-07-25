@@ -19,18 +19,12 @@
 
 package me.mochibit.defcon.registers
 
-import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.Defcon.Logger.info
-import me.mochibit.defcon.Defcon.Logger.warn
 import me.mochibit.defcon.classes.CustomItemDefinition
-import me.mochibit.defcon.classes.PluginConfiguration
-import me.mochibit.defcon.enums.ConfigurationStorage
-import me.mochibit.defcon.enums.ItemBehaviour
+import me.mochibit.defcon.config.ItemsConfiguration
 import me.mochibit.defcon.interfaces.PluginItem
+import me.mochibit.defcon.utils.Logger.info
+import me.mochibit.defcon.utils.Logger.warn
 import me.mochibit.defcon.utils.versionGreaterOrEqualThan
-import org.bukkit.NamespacedKey
-import org.bukkit.inventory.EquipmentSlot
-import org.bukkit.plugin.java.JavaPlugin
 
 /**
  * This class handles the registration of the definitions items
@@ -45,88 +39,45 @@ class ItemRegister {
      *
      * @return boolean - True if all items are registered, false if some error occurred.
      */
-    fun registerItems(): Boolean {
+    suspend fun registerItems(): Boolean {
         registeredItems = HashMap()
         /* REGISTER THE ITEMS COMING FROM THE CONFIG */
-        val itemConfig = PluginConfiguration.get(ConfigurationStorage.Items).config
-        val configurationItems = itemConfig.getList("enabled-items")
-        if (configurationItems == null || configurationItems.isEmpty()) {
-            warn("No items enabled found in the items.yml file")
+        val configurationItems = ItemsConfiguration.getSchema()
+        if (configurationItems.isEmpty()) {
+            warn("No items found in the configuration, skipping item registration")
             return false
         }
 
         configurationItems.forEach { item ->
-            val itemId = item.toString()
-            registeredItems[itemId]?.let {
-                warn("Item $itemId is already registered (probably duplicated?), skipping")
+            registeredItems[item.id]?.let {
+                warn("Item ${item.id} is already registered (probably duplicated?), skipping")
                 return@forEach
             }
 
-            val itemName = itemConfig.getString("$item.item-name") ?: run {
-                warn("Could not register item $itemId, because the item-name is not set")
-                return@forEach
-            }
 
-            val itemDescription = itemConfig.getString("$item.item-description")
             val itemMinecraftId = if (versionGreaterOrEqualThan("1.21.3")) {
-                itemConfig.getString("$item.item-minecraft-id")
+                item.minecraftId
             } else {
-                itemConfig.getString("$item.legacy-minecraft-id") ?: let {
-                    warn("Legacy minecraft id for item $itemId is not set, trying to get the new one, it will default to the base one, but it can give problems")
-                    itemConfig.getString("$item.item-minecraft-id")
-                }
-            } ?: run {
-                warn("Could not register item $itemId, because the legacy-minecraft-id is not set")
-                return@forEach
+                item.legacyMinecraftId
             }
-
-            val itemCustomBlockId = itemConfig.getString("$item.definitions-block-id", null)
-
-            val itemStackSize = itemConfig.getInt("$item.max-stack-size")
-            val itemUsable = itemConfig.getBoolean("$item.is-usable")
-            val itemTransportable = itemConfig.getBoolean("$item.is-transportable")
-            val itemDroppable = itemConfig.getBoolean("$item.is-droppable")
-
-            val itemEquipable = itemConfig.getBoolean("$item.is-equipable", false)
-
-            val itemModel = itemConfig.getString("$item.item-model")?.let {
-                NamespacedKey.fromString(it)
-            }
-
-            val itemModelId = itemConfig.getInt("$item.item-model-id").let {
-                if (it <= 0)
-                    null
-                else
-                    it
-            }
-
-            val equipSlot = EquipmentSlot.valueOf(itemConfig.getString("$item.equip-slot")?.uppercase() ?: "HAND")
-
-            var behaviourName = itemConfig.getString("$item.behaviour")
-            if (behaviourName == null) {
-                behaviourName = "generic"
-            }
-            val behaviourValue = ItemBehaviour.fromString(behaviourName)
-                ?: throw IllegalArgumentException("Behaviour $behaviourName is not valid")
 
             val customItem: PluginItem = CustomItemDefinition(
-                id = itemId,
-                name = itemName,
-                description = itemDescription,
+                id = item.id,
+                name = item.name,
+                description = item.description,
                 minecraftId = itemMinecraftId,
-                itemModel = itemModel,
-                itemModelId = itemModelId,
-                customBlockId = itemCustomBlockId,
-                equipSlot = equipSlot,
 
-                isEquipable = itemEquipable,
-                isUsable = itemUsable,
-                isTransportable = itemTransportable,
-                stackSize = itemStackSize,
-                isDroppable = itemDroppable,
-                behaviour = behaviourValue
+                itemModel = item.itemModel,
+                itemModelId = item.itemModelId,
+                customBlockId = item.itemBlockId,
+                equipSlot = item.equipmentSlot,
+
+                isEquipable = item.isEquippable,
+                isUsable = item.isUsable,
+                stackSize = item.maxStackSize,
+                behaviour = item.itemBehaviour
             )
-            info("Registered item $itemId")
+            info("Registered item ${item.id}")
             registeredItems[customItem.id] = customItem
         }
 

@@ -21,7 +21,7 @@ package me.mochibit.defcon.registers
 
 import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.classes.CustomBlockDefinition
-import me.mochibit.defcon.classes.PluginConfiguration
+import me.mochibit.defcon.config.PluginConfiguration
 import me.mochibit.defcon.enums.BlockBehaviour
 import me.mochibit.defcon.enums.BlockDataKey
 import me.mochibit.defcon.enums.ConfigurationStorage

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.chunked
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.Defcon.Logger
+import me.mochibit.defcon.utils.Logger
 import me.mochibit.defcon.save.savedata.BiomeAreaSave
 import org.bukkit.Location
 import org.bukkit.NamespacedKey

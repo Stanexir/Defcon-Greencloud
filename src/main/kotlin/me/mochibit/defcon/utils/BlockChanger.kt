@@ -1,6 +1,8 @@
 package me.mochibit.defcon.utils
 
 import com.github.shynixn.mccoroutine.bukkit.minecraftDispatcher
+import io.github.retrooper.packetevents.util.SpigotConversionUtil
+import io.github.retrooper.packetevents.util.SpigotReflectionUtil
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import me.mochibit.defcon.Defcon
@@ -160,7 +162,7 @@ class BlockChanger private constructor(
 
         // Launch multiple workers that share the same channel
         repeat(workerCount) {
-            val job = scope.launch(plugin.minecraftDispatcher) {
+            val job = scope.launch(Dispatchers.Default) {
                 var processedBlocks = 0
                 for (change in blockChannel) {
                     // Process the block change
@@ -183,34 +185,14 @@ class BlockChanger private constructor(
      */
     private suspend fun applyBlockChange(change: BlockChange) {
         try {
-            val oldBlockData = chunkCache.getBlockDataAsync(change.x, change.y, change.z)
-            if (change.newMaterial != null && oldBlockData.material == change.newMaterial
-            ) {
-                return
-            }
-
-            // Get block and apply changes
-            val block = world.getBlockAt(change.x, change.y, change.z)
-
+            val oldBlockData = NMSReflectionCache.getBlockMaterial(world, change.x, change.y, change.z)
             // Apply material change
             change.newMaterial?.let {
-                block.setType(it, change.updateBlock)
-            }
-
-            // Apply block data if needed
-            if (change.copyBlockData && change.newMaterial != null) {
-                try {
-                    val newBlockData = block.blockData
-                    copyRelevantBlockData(oldBlockData, newBlockData)
-                    block.setBlockData(newBlockData, false)
-                } catch (e: Exception) {
-                    // Silent catch for better performance
+                val newBlockData = it.createBlockData()
+                copyRelevantBlockData(oldBlockData.createBlockData(), newBlockData)
+                scope.launch(plugin.minecraftDispatcher) {
+                    NMSReflectionCache.setBlockFast(world, change.x, change.y, change.z, newBlockData)
                 }
-            }
-
-            // Apply biome change if requested
-            change.newBiome?.let {
-                world.setBiome(change.x, change.y, change.z, it)
             }
         } catch (e: Exception) {
             // Silent catch for resilience against world/chunk unload scenarios

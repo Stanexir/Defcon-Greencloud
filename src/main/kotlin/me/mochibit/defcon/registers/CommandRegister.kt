@@ -20,12 +20,10 @@
 package me.mochibit.defcon.registers
 
 import io.papermc.paper.command.brigadier.Commands
-import io.papermc.paper.plugin.lifecycle.event.LifecycleEvent
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.Defcon.Logger.info
+import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.commands.GenericCommand
-import org.bukkit.plugin.java.JavaPlugin
 import org.reflections.Reflections
 import java.lang.reflect.InvocationTargetException
 

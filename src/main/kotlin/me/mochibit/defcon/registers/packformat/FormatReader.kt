@@ -18,12 +18,11 @@
  */
 package me.mochibit.defcon.registers.packformat
 
-import me.mochibit.defcon.Defcon.Logger.info
-import me.mochibit.defcon.Defcon.Logger.warn
-import me.mochibit.defcon.classes.PluginConfiguration
+import me.mochibit.defcon.utils.Logger.info
+import me.mochibit.defcon.utils.Logger.warn
+import me.mochibit.defcon.config.PluginConfiguration
 import me.mochibit.defcon.enums.ConfigurationStorage
 import me.mochibit.defcon.utils.compareVersions
-import me.mochibit.defcon.utils.versionGreaterOrEqualThan
 import org.bukkit.Bukkit
 
 /**

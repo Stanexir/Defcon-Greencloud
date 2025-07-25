@@ -18,18 +18,15 @@
  */
 package me.mochibit.defcon.effects.explosion.generic
 
-import me.mochibit.defcon.Defcon.Logger.err
+import me.mochibit.defcon.utils.Logger.err
 import me.mochibit.defcon.effects.AnimatedEffect
 import me.mochibit.defcon.effects.ParticleComponent
 import me.mochibit.defcon.particles.emitter.ParticleEmitter
 import me.mochibit.defcon.particles.emitter.RingSurfaceShape
-import me.mochibit.defcon.particles.mutators.SimpleFloorSnap
 import me.mochibit.defcon.particles.templates.definition.ExplosionDustParticle
 import org.bukkit.Color
 import org.bukkit.Location
 import org.joml.Vector3f
-import kotlin.math.PI
-import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.time.Duration

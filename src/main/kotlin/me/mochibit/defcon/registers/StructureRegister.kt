@@ -20,7 +20,7 @@
 package me.mochibit.defcon.registers
 
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.classes.PluginConfiguration
+import me.mochibit.defcon.config.PluginConfiguration
 import me.mochibit.defcon.enums.ConfigurationStorage
 import me.mochibit.defcon.enums.StructureBehaviour
 import me.mochibit.defcon.exceptions.BlockNotRegisteredException

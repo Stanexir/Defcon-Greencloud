@@ -1,7 +1,7 @@
 package me.mochibit.defcon.explosions.processor
 
 import kotlinx.coroutines.*
-import me.mochibit.defcon.explosions.MaterialCategories
+import me.mochibit.defcon.transformer.material.MaterialCategories
 import me.mochibit.defcon.utils.BlockChanger
 import me.mochibit.defcon.utils.ChunkCache
 import me.mochibit.defcon.utils.Geometry.wangNoise

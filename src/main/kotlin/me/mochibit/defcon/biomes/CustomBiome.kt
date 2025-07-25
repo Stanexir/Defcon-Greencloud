@@ -23,7 +23,7 @@ package me.mochibit.defcon.biomes
 
 import io.papermc.paper.registry.RegistryAccess
 import io.papermc.paper.registry.RegistryKey
-import me.mochibit.defcon.Defcon.Logger.warn
+import me.mochibit.defcon.utils.Logger.warn
 import me.mochibit.defcon.biomes.data.*
 import me.mochibit.defcon.biomes.enums.PrecipitationType
 import me.mochibit.defcon.biomes.enums.TemperatureModifier

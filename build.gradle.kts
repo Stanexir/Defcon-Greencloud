@@ -1,4 +1,5 @@
-import net.minecrell.pluginyml.paper.PaperPluginDescription
+
+
 import java.time.Instant
 
 // Dependency versions - centralized for easier management

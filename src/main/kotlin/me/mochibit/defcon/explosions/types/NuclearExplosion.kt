@@ -25,8 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.classes.PluginConfiguration
-import me.mochibit.defcon.enums.ConfigurationStorage
+import me.mochibit.defcon.config.PluginConfiguration
 import me.mochibit.defcon.explosions.ExplosionComponent
 import me.mochibit.defcon.explosions.processor.Crater
 import me.mochibit.defcon.explosions.processor.Shockwave

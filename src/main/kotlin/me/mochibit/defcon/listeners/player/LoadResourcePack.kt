@@ -19,7 +19,7 @@
 
 package me.mochibit.defcon.listeners.player
 
-import me.mochibit.defcon.Defcon
+import me.mochibit.defcon.utils.Logger
 import me.mochibit.defcon.registers.ResourcePackRegister
 import net.kyori.adventure.resource.ResourcePackRequest
 import net.kyori.adventure.text.minimessage.MiniMessage
@@ -31,7 +31,7 @@ class LoadResourcePack : Listener {
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
         if (!ResourcePackRegister.isPackRegistered) {
-            Defcon.Logger.warn("Resource pack is not registered, check for errors in the console")
+            Logger.warn("Resource pack is not registered, check for errors in the console")
             return
         }
         val player = event.player

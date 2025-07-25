@@ -1,6 +1,6 @@
 package me.mochibit.defcon.listeners.items
 
-import me.mochibit.defcon.Defcon.Logger.warn
+import me.mochibit.defcon.utils.Logger.warn
 import me.mochibit.defcon.enums.ItemBehaviour
 import me.mochibit.defcon.events.equip.CustomItemEquipEvent
 import me.mochibit.defcon.extensions.equipSlotName

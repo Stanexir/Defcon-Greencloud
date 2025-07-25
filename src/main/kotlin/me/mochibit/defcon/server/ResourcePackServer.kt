@@ -19,13 +19,12 @@
 package me.mochibit.defcon.server
 
 import com.github.shynixn.mccoroutine.bukkit.launch
-import com.github.shynixn.mccoroutine.bukkit.minecraftDispatcher
 import kotlinx.coroutines.*
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.Defcon.Logger
-import me.mochibit.defcon.Defcon.Logger.err
-import me.mochibit.defcon.Defcon.Logger.info
-import me.mochibit.defcon.classes.PluginConfiguration
+import me.mochibit.defcon.utils.Logger
+import me.mochibit.defcon.utils.Logger.err
+import me.mochibit.defcon.utils.Logger.info
+import me.mochibit.defcon.config.PluginConfiguration
 import me.mochibit.defcon.enums.ConfigurationStorage
 import java.io.BufferedReader
 import java.io.FileInputStream

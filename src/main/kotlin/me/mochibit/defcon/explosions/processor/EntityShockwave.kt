@@ -22,9 +22,7 @@ package me.mochibit.defcon.explosions.processor
 import com.github.shynixn.mccoroutine.bukkit.minecraftDispatcher
 import kotlinx.coroutines.*
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.Defcon.Logger.err
-import me.mochibit.defcon.Defcon.Logger.info
-import me.mochibit.defcon.effects.explosion.generic.ShockwaveEffect
+import me.mochibit.defcon.utils.Logger.err
 import me.mochibit.defcon.explosions.effects.CameraShake
 import me.mochibit.defcon.explosions.effects.CameraShakeOptions
 import org.bukkit.Location

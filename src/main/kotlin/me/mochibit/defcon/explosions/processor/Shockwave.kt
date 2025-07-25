@@ -5,23 +5,20 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.chunked
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.explosions.MaterialCategories
-import me.mochibit.defcon.explosions.MaterialTransformer
+import me.mochibit.defcon.transformer.material.MaterialCategories
+import me.mochibit.defcon.transformer.material.MaterialTransformer
 import me.mochibit.defcon.extensions.toVector3i
 import me.mochibit.defcon.observer.Completable
 import me.mochibit.defcon.observer.CompletionDispatcher
 import me.mochibit.defcon.utils.BlockChanger
 import me.mochibit.defcon.utils.ChunkCache
-import org.bukkit.Chunk
+import me.mochibit.defcon.utils.NMSReflectionCache
 import org.bukkit.Location
 import org.bukkit.Material
 import org.joml.Vector3i
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 import kotlin.random.Random
 
 class Shockwave(
@@ -64,18 +61,14 @@ class Shockwave(
 
                     // Process blocks in chunks to reduce memory pressure
                     generateShockwaveCirclePrecise(currentRadius)
-                        .chunked(50000)
                         .flowOn(Dispatchers.Default)
-                        .collect { locationBatch ->
-
-                            locationBatch.forEach { loc ->
-                                loc.y = chunkCache.highestBlockYAtAsync(loc.x, loc.z)
-                                val firstMaterial = chunkCache.getBlockMaterialAsync(loc.x, loc.y, loc.z)
-                                if (treeBurner.isTreeBlock(firstMaterial)) {
-                                    processTrees(loc, radiusProgress, firstMaterial)
-                                } else {
-                                    processBlock(loc, radiusProgress, firstMaterial)
-                                }
+                        .collect { loc ->
+                            loc.y = NMSReflectionCache.getHighestBlockY(world, loc.x, loc.z, true)
+                            val firstMaterial = NMSReflectionCache.getBlockMaterial(world, loc.x, loc.y, loc.z)
+                            if (treeBurner.isTreeBlock(firstMaterial)) {
+                                processTrees(loc, radiusProgress, firstMaterial)
+                            } else {
+                                processBlock(loc, radiusProgress, firstMaterial)
                             }
                         }
                 }

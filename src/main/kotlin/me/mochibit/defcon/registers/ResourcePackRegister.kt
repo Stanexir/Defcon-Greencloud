@@ -11,9 +11,9 @@
 package me.mochibit.defcon.registers
 
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.Defcon.Logger.err
-import me.mochibit.defcon.Defcon.Logger.info
-import me.mochibit.defcon.Defcon.Logger.warn
+import me.mochibit.defcon.utils.Logger.err
+import me.mochibit.defcon.utils.Logger.info
+import me.mochibit.defcon.utils.Logger.warn
 import me.mochibit.defcon.customassets.fonts.AbstractCustomFont
 import me.mochibit.defcon.customassets.items.AbstractCustomItemModel
 import me.mochibit.defcon.customassets.items.ModelData
@@ -22,7 +22,6 @@ import me.mochibit.defcon.registers.packformat.FormatReader
 import me.mochibit.defcon.server.ResourcePackServer
 import me.mochibit.defcon.utils.versionGreaterOrEqualThan
 import net.kyori.adventure.resource.ResourcePackInfo
-import net.kyori.adventure.text.minimessage.MiniMessage
 import org.json.simple.JSONArray
 import org.json.simple.JSONObject
 import org.json.simple.parser.JSONParser

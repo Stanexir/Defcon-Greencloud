@@ -10,7 +10,7 @@
 
 package me.mochibit.defcon.registers
 
-import me.mochibit.defcon.Defcon.Logger.info
+import me.mochibit.defcon.utils.Logger.info
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -20,7 +20,6 @@ import java.nio.file.Paths
 import java.util.jar.JarFile
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
-import kotlin.io.path.nameWithoutExtension
 
 /**
  * Base class for creating resource and data packs.

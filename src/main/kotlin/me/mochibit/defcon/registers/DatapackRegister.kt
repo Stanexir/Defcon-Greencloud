@@ -10,7 +10,7 @@
 
 package me.mochibit.defcon.registers
 
-import me.mochibit.defcon.Defcon.Logger.info
+import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.biomes.BiomeRegister
 import me.mochibit.defcon.biomes.CustomBiome
 import me.mochibit.defcon.biomes.data.BiomeEffects

@@ -49,9 +49,7 @@ class CustomItemDefinition(
     override val customBlockId: String?,
     override val isUsable: Boolean,
     override val isEquipable: Boolean,
-    override val isDroppable: Boolean,
     override val stackSize: Int,
-    override val isTransportable: Boolean,
     override val behaviour: ItemBehaviour,
 ) : PluginItem {
 
@@ -82,8 +80,6 @@ class CustomItemDefinition(
             MetaManager.setItemData(itemMeta, ItemDataKey.StackSize, stackSize)
             MetaManager.setItemData(itemMeta, ItemDataKey.Usable, isUsable)
             MetaManager.setItemData(itemMeta, ItemDataKey.Equipable, isEquipable)
-            MetaManager.setItemData(itemMeta, ItemDataKey.Droppable, isDroppable)
-            MetaManager.setItemData(itemMeta, ItemDataKey.Transportable, isTransportable)
             MetaManager.setItemData(itemMeta, ItemDataKey.Behaviour, behaviour.name)
             MetaManager.setItemData(itemMeta, ItemDataKey.EquipSlotName, equipSlot.name)
 
