@@ -27,15 +27,4 @@ enum class ItemBehaviour() {
     RADIATION_INHIBITOR,
     GEIGER_COUNTER,
     WRENCH;
-
-    companion object {
-        fun fromString(text: String?): ItemBehaviour? {
-            for (b in values()) {
-                if (b.name.equals(text, ignoreCase = true)) {
-                    return b
-                }
-            }
-            return null
-        }
-    }
 }

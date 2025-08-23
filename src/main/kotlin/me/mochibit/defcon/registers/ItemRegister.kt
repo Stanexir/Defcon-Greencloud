@@ -19,9 +19,8 @@
 
 package me.mochibit.defcon.registers
 
-import me.mochibit.defcon.classes.CustomItemDefinition
+import me.mochibit.defcon.items.PluginItem
 import me.mochibit.defcon.config.ItemsConfiguration
-import me.mochibit.defcon.interfaces.PluginItem
 import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.utils.Logger.warn
 import me.mochibit.defcon.utils.versionGreaterOrEqualThan
@@ -61,9 +60,9 @@ class ItemRegister {
                 item.legacyMinecraftId
             }
 
-            val customItem: PluginItem = CustomItemDefinition(
+            val customItem = PluginItem(
                 id = item.id,
-                name = item.name,
+                displayName = item.displayName,
                 description = item.description,
                 minecraftId = itemMinecraftId,
 

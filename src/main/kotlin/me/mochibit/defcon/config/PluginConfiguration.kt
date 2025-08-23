@@ -137,13 +137,11 @@ abstract class PluginConfiguration<out T>(private val configName: String) {
         private val configurations = mutableSetOf<PluginConfiguration<*>>()
 
         suspend fun loadAll() = coroutineScope {
-            // Registra le configurazioni
             configurations.add(MainConfiguration)
             configurations.add(ItemsConfiguration)
             configurations.add(BlocksConfiguration)
             configurations.add(StructuresConfiguration)
 
-            // Inizializza tutte le configurazioni in parallelo
             for (config in configurations) {
                 launch {
                     try {

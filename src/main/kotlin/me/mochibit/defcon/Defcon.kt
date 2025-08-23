@@ -90,8 +90,8 @@ class Defcon : SuspendingJavaPlugin() {
     companion object {
         private lateinit var _instance: Defcon
         val instance get() = _instance
-        var namespace = "defcon"
         val minecraftVersion = Bukkit.getServer().bukkitVersion.split("-")[0]
+        fun namespacedKey(key: String) = org.bukkit.NamespacedKey(instance, key)
     }
 
 }

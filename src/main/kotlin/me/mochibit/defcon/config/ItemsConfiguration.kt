@@ -19,42 +19,39 @@
 
 package me.mochibit.defcon.config
 
-import kotlinx.coroutines.sync.withLock
 import me.mochibit.defcon.enums.ItemBehaviour
 import org.bukkit.NamespacedKey
 import org.bukkit.inventory.EquipmentSlot
+import kotlin.text.get
 
 object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefinition>>("items") {
 
     data class ItemDefinition(
         val id: String,
-        val name: String,
+        val displayName: String,
         val description: String,
 
         val minecraftId: String,
         val legacyMinecraftId: String,
 
         val itemModel: NamespacedKey?,
-        val itemModelId: Int,
+        val legacyItemModel: Int,
 
-        val itemBlockId: String? = null,
-
-        val isUsable: Boolean,
-        val isEquippable: Boolean,
-        val equipmentSlot: EquipmentSlot,
+        val equipmentSlot: EquipmentSlot?,
         val maxStackSize: Int,
         val itemBehaviour: ItemBehaviour,
+        val properties: Map<String, Any> = emptyMap(),
     )
 
     override suspend fun cleanupSchema() {}
 
     override suspend fun loadSchema(): List<ItemDefinition> {
         val tempItems = mutableListOf<ItemDefinition>()
-        val itemsList = config.getList("enabled-items") ?: return listOf()
+        val itemsList = config.getList("items") ?: return listOf()
         itemsList.forEach { item ->
             val id = item.toString()
 
-            val name = config.getString("$id.name") ?: return@forEach
+            val displayName = config.getString("$id.display-name") ?: return@forEach
 
             val description = config.getString("$id.description") ?: return@forEach
 
@@ -62,40 +59,45 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
 
             val legacyMinecraftId = config.getString("$id.legacy-minecraft-id") ?: return@forEach
 
-            val itemModel = config.getString("$id.item-model-name", null)?.let {
+            val itemModel = config.getString("$id.model", null)?.let {
                 NamespacedKey.fromString(it)
             }
 
-            val itemModelId = config.getInt("$id.item-model-id", 0)
+            val legacyModelId = config.getInt("$id.legacy-model-id", 0)
 
-            val isUsable = config.getBoolean("$id.is-usable", false)
 
-            val isEquippable = config.getBoolean("$id.is-equippable", false)
+            val equipmentSlot = config.getString("$id.equipment-slot", null).let {
+                if (it != null)
+                    EquipmentSlot.valueOf(it.uppercase())
+                else
+                    null
+            }
 
-            val equipmentSlot =
-                EquipmentSlot.valueOf(config.getString("$id.equipment-slot", "HAND")?.uppercase() ?: "HAND")
 
             val maxStackSize = config.getInt("$id.max-stack-size", 64)
 
             val itemBehaviour =
-                ItemBehaviour.valueOf(config.getString("$id.item-behaviour", "GENERIC")?.uppercase() ?: "GENERIC")
+                ItemBehaviour.valueOf(config.getString("$id.behaviour", "GENERIC")?.uppercase() ?: "GENERIC")
 
-            val itemBlockId = config.getString("$id.item-block-id")
+            val properties = mutableMapOf<String, Any>()
+            config.getConfigurationSection("$id.properties")?.let { propertiesSection ->
+                propertiesSection.getKeys(false).forEach { key ->
+                    properties[key] = propertiesSection.get(key) ?: ""
+                }
+            }
             tempItems.add(
                 ItemDefinition(
                     id = id,
-                    name = name,
+                    displayName = displayName,
                     description = description,
                     minecraftId = minecraftId,
                     legacyMinecraftId = legacyMinecraftId,
                     itemModel = itemModel,
-                    itemModelId = itemModelId,
-                    isUsable = isUsable,
-                    isEquippable = isEquippable,
+                    legacyItemModel = legacyModelId,
                     equipmentSlot = equipmentSlot,
                     maxStackSize = maxStackSize,
                     itemBehaviour = itemBehaviour,
-                    itemBlockId = itemBlockId
+                    properties = properties,
                 )
             )
         }

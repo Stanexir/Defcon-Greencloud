@@ -13,10 +13,10 @@ object Versions {
     const val GSON = "2.10.1"
     const val JUNIT = "5.10.1"
     const val MOCKITO = "5.8.0"
-    const val JVM = 21
+    const val JVM = 24
     const val MOCKBUKKIT = "4.0.0"
     const val MCCOROUTINE = "2.22.0"
-    val JAVA_VERSION = JavaVersion.VERSION_21
+    val JAVA_VERSION = JavaVersion.VERSION_24
 }
 
 plugins {

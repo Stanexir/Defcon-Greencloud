@@ -1,5 +1,4 @@
-# Nuclear explosions configuration
-# This is used to set the base properties of the nuclear explosions
+# Base nuclear explosions configuration
 nuclear-explosion-settings:
   shockwave-config:
     base-radius: 800 # The radius (in blocks) of the shockwave

@@ -1,81 +1,38 @@
 
 
-#------------------------------------------------------------------------------
-# SPECIFIC ITEMS FUNCTION
-#------------------------------------------------------------------------------
+items:
+  gas-mask:
+    display-name: "Gas mask"
+    minecraft-id: LEATHER_HELMET
+    legacy-minecraft-id: LEATHER_BOOTS # A different item because if you equip the helmet it isn't visible as a model (<= 1.21.1)
+    model: "leather_gas_mask"
+    legacy-model-id: 1 # Legacy model ID
+    equip-slot: "head"
+    max-stack-size: 1
+    behaviour: "gas-mask"
 
-# behaviour: The function of the item. DEFAULT: Generic (Minecraft events)
-# block | The item is a block.
-# geiger_counter | The item is a Geiger counter.
-# radiation_inhibitor | The item is a radiation inhibitor (slows the rad/s).
-# gas_mask | The item is a gas mask.
-# gas_mask_filter | The item is a gas mask filter.
-# wrench | The item is a wrench.
+  iodine-pills:
+    display-name: "Iodine pills"
+    description: |
+      Decreases the absorbed radiation levels, helping to heal radiation sickness
+    minecraft-id: PUMPKIN_SEEDS
+    max-stack-size: 64
+    behaviour: "radiation-healer"
+    properties:
+      rate-per-second: 0.5
 
-enabled-items:
-  - geiger
-  #  - radiation-inhibitor
-  - gas-mask
-  #  - gas-mask-filter
-  - wrench
-  - bomb-casing
-  - bomb-core
-  - bomb-interface
+  geiger:
+    display-name: "Geiger Counter"
+    description: |
+      Produces a <red>clicking sound</red> while holding
+      <yellow>RIGHT CLICK</yellow> to read the radiation values
+    minecraft-id: COMPASS
+    max-stack-size: 1
+    behaviour: "geiger-counter"
 
-
-# Definition of the items
-gas-mask:
-  name: "Gas mask"
-  minecraft-id: LEATHER_HELMET
-  legacy-minecraft-id: LEATHER_BOOTS # A different item because if you equip the helmet it isn't visible as a model (<= 1.21.1)
-  model: "leather_gas_mask"
-  model-id: 1
-  is-usable: true
-  is-equipable: true
-  equip-slot: "head"
-  is-droppable: true
-  max-stack-size: 1
-  is-transportable: true
-  behaviour: "gas_mask"
-
-geiger:
-  name: "Geiger Counter"
-  description: "Produces a <red>clicking sound</red> while holding \n
-     <yellow>RIGHT CLICK</yellow> to read the radiation values"
-  minecraft-id: COMPASS
-  is-usable: true
-  max-stack-size: 1
-  behaviour: "geiger_counter"
-
-wrench:
-  name: "<gradient:#fff3a3:#adadad>Wrench</gradient>"
-  description: "It hurts when you hit with it"
-  minecraft-id: STONE_SWORD
-  is-usable: true
-  max-stack-size: 1
-  behaviour: "wrench"
-
-
-# Definition of the blocks
-fission-bomb-core:
-  name: ""
-  description: "The core of the bomb"
-  minecraft-id: BEACON
-  model: "bomb_core"
-  model-id: 1001
-  is-usable: true
-  behaviour: "block"
-  block-behaviour: ""
-
-bomb-interface:
-  item-name: "Bomb interface"
-  item-description: "The interface of the bomb"
-  item-minecraft-id: COMMAND_BLOCK
-  item-data-model-id: 1002
-  is-usable: true
-  is-equipable: true
-  is-droppable: true
-  is-transportable: true
-  max-stack-size: 64
-  custom-block-id: bomb-interface
-  behaviour: "block"
+  wrench:
+    display-name: "<gradient:#fff3a3:#adadad>Wrench</gradient>"
+    description: "Handy yet dangerous"
+    minecraft-id: STONE_SWORD
+    max-stack-size: 1
+    behaviour: "wrench"

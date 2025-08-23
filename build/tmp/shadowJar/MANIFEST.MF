@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Built-By: Ryno
+Build-Timestamp: 2025-06-25T19:02:17.204979300Z
+Created-By: Gradle 8.10.2
+Implementation-Title: Defcon
+Implementation-Version: 1.3.5b-SNAPSHOT
+
