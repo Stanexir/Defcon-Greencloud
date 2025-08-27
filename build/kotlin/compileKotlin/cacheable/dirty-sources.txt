@@ -5,9 +5,11 @@ E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\utils\Logger.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\customassets\items\Override.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\particles\emitter\ParticleInstanceBuilder.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\explosions\ExplosionComponent.kt
+E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\items\variants\BaseItem.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\listeners\blocks\CustomBlockBreakEvent.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\vertexgeometry\particle\ParticleShape.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\events\geiger\GeigerDetectEvent.kt
+E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\items\properties\ItemProperties.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\classes\structures\NuclearWarhead.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\explosions\processor\ThermalRadiationBurn.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\save\savedata\BiomeAreaSave.kt
@@ -27,6 +29,7 @@ E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\events\radiationarea\RadiationS
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\customassets\sounds\AbstractCustomSound.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\events\equip\CustomItemEquipEvent.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\explosions\processor\Crater.kt
+E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\items\PluginItemFactory.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\particles\templates\ParticleProperties.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\vertexgeometry\VertexShapeBuilder.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\customassets\items\ParentType.kt
@@ -40,6 +43,7 @@ E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\listeners\entities\EntityInhibi
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\classes\CustomBlockDefinition.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\utils\Geometry.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\customassets\items\Predicate.kt
+E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\items\variants\StructureAssemblerItem.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\particles\templates\definition\ExplosionDustParticle.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\particles\emitter\ClientSideParticleInstance.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\explosions\types\Explosion.kt
@@ -77,6 +81,7 @@ E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\utils\ColorUtils.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\threading\jobs\Schedulable.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\registers\packformat\FormatReader.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\biomes\enums\GrassColorModifier.kt
+E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\items\variants\GeigerCounterItem.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\classes\structures\StructureQuery.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\radiation\RadiationArea.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\customassets\fonts\FontData.kt
@@ -85,11 +90,12 @@ E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\utils\BlockChanger.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\interfaces\PluginBlock.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\transformer\material\TransformationOutcome.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\biomes\data\BiomeMoodSound.kt
+E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\items\variants\GasMaskItem.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\threading\jobs\ScheduledCompositionJob.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\effects\ColorSupplier.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\interfaces\ExplodingStructure.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\vertexgeometry\morphers\ShapeMorpher.kt
-E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\enums\ItemDataKey.kt
+E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\items\factory\ItemStackFactory.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\vertexgeometry\shapes\CylinderBuilder.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\listeners\packet\biome\ClientSideBiome.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\commands\definitions\ExplodeCommand.kt
@@ -105,6 +111,7 @@ E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\observer\Observable.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\save\savedata\RadiationAreaSave.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\particles\emitter\TextDisplayParticleInstance.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\save\schemas\BiomeAreaSaveSchema.kt
+E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\extensions\ItemMeta.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\particles\mutators\FloorSnapper.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\biomes\data\BiomeEffects.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\customassets\sounds\definitions\NukeSetNear.kt
@@ -119,7 +126,6 @@ E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\customassets\sounds\definitions
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\registers\ResourcePackRegister.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\registers\StructureRegister.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\observer\CompletionDispatcher.kt
-E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\classes\CustomItemDefinition.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\biomes\data\BiomeCarver.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\particles\mutators\SimpleFloorSnap.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\threading\jobs\SchedulableWorkload.kt
@@ -142,6 +148,7 @@ E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\vertexgeometry\morphers\SnapToF
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\listeners\items\GasMaskListener.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\config\StructuresConfiguration.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\notification\NotificationType.kt
+E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\items\properties\BaseProperties.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\explosions\processor\TreeBurner.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\transformer\material\TransformationCondition.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\listeners\items\RadiationInhibitorListener.kt
@@ -157,7 +164,7 @@ E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\explosions\processor\RaycastedE
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\save\AbstractSaveData.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\customassets\sounds\definitions\NukeGroundRumble.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\effects\AnimatedEffect.kt
-E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\enums\ItemBehaviour.kt
+E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\items\ItemBehaviour.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\particles\templates\AbstractParticle.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\listeners\items\GasMaskFilterListener.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\biomes\data\BiomeSpawnCost.kt
@@ -169,7 +176,6 @@ E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\extensions\Player.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\vertexgeometry\particle\AbstractShape.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\customassets\items\definitions\LeatherGasMask.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\registers\PackRegister.kt
-E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\interfaces\PluginItem.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\registers\listener\VersionIndicator.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\threading\scheduling\SchedulingUtils.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\transformer\material\TransformationRule.kt
@@ -177,6 +183,7 @@ E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\extensions\Location.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\explosions\effects\ClientSideTextDisplay.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\config\BlocksConfiguration.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\utils\RayCaster.kt
+E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\items\variants\PluginItem.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\save\schemas\RadiationSaveSchema.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\server\ResourcePackServer.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\biomes\data\BiomeParticle.kt
@@ -192,4 +199,5 @@ E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\biomes\data\BiomeFeature.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\biomes\data\BiomeSpawner.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\effects\ParticleComponent.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\registers\CommandRegister.kt
+E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\items\variants\RadiationHealerItem.kt
 E:\git\Defcon\src\main\kotlin\me\mochibit\defcon\customassets\fonts\AbstractCustomFont.kt

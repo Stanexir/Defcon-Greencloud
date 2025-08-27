@@ -1,63 +1,56 @@
-
-
 import java.time.Instant
+
+plugins {
+    kotlin("jvm") version "2.2.0"
+    id("com.gradleup.shadow") version "9.0.0-beta12"
+    id("xyz.jpenilla.run-paper") version "2.3.1"
+    id("de.eldoria.plugin-yml.bukkit") version "0.7.1"
+}
 
 // Dependency versions - centralized for easier management
 object Versions {
-    const val KOTLIN = "2.1.20"
+    const val KOTLIN = "2.2.0"
     const val KOTLINX_COROUTINES = "1.10.2"
-    const val KTOR = "3.1.2"
     const val PAPER_API = "1.21.4-R0.1-SNAPSHOT"
     const val PACKET_EVENTS = "2.7.0"
     const val CUSTOM_BLOCK_DATA = "2.2.4"
     const val GSON = "2.10.1"
     const val JUNIT = "5.10.1"
     const val MOCKITO = "5.8.0"
-    const val JVM = 24
     const val MOCKBUKKIT = "4.0.0"
     const val MCCOROUTINE = "2.22.0"
-    val JAVA_VERSION = JavaVersion.VERSION_24
+    const val REFLECTIONS = "0.10.2"
+    const val JVM_TARGET = 23
 }
-
-plugins {
-    kotlin("jvm") version "2.1.20"
-    id("com.gradleup.shadow") version "9.0.0-beta12"
-    id("xyz.jpenilla.run-paper") version "2.3.1"
-    id("de.eldoria.plugin-yml.bukkit") version "0.7.1"
-}
-
-group = "me.mochibit"
-version = "1.3.5b-SNAPSHOT"
-
-// Project metadata
-description = "A plugin that adds nuclear energy, along with its advantages and dangers"
-
 
 object PacketEvents {
     const val PLATFORM = "spigot"
 }
 
 
+
+group = "me.mochibit"
+version = "1.3.5b-SNAPSHOT"
+description = "A plugin that adds nuclear energy, along with its advantages and dangers"
+
 // Output configuration
 val outputPluginDirectory: String = project.findProperty("outputDir")?.toString()
     ?: layout.buildDirectory.dir("libs").get().asFile.path
+
 logger.lifecycle("Output directory: $outputPluginDirectory")
 
+// Kotlin configuration
 kotlin {
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(Versions.JVM))
-    }
-}
+    jvmToolchain(Versions.JVM_TARGET)
 
-// Java configuration
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(Versions.JVM))
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(Versions.JVM_TARGET.toString()))
+        freeCompilerArgs.addAll(
+            "-Xjvm-default=all",
+            "-opt-in=kotlin.RequiresOptIn",
+            "-Xcontext-receivers" // Enable context receivers if needed
+        )
     }
-    withSourcesJar()
-    withJavadocJar()
-    sourceCompatibility = Versions.JAVA_VERSION
-    targetCompatibility = Versions.JAVA_VERSION
 }
 
 // Plugin.yml generation
@@ -69,17 +62,6 @@ bukkit {
     description = project.description
     authors = listOf("MochiBit")
     website = "https://github.com/mochibit/defcon"
-
-//    loader = "me.mochibit.defcon.plugin.loader.DefconLoader"
-
-//    generateLibrariesJson = true
-
-//    serverDependencies {
-//        register("packetevents") {
-//            load = PaperPluginDescription.RelativeLoadOrder.BEFORE
-//            required = true
-//        }
-//    }
 
     depend = listOf("packetevents")
 
@@ -100,57 +82,40 @@ repositories {
         name = "sonatype"
     }
     maven("https://hub.jeff-media.com/nexus/repository/jeff-media-public/") // CustomBlockData
-
-    maven { url = uri("https://repo.codemc.io/repository/maven-releases/") }
-
-    maven { url = uri("https://repo.codemc.io/repository/maven-snapshots/") }
+    maven("https://repo.codemc.io/repository/maven-releases/")
+    maven("https://repo.codemc.io/repository/maven-snapshots/")
 }
 
 dependencies {
     // Server API - compileOnly to avoid bundling
     compileOnly("io.papermc.paper:paper-api:${Versions.PAPER_API}")
-    compileOnly("com.github.retrooper", "packetevents-${PacketEvents.PLATFORM}", Versions.PACKET_EVENTS)
+    compileOnly("com.github.retrooper:packetevents-${PacketEvents.PLATFORM}:${Versions.PACKET_EVENTS}")
+
+    // Kotlin standard libraries
+    library(kotlin("stdlib", Versions.KOTLIN))
+    library(kotlin("reflect", Versions.KOTLIN))
+    library("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.KOTLINX_COROUTINES}")
+
+    // Coroutines for Minecraft
+    library("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:${Versions.MCCOROUTINE}")
+    library("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:${Versions.MCCOROUTINE}")
+
+    // Utility libraries
+    library("com.google.code.gson:gson:${Versions.GSON}")
 
     // Libraries to be shaded
     implementation("com.jeff-media:custom-block-data:${Versions.CUSTOM_BLOCK_DATA}")
-
-    // Reflection api
-    implementation("org.reflections:reflections:0.10.2") {
+    implementation("org.reflections:reflections:${Versions.REFLECTIONS}") {
         exclude(group = "org.slf4j")
         exclude(group = "com.google.code.findbugs")
     }
-    library("org.jetbrains.kotlinx", "kotlinx-coroutines-core", Versions.KOTLINX_COROUTINES)
 
-    // Coroutines
-    library("com.github.shynixn.mccoroutine", "mccoroutine-bukkit-api", Versions.MCCOROUTINE)
-    library("com.github.shynixn.mccoroutine", "mccoroutine-bukkit-core", Versions.MCCOROUTINE)
-
-    library(kotlin("stdlib", Versions.KOTLIN))
-    library(kotlin("reflect", Versions.KOTLIN))
-    library("com.google.code.gson:gson:${Versions.GSON}")
-
-    // Testing
-    testImplementation(kotlin("test", Versions.KOTLIN))
+    // Testing dependencies
+    testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:${Versions.JUNIT}")
     testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:${Versions.MOCKBUKKIT}")
     testImplementation("org.mockito:mockito-core:${Versions.MOCKITO}")
     testImplementation("io.papermc.paper:paper-api:${Versions.PAPER_API}")
-}
-
-// Kotlin compilation
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(Versions.JVM.toString()))
-        freeCompilerArgs.addAll("-Xjvm-default=all", "-opt-in=kotlin.RequiresOptIn")
-    }
-}
-
-// Java compilation
-tasks.withType<JavaCompile>().configureEach {
-    options.apply {
-        encoding = "UTF-8"
-        release.set(Versions.JVM)
-    }
 }
 
 // Testing configuration
@@ -158,14 +123,17 @@ tasks.test {
     useJUnitPlatform()
     testLogging {
         events("passed", "skipped", "failed")
+        showStandardStreams = false
     }
-    // Parallel test execution for faster builds
-    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+
+    // JVM arguments for testing
+    jvmArgs("-Xmx2G", "-XX:+UseG1GC")
 }
 
 // Server test configuration
 tasks.runServer {
-    minecraftVersion("1.20.2")
+    minecraftVersion("1.21.4")
 
     downloadPlugins {
         github(
@@ -175,13 +143,14 @@ tasks.runServer {
             "packetevents-${PacketEvents.PLATFORM}-${Versions.PACKET_EVENTS}.jar"
         )
     }
+
+    // JVM arguments for the test server
+    jvmArgs("-Xmx4G", "-XX:+UseG1GC")
 }
 
-// JAR configuration
+// Disable default jar task
 tasks.jar {
-    archiveBaseName.set("Defcon")
-    archiveVersion.set(project.version.toString())
-    enabled = false // Disable default jar
+    enabled = false
 }
 
 // Shadow JAR configuration
@@ -191,10 +160,11 @@ tasks.shadowJar {
     archiveClassifier.set("")
     archiveVersion.set(project.version.toString())
 
-//  Relocate dependencies
+    // Relocate dependencies to avoid conflicts
     relocate("com.jeff_media.customblockdata", "me.mochibit.lib.customblockdata")
+    relocate("org.reflections", "me.mochibit.lib.reflections")
 
-//  Minimize JAR size
+    // Minimize JAR size but preserve Kotlin runtime
     minimize {
         exclude(dependency("org.jetbrains.kotlin:.*"))
         exclude(dependency("org.jetbrains.kotlinx:.*"))
@@ -202,36 +172,45 @@ tasks.shadowJar {
 
     // Exclude unnecessary files
     exclude("META-INF/*.DSA", "META-INF/*.RSA", "META-INF/*.SF")
+    exclude("META-INF/maven/**")
+    exclude("**/*.kotlin_metadata")
+    exclude("**/*.kotlin_builtins")
 
-    // Add build timestamp manifest entry
+    // Build information in manifest
     manifest {
         attributes(
             "Built-By" to System.getProperty("user.name"),
             "Build-Timestamp" to Instant.now().toString(),
             "Created-By" to "Gradle ${gradle.gradleVersion}",
             "Implementation-Title" to project.name,
-            "Implementation-Version" to project.version
+            "Implementation-Version" to project.version,
+            "Kotlin-Version" to Versions.KOTLIN
         )
     }
 }
 
-// Default artifact
+// Make shadowJar the default artifact
 artifacts {
     archives(tasks.shadowJar)
 }
 
-// Make shadowJar part of the build process
+// Build process
 tasks.build {
     dependsOn(tasks.shadowJar)
 }
 
 // Install plugin task
 tasks.register<Copy>("installPlugin") {
+    group = "build"
+    description = "Installs the built plugin to the output directory"
     dependsOn(tasks.shadowJar)
+
     from(tasks.shadowJar.get().archiveFile)
     into(file(outputPluginDirectory))
+
     doLast {
-        logger.lifecycle("Plugin installed to: $outputPluginDirectory/${tasks.shadowJar.get().archiveFileName.get()}")
+        val fileName = tasks.shadowJar.get().archiveFileName.get()
+        logger.lifecycle("Plugin installed to: $outputPluginDirectory/$fileName")
     }
 }
 
@@ -240,9 +219,14 @@ tasks.register("cleanBuildInstall") {
     group = "build"
     description = "Cleans the project, builds it, and installs the plugin to the output directory"
     dependsOn(tasks.clean, "installPlugin")
+
+    // Ensure proper task ordering
+    tasks.clean.get().mustRunAfter("installPlugin")
 }
 
-// Configure Gradle to use parallel execution where possible
+// Performance optimization
 gradle.taskGraph.whenReady {
     System.setProperty("org.gradle.parallel", "true")
+    System.setProperty("org.gradle.configureondemand", "true")
+    System.setProperty("org.gradle.caching", "true")
 }

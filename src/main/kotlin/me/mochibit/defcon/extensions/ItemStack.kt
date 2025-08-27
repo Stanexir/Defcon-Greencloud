@@ -19,7 +19,7 @@
 
 package me.mochibit.defcon.extensions
 
-import me.mochibit.defcon.enums.ItemBehaviour
+import me.mochibit.defcon.items.ItemBehaviour
 import me.mochibit.defcon.enums.ItemDataKey
 import me.mochibit.defcon.utils.MetaManager
 import org.bukkit.inventory.ItemStack

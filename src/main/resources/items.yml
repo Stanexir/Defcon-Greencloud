@@ -19,7 +19,9 @@ items:
     max-stack-size: 64
     behaviour: "radiation-healer"
     properties:
-      rate-per-second: 0.5
+      heal-amount: 0.5
+      duration-seconds: 15
+
 
   geiger:
     display-name: "Geiger Counter"

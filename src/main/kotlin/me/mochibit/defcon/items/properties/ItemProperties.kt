@@ -1,7 +1,7 @@
 /*
  *
  * DEFCON: Nuclear warfare plugin for minecraft servers.
- * Copyright (c) 2024 mochibit.
+ * Copyright (c) 2025 mochibit.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -17,19 +17,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.interfaces
+package me.mochibit.defcon.items.properties
 
-import me.mochibit.defcon.enums.BlockBehaviour
-import me.mochibit.defcon.items.variants.PluginItem
-import org.bukkit.Location
+import org.bukkit.NamespacedKey
+import org.bukkit.inventory.EquipmentSlot
 
-interface PluginBlock {
+sealed interface ItemProperties {
     val id: String
-    val customModelId: Int
-    val minecraftId: String
-    fun placeBlock(item: PluginItem, location: Location)
-    fun removeBlock(location: Location)
+    val displayName: String
+    val description: String?
 
-    /*Behaviour type*/
-    val behaviour: BlockBehaviour
+    val minecraftId: String
+    val itemModel: NamespacedKey?
+
+    val equipmentSlot: EquipmentSlot?
+    val maxStackSize: Int
+
+    val legacyProperties: BaseProperties.LegacyProperties
 }

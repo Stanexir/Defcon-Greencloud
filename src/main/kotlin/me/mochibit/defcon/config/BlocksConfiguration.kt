@@ -19,12 +19,47 @@
 
 package me.mochibit.defcon.config
 
-object BlocksConfiguration : PluginConfiguration("blocks") {
-    override suspend fun load() {
-        TODO("Not yet implemented")
+import me.mochibit.defcon.enums.BlockBehaviour
+import me.mochibit.defcon.utils.Logger
+
+object BlocksConfiguration : PluginConfiguration<List<BlocksConfiguration.BlockDefinition>>("blocks") {
+    data class BlockDefinition(
+        val id: String,
+        val displayName: String,
+        val description: String,
+        val minecraftId: String,
+        val behaviour: BlockBehaviour
+    )
+
+    override suspend fun loadSchema(): List<BlockDefinition> {
+        val tempBlocks = mutableListOf<BlockDefinition>()
+        val blocksList = config.getList("blocks") ?: listOf()
+
+        blocksList.forEach { block ->
+            val id = block.toString()
+            val displayName = config.getString("$id.display-name") ?: return@forEach
+            val description = config.getString("$id.description") ?: return@forEach
+            val minecraftId = config.getString("$id.minecraft-id") ?: return@forEach
+            val behaviourValue = config.getString("$id.block-behaviour") ?: return@forEach
+            val blockBehaviour = try {
+                BlockBehaviour.valueOf(behaviourValue.uppercase())
+            } catch (ex: IllegalArgumentException) {
+                Logger.err("Invalid block behaviour, skipping.. CAUSE: $behaviourValue")
+                return@forEach
+            }
+
+            tempBlocks.add(
+                BlockDefinition(
+                    id = id,
+                    displayName = displayName,
+                    description = description,
+                    minecraftId = minecraftId,
+                    behaviour = blockBehaviour
+                )
+            )
+        }
+
     }
 
-    override suspend fun cleanup() {
-        TODO("Not yet implemented")
-    }
+    override suspend fun cleanupSchema() {}
 }

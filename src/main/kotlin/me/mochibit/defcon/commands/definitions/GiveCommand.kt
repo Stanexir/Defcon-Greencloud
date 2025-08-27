@@ -153,10 +153,10 @@ class GiveCommand : GenericCommand() {
                 val isSelf = sender == targetPlayer
 
                 if (isSelf) {
-                    sendMessage(sender, "You have been given a ${item.displayName}")
+                    sendMessage(sender, "You have been given a ${item.properties.displayName}")
                 } else {
-                    sendMessage(sender, "Gave ${targetPlayer.name} a ${item.displayName}")
-                    sendMessage(targetPlayer, "You received a ${item.displayName}")
+                    sendMessage(sender, "Gave ${targetPlayer.name} a ${item.properties.displayName}")
+                    sendMessage(targetPlayer, "You received a ${item.properties.displayName}")
                 }
             } else {
                 // Inventory was full

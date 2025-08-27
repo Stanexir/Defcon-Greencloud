@@ -20,7 +20,7 @@
 package me.mochibit.defcon.listeners.items
 
 import me.mochibit.defcon.enums.BlockDataKey
-import me.mochibit.defcon.enums.ItemBehaviour
+import me.mochibit.defcon.items.ItemBehaviour
 import me.mochibit.defcon.enums.ItemDataKey
 import me.mochibit.defcon.registers.ItemRegister
 import me.mochibit.defcon.registers.StructureRegister

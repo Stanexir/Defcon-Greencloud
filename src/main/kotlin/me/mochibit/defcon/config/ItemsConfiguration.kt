@@ -19,7 +19,8 @@
 
 package me.mochibit.defcon.config
 
-import me.mochibit.defcon.enums.ItemBehaviour
+import me.mochibit.defcon.items.ItemBehaviour
+import me.mochibit.defcon.utils.Logger
 import org.bukkit.NamespacedKey
 import org.bukkit.inventory.EquipmentSlot
 import kotlin.text.get
@@ -75,9 +76,14 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
 
 
             val maxStackSize = config.getInt("$id.max-stack-size", 64)
+            val behaviourValue = config.getString("$id.behaviour") ?: return@forEach
 
-            val itemBehaviour =
-                ItemBehaviour.valueOf(config.getString("$id.behaviour", "GENERIC")?.uppercase() ?: "GENERIC")
+            val itemBehaviour = try {
+                ItemBehaviour.valueOf(behaviourValue.uppercase())
+            } catch (ex: IllegalArgumentException) {
+                Logger.err("Invalid item behaviour, skipping.. CAUSE: $behaviourValue")
+                return@forEach
+            }
 
             val properties = mutableMapOf<String, Any>()
             config.getConfigurationSection("$id.properties")?.let { propertiesSection ->

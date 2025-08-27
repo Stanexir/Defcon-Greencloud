@@ -23,9 +23,9 @@ import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.enums.BlockBehaviour
 import me.mochibit.defcon.enums.BlockDataKey
 import me.mochibit.defcon.interfaces.PluginBlock
-import me.mochibit.defcon.interfaces.PluginItem
 import me.mochibit.defcon.utils.MetaManager
 import com.jeff_media.customblockdata.CustomBlockData
+import me.mochibit.defcon.items.variants.PluginItem
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
 import org.bukkit.persistence.PersistentDataContainer
@@ -39,11 +39,11 @@ class CustomBlockDefinition(
     override val customModelId: Int,
     override val minecraftId: String,
     override val behaviour: BlockBehaviour
-) : PluginBlock{
+) : PluginBlock {
 
     override fun placeBlock(item: PluginItem, location: Location) {
         MetaManager.setBlockData(location, BlockDataKey.CustomBlockId, id)
-        MetaManager.setBlockData(location, BlockDataKey.ItemId, item.id)
+        MetaManager.setBlockData(location, BlockDataKey.ItemId, item.properties.id)
 
         // Print in chat for debugging
         Defcon.instance!!.getLogger().info("Placed block ID: " +

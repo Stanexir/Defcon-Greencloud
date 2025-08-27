@@ -1,21 +1,36 @@
-# Pack format fallbacks, to use if the plugin release is before a certain minecraft version, used for resource pack and data pack generation
-# You can read more about pack format here: https://minecraft.fandom.com/wiki/Pack_format
-pack_format_fallback:
-  resource_pack: 46
-  data_pack: 71
+# Base nuclear explosions configuration
+nuclear-explosion-settings:
+  shockwave-config:
+    base-radius: 800 # The radius (in blocks) of the shockwave
+    base-height: 300 # The height (in blocks) of the shockwave, all structures under this height will be destroyed,
+    # and the range is like this [explosion height, explosion height + height]
+  crater-config:
+    base-radius: 180 # The radius (in blocks) of the crater
 
-# Resource pack server port, this is the port that the server will use to serve the resource pack
-resource_pack_server_port: 8000
+  fallout-config:
+    base-radius: 1600 # The base fallout spread radius in blocks (XZ plane)
+    base-spread-height: 150 # The base fallout height in blocks (Y axis), starting from the explosion center
+    base-underground-spread-depth: 30 # Depth value in blocks of the fallout underground spread
+
+  flash-config:
+    base-radius: 1000 # The distance in blocks from the explosion center where the flash will be visible
+
+  thermal-config:
+    base-radius: 1000 # The distance in blocks from the explosion center the thermal damage will be applied
+
+  sound-config:
+    sound-speed: 50 # The speed of the sound in blocks per second, this is used to calculate the sound delay
 
 
-# Configuration for the nuke size (IT WILL BE REMOVED SOON)
-nuke_shockwave_radius: 800 # The radius of the shockwave
-nuke_shockwave_height: 300 # The height of the structures that gets under the shockwave
-nuke_crater_radius: 180 # The radius of the crater
-nuke_fallout_radius: 1600 # The radius of the fallout
-nuke_flash_radius: 1000 # The radius of the flash (blindness)
-nuke_thermal_radius: 1000 # The radius of the thermal (you will be set on fire)
-nuke_sound_speed: 50 # The speed of the sound (in blocks per second)
 
-nuke_fallout_spread_air: 150 # The radius of the fallout spread in the air
-nuke_fallout_spread_underground: 30 # The radius of the fallout spread underground
+# Plugin pack generator settings
+# This includes settings for the resource pack and data pack
+pack-generator:
+  resource-pack:
+    automatic-generation: true # Default: true; Disable this only if you want to use a custom resource pack on your server
+    resource-server-port: 8000 # Default: 8000; The port that the server will use to serve the resource pack
+  pack-format-fallback:
+    # These are the pack format fallbacks, to use if the plugin release is before a certain minecraft version
+    # You can read more about pack format here: https://minecraft.fandom.com/wiki/Pack_format
+    resource-pack: 46
+    data-pack: 71

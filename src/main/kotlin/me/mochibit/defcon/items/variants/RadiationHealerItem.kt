@@ -1,7 +1,7 @@
 /*
  *
  * DEFCON: Nuclear warfare plugin for minecraft servers.
- * Copyright (c) 2024 mochibit.
+ * Copyright (c) 2025 mochibit.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -17,19 +17,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.interfaces
+package me.mochibit.defcon.items.variants
 
-import me.mochibit.defcon.enums.BlockBehaviour
-import me.mochibit.defcon.items.variants.PluginItem
-import org.bukkit.Location
+import me.mochibit.defcon.items.properties.BaseProperties
+import me.mochibit.defcon.items.properties.ItemProperties
 
-interface PluginBlock {
-    val id: String
-    val customModelId: Int
-    val minecraftId: String
-    fun placeBlock(item: PluginItem, location: Location)
-    fun removeBlock(location: Location)
+class RadiationHealerItem(
+    override val properties: RadiationHealerData
+) : BaseItem(properties) {
 
-    /*Behaviour type*/
-    val behaviour: BlockBehaviour
+    data class RadiationHealerData(
+        val baseProperties: BaseProperties,
+        val healAmount: Double,
+        val durationSeconds: Long,
+    ) : ItemProperties by baseProperties
 }

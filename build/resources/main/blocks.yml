@@ -1,44 +1,23 @@
-# This file configuration stores all the blocks as abstract entities.
-# Any item can be linked to a block and behaves like one.
-# Behaviours of the single block will be set as defined with the given behaviours
-
-# block-id: The unique block definitions id (NOT RELATED WITH ITEMS).
-# block-minecraft-id: The minecraft ID of the block (if an item, some of them can be treated as block).
-# block-data-model-id: This ID will be used if the block is an item. (and will be replaced with a definitions model)
-
-#------------------------------------------------------------------------------
-# BLOCK BEHAVIOURS
-#------------------------------------------------------------------------------
-# behaviour: The behaviour of the block
-# generic | The block is a generic block (Minecraft events)
-# structure_component | The block is a structure component
-# structure_interface | The block is a structure interface
-# air_vent | The block is an air vent
-# generator | The block is a generator
-# refiner | The block is a refiner
-# pump | The block is a pump
-#
-
-enabled-blocks:
-  - bomb-casing
-  - bomb-core
-  - bomb-interface
-
-
-#------------------------------------------------------------------------------
-# BLOCKS
-#------------------------------------------------------------------------------
-bomb-casing:
-  block-minecraft-id: IRON_BLOCK
-  block-data-model-id: 1000
-  behaviour: "structure_component"
-
-bomb-core:
-  block-minecraft-id: BEACON
-  block-data-model-id: 1001
-  behaviour: "structure_component"
-
-bomb-interface:
-  block-minecraft-id: COMMAND_BLOCK
-  block-data-model-id: 1002
-  behaviour: "structure_interface"
+blocks:
+  fission-core:
+    display-name: "Fission core block"
+    description: |
+      Fission core for the nuclear warhead.
+      It can be configured to be either a gun-type or implosion-type warhead through a <yellow> warhead interface </yellow>
+    minecraft-id: BLACK_GLAZED_TERRACOTTA
+    block-behaviour: "fission-core"
+  fusion-core:
+    display-name: "Fusion core block"
+    description: |
+      Fusion-enabled block for a warhead.
+      It can be configured through a <yellow> warhead interface </yellow>
+      It needs to be <red>boosted</red> by a fission core block to work.
+    minecraft-id: END_ROD
+    block-behaviour: "fusion-core"
+  warhead-interface:
+    display-name: "Warhead interface block"
+    description: |
+      Essential configuration block for arming nuclear warheads.
+      It allows the management of the fusion and fissile materials, and lets you configure the specific warhead settings.
+    minecraft-id: CRAFTER
+    block-behaviour: "warhead-interface"

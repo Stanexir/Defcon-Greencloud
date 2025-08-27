@@ -25,7 +25,7 @@ import com.github.shynixn.mccoroutine.bukkit.ticks
 import io.papermc.paper.event.entity.EntityEquipmentChangedEvent
 import kotlinx.coroutines.delay
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.enums.ItemBehaviour
+import me.mochibit.defcon.items.ItemBehaviour
 import me.mochibit.defcon.events.equip.CustomItemEquipEvent
 import me.mochibit.defcon.events.radiationarea.RadiationSuffocationEvent
 import me.mochibit.defcon.extensions.getBehaviour

@@ -19,11 +19,11 @@
 
 package me.mochibit.defcon.registers
 
-import me.mochibit.defcon.items.PluginItem
+import me.mochibit.defcon.items.variants.PluginItem
 import me.mochibit.defcon.config.ItemsConfiguration
+import me.mochibit.defcon.items.PluginItemFactory
 import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.utils.Logger.warn
-import me.mochibit.defcon.utils.versionGreaterOrEqualThan
 
 /**
  * This class handles the registration of the definitions items
@@ -53,31 +53,9 @@ class ItemRegister {
                 return@forEach
             }
 
-
-            val itemMinecraftId = if (versionGreaterOrEqualThan("1.21.3")) {
-                item.minecraftId
-            } else {
-                item.legacyMinecraftId
-            }
-
-            val customItem = PluginItem(
-                id = item.id,
-                displayName = item.displayName,
-                description = item.description,
-                minecraftId = itemMinecraftId,
-
-                itemModel = item.itemModel,
-                itemModelId = item.itemModelId,
-                customBlockId = item.itemBlockId,
-                equipSlot = item.equipmentSlot,
-
-                isEquipable = item.isEquippable,
-                isUsable = item.isUsable,
-                stackSize = item.maxStackSize,
-                behaviour = item.itemBehaviour
-            )
+            val customItem = PluginItemFactory.create(item)
             info("Registered item ${item.id}")
-            registeredItems[customItem.id] = customItem
+            registeredItems[customItem.properties.id] = customItem
         }
 
         return true

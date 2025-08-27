@@ -8,11 +8,11 @@ website: https://github.com/mochibit/defcon
 depend:
   - packetevents
 libraries:
+  - org.jetbrains.kotlin:kotlin-stdlib:2.2.0
+  - org.jetbrains.kotlin:kotlin-reflect:2.2.0
   - org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2
   - com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0
   - com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.22.0
-  - org.jetbrains.kotlin:kotlin-stdlib:2.1.20
-  - org.jetbrains.kotlin:kotlin-reflect:2.1.20
   - com.google.code.gson:gson:2.10.1
 permissions:
   defcon.admin:
