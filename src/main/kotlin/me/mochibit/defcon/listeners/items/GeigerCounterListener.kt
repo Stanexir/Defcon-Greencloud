@@ -20,7 +20,7 @@
 package me.mochibit.defcon.listeners.items
 
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.items.ItemBehaviour
+import me.mochibit.defcon.registry.items.ItemBehaviour
 import me.mochibit.defcon.events.geiger.GeigerDetectEvent
 import me.mochibit.defcon.extensions.getBehaviour
 import org.bukkit.Bukkit

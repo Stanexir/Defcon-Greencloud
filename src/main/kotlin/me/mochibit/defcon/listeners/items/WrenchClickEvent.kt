@@ -20,10 +20,10 @@
 package me.mochibit.defcon.listeners.items
 
 import me.mochibit.defcon.enums.BlockDataKey
-import me.mochibit.defcon.items.ItemBehaviour
+import me.mochibit.defcon.registry.items.ItemBehaviour
 import me.mochibit.defcon.enums.ItemDataKey
-import me.mochibit.defcon.registers.ItemRegister
-import me.mochibit.defcon.registers.StructureRegister
+import me.mochibit.defcon.registry.items.ItemRegistry
+import me.mochibit.defcon.registry.StructureRegister
 import me.mochibit.defcon.utils.MetaManager
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -40,7 +40,7 @@ class WrenchClickEvent: Listener {
         val itemID = MetaManager.getItemData<String>(itemInHand.itemMeta, ItemDataKey.ItemID) ?: return;
 
         // Check if the item is a wrench
-        val wrenchItem = ItemRegister.registeredItems[itemID] ?: return;
+        val wrenchItem = ItemRegistry.registeredItems[itemID] ?: return;
         if (wrenchItem.behaviour != ItemBehaviour.WRENCH) return;
 
         if (MetaManager.getBlockData<String>(clickedBlock.location, BlockDataKey.StructureId) == null) return;

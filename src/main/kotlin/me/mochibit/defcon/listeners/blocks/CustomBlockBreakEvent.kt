@@ -20,7 +20,7 @@
 package me.mochibit.defcon.listeners.blocks
 
 import me.mochibit.defcon.interfaces.PluginBlock
-import me.mochibit.defcon.registers.BlockRegister
+import me.mochibit.defcon.registry.BlockRegister
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent

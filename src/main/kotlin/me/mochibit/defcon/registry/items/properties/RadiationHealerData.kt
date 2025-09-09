@@ -1,7 +1,7 @@
 /*
  *
  * DEFCON: Nuclear warfare plugin for minecraft servers.
- * Copyright (c) 2024 mochibit.
+ * Copyright (c) 2025 mochibit.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -17,8 +17,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.classes.structures
+package me.mochibit.defcon.registry.items.properties
 
-import org.bukkit.Location
-
-data class StructureQuery(val structures: List<StructureDefinition>, val appliedLocations: List<Location>)
+data class RadiationHealerData(
+    val baseProperties: BaseProperties,
+    val healAmount: Double,
+    val durationSeconds: Long,
+) : ItemProperties by baseProperties

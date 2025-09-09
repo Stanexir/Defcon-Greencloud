@@ -59,6 +59,7 @@ object BlocksConfiguration : PluginConfiguration<List<BlocksConfiguration.BlockD
             )
         }
 
+        return tempBlocks.toList()
     }
 
     override suspend fun cleanupSchema() {}

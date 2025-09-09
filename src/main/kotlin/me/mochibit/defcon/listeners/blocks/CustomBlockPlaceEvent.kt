@@ -21,8 +21,8 @@ package me.mochibit.defcon.listeners.blocks
 
 import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.interfaces.PluginItem
-import me.mochibit.defcon.registers.BlockRegister
-import me.mochibit.defcon.registers.ItemRegister
+import me.mochibit.defcon.registry.BlockRegister
+import me.mochibit.defcon.registry.items.ItemRegistry
 import org.bukkit.NamespacedKey
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -52,7 +52,7 @@ class CustomBlockPlaceEvent : Listener {
         val customItemId = container.get(itemIdKey, PersistentDataType.STRING)?: return
 
 
-        customItem = ItemRegister.registeredItems[customItemId] ?: throw Exception("Item not registered")
+        customItem = ItemRegistry.registeredItems[customItemId] ?: throw Exception("Item not registered")
 
         try {
             BlockRegister.getBlock(customBlockId)

@@ -1,12 +1,12 @@
 package me.mochibit.defcon.listeners.items
 
 import me.mochibit.defcon.utils.Logger.warn
-import me.mochibit.defcon.items.ItemBehaviour
+import me.mochibit.defcon.registry.items.ItemBehaviour
 import me.mochibit.defcon.events.equip.CustomItemEquipEvent
 import me.mochibit.defcon.extensions.equipSlotName
 import me.mochibit.defcon.extensions.getBehaviour
 import me.mochibit.defcon.extensions.getItemID
-import me.mochibit.defcon.registers.listener.VersionIndicator
+import me.mochibit.defcon.registry.listeners.VersionIndicator
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player

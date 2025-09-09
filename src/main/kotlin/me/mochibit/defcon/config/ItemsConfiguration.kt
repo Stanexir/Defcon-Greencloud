@@ -19,11 +19,14 @@
 
 package me.mochibit.defcon.config
 
-import me.mochibit.defcon.items.ItemBehaviour
+import me.mochibit.defcon.registry.behavioural.ElementBehaviour
+import me.mochibit.defcon.registry.behavioural.ElementDefinition
+import me.mochibit.defcon.registry.items.ItemBehaviour
+import me.mochibit.defcon.registry.items.properties.BaseProperties
+import me.mochibit.defcon.registry.items.variants.BaseItem
 import me.mochibit.defcon.utils.Logger
 import org.bukkit.NamespacedKey
 import org.bukkit.inventory.EquipmentSlot
-import kotlin.text.get
 
 object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefinition>>("items") {
 
@@ -40,9 +43,10 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
 
         val equipmentSlot: EquipmentSlot?,
         val maxStackSize: Int,
-        val itemBehaviour: ItemBehaviour,
+
         val properties: Map<String, Any> = emptyMap(),
-    )
+        override val behaviour: ItemBehaviour,
+    ): ElementDefinition<BaseProperties, BaseItem>
 
     override suspend fun cleanupSchema() {}
 
@@ -102,7 +106,7 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
                     legacyItemModel = legacyModelId,
                     equipmentSlot = equipmentSlot,
                     maxStackSize = maxStackSize,
-                    itemBehaviour = itemBehaviour,
+                    behaviour = itemBehaviour,
                     properties = properties,
                 )
             )

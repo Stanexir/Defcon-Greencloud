@@ -25,21 +25,17 @@ import com.github.shynixn.mccoroutine.bukkit.ticks
 import io.papermc.paper.event.entity.EntityEquipmentChangedEvent
 import kotlinx.coroutines.delay
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.items.ItemBehaviour
+import me.mochibit.defcon.registry.items.ItemBehaviour
 import me.mochibit.defcon.events.equip.CustomItemEquipEvent
 import me.mochibit.defcon.events.radiationarea.RadiationSuffocationEvent
 import me.mochibit.defcon.extensions.getBehaviour
 import me.mochibit.defcon.extensions.random
-import me.mochibit.defcon.registers.listener.UniversalVersionIndicator
-import me.mochibit.defcon.registers.listener.VersionIndicator
+import me.mochibit.defcon.registry.listeners.UniversalVersionIndicator
+import me.mochibit.defcon.registry.listeners.VersionIndicator
 import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.block.Action
-import org.bukkit.event.inventory.ClickType
-import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.event.player.PlayerInteractEvent
 
 
 @UniversalVersionIndicator

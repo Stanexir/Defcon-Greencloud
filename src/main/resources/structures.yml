@@ -1,78 +1,65 @@
-# This file is the main configuration file to define the multi-block structures of the plugin.
-# Rules
-
-#------------------------------------------------------------------------------
-# RULES
-#------------------------------------------------------------------------------
-
-# Every structure has a specific id.
-
-#block-set: The blocks that compose the structure.
-#  - a:bomb-core | name:definitions-block-id
-#  - b:bomb-casing
-#  - c:bomb-interface
-
-#block-dispositions:
-#  - set_name: | The name of the set of blocks
-#      y: 0 | The y position of the set of blocks
-#      dispositions: | The disposition of the blocks
-#        - b,b,b
-#        - b,b,b
-#        - b,b,b
-
-# How the dispositions are read:
-#  - b,b,b | The disposition of the blocks (x,z plane)
-# There are some operators
-#  , -> Separator for the blocks
-#  || -> Make one block count for another, for example b||c will make a valid structure with b or c
-#
-# structure-requires-interface: true | If the structure requires an interface block to be accessed
-# structure-interface-blocks: | The blocks that can be used as interface
-# behaviour: | The behaviour of the structure
-
-# The behaviour of the structure can be:
-#  - warhead | The structure is a warhead
-#  - launch_pad | The structure is used to launch rockets and missiles
-#  - generator | The structure is a generator
-#  - refiner | The structure is a refiner
-#  - pump | The structure is a pump
+# Shapeless structures do not have a defined shape and can be placed in any configuration.
+# They are defined by the presence of specific blocks within a certain area.
+# The structure is recognized if all required blocks are present within the defined area, regardless of their arrangement.
 
 
-
+# Shaped structures have defined shapes, but can have some flexibility in block placement
 
 enabled-structures:
-  - bomb
+  - nuclear-warhead
+  - fat-boy
 
-#------------------------------------------------------------------------------
-# STRUCTURES
-#------------------------------------------------------------------------------
+nuclear-warhead:
+  display-name: "Nuclear warhead"
+  description: |
+    A nuclear warhead is a mass-destruction weapon that can be configured to be fission only
+    (gun-type or implosion-type) or a two-stage thermonuclear weapon (boosted fission or true fusion).
+  structure:
+    type: "shapeless"
+    required-blocks:
+      - "defcon:fission-core"
+      - "defcon:warhead-interface"
+    optional-blocks:
+      - "defcon:fusion-core"
+  behaviour: "nuclear-warhead"
 
-bomb:
-  block-set:
-    - a:bomb-core
-    - b:bomb-casing
-    - c:bomb-interface
-  block-dispositions:
-    - set0:
-        y: 0
-        dispositions:
-          - b,b,b
-          - b,b,b
-          - b,b,b
-    - set1:
-        y: 1
-        dispositions:
-          - b,b,b
-          - b,a,b
-          - b,b,b
-    - set2:
-        y: 2
-        dispositions:
-          - b,b,b
-          - b,c,b
-          - b,b,b
-  requires-interface: true
-  interface-blocks:
-    - c
-  behaviour: "warhead"
-
+little-boy:
+  display-name: "<yellow> Fat-boy </yellow>"
+  description: |
+    The OG
+  structure:
+    type: "shaped"
+    pattern:
+      y-0:
+        - "--b--y"
+        - "wybywy"
+        - "--b--y"
+      y-1:
+        - "wyIywy"
+        - "yXXXy-"
+        - "wyIywy"
+      y-2:
+        - "--b--y"
+        - "wybywy"
+        - "--b--y"
+    mapping:
+      b:
+        block: "minecraft:black_concrete"
+      w:
+        block: "minecraft:blackstone_wall"
+      y:
+        block: "minecraft:yellow_terracotta"
+      X:
+        any-of: [ "defcon:fission-core" ]
+      I:
+        recommended-of: [ "defcon:warhead-interface" ]
+    mapping-rules:
+      X:
+        min: 1
+        max: 1
+      I:
+        min: 1
+        any-location-non-air: true
+    properties:
+      warhead-type: "droppable-payload"
+    behaviour: "nuclear-warhead"

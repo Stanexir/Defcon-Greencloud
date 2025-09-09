@@ -25,10 +25,13 @@ import me.mochibit.defcon.biomes.CustomBiomeHandler
 import me.mochibit.defcon.config.PluginConfiguration
 import me.mochibit.defcon.notification.NotificationManager
 import me.mochibit.defcon.radiation.RadiationManager
-import me.mochibit.defcon.registers.*
+import me.mochibit.defcon.registry.*
+import me.mochibit.defcon.registry.items.ItemRegistry
+import me.mochibit.defcon.registry.listeners.EventRegister
+import me.mochibit.defcon.registry.pack.DatapackRegister
+import me.mochibit.defcon.registry.pack.ResourcePackRegister
 import me.mochibit.defcon.server.ResourcePackServer
 import org.bukkit.Bukkit
-import org.bukkit.plugin.java.JavaPlugin
 
 
 class Defcon : SuspendingJavaPlugin() {
@@ -57,7 +60,7 @@ class Defcon : SuspendingJavaPlugin() {
         EventRegister.registerAllListeners()
 
         /* Register definitions items */
-        if (!ItemRegister().registerItems()) {
+        if (!ItemRegistry().registerItems()) {
             info("Some items were not registered!")
         }
 

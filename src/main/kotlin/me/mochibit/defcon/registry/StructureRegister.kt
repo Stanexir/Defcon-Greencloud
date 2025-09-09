@@ -17,8 +17,27 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.classes.structures
+package me.mochibit.defcon.registry
 
-import org.bukkit.Location
+import me.mochibit.defcon.Defcon
+import org.bukkit.plugin.java.JavaPlugin
 
-data class StructureQuery(val structures: List<StructureDefinition>, val appliedLocations: List<Location>)
+import java.util.*
+import kotlin.collections.HashMap
+
+class StructureRegister() {
+    private var pluginInstance: JavaPlugin? = null
+
+    init {
+        // Get the instance of the plugin
+        this.pluginInstance = JavaPlugin.getPlugin(Defcon::class.java);
+    }
+
+    fun registerStructures() {
+
+    }
+
+    companion object {
+        private var registeredStructures: HashMap<String, StructureDefinition> = HashMap()
+    }
+}

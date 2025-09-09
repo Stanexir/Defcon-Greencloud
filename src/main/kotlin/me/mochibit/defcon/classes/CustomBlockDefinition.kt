@@ -25,7 +25,7 @@ import me.mochibit.defcon.enums.BlockDataKey
 import me.mochibit.defcon.interfaces.PluginBlock
 import me.mochibit.defcon.utils.MetaManager
 import com.jeff_media.customblockdata.CustomBlockData
-import me.mochibit.defcon.items.variants.PluginItem
+import me.mochibit.defcon.registry.items.variants.PluginItem
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
 import org.bukkit.persistence.PersistentDataContainer

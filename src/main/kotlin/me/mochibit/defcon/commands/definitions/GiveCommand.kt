@@ -31,7 +31,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack
 import io.papermc.paper.command.brigadier.Commands
 import me.mochibit.defcon.commands.CommandInfo
 import me.mochibit.defcon.commands.GenericCommand
-import me.mochibit.defcon.registers.ItemRegister
+import me.mochibit.defcon.registry.items.ItemRegistry
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import java.util.concurrent.CompletableFuture
@@ -69,7 +69,7 @@ class GiveCommand : GenericCommand() {
         builder: SuggestionsBuilder
     ): CompletableFuture<Suggestions> {
         val prefix = builder.remainingLowerCase
-        ItemRegister.registeredItems.keys
+        ItemRegistry.registeredItems.keys
             .filterNotNull()
             .filter { it.lowercase().startsWith(prefix) }
             .forEach(builder::suggest)
@@ -137,7 +137,7 @@ class GiveCommand : GenericCommand() {
      */
     private fun giveItemToPlayer(sender: org.bukkit.command.CommandSender, targetPlayer: Player, itemId: String): Int {
         // Get the item from the register
-        val item = ItemRegister.registeredItems[itemId]
+        val item = ItemRegistry.registeredItems[itemId]
 
         if (item == null) {
             sendMessage(sender, "Item with ID '$itemId' not found in the registry", isError = true)

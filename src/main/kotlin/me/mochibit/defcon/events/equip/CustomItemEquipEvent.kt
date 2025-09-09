@@ -37,8 +37,7 @@ package me.mochibit.defcon.events.equip
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import me.mochibit.defcon.items.ItemBehaviour
-import org.bukkit.entity.HumanEntity
+import me.mochibit.defcon.registry.items.ItemBehaviour
 import org.bukkit.entity.Player
 import org.bukkit.event.Cancellable
 import org.bukkit.event.Event

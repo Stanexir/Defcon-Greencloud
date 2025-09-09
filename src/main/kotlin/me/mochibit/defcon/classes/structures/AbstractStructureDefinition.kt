@@ -21,7 +21,6 @@ package me.mochibit.defcon.classes.structures
 import me.mochibit.defcon.classes.StructureBlock
 import me.mochibit.defcon.enums.BlockDataKey
 import me.mochibit.defcon.enums.StructureBehaviour
-import me.mochibit.defcon.interfaces.StructureDefinition
 import me.mochibit.defcon.utils.MetaManager
 import org.bukkit.Location
 

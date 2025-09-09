@@ -20,7 +20,6 @@
 package me.mochibit.defcon.enums
 
 import me.mochibit.defcon.classes.structures.NuclearWarhead
-import me.mochibit.defcon.interfaces.StructureDefinition
 
 
 enum class StructureBehaviour(name: String) {
