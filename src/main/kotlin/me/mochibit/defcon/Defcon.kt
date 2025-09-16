@@ -25,11 +25,11 @@ import me.mochibit.defcon.biomes.CustomBiomeHandler
 import me.mochibit.defcon.config.PluginConfiguration
 import me.mochibit.defcon.notification.NotificationManager
 import me.mochibit.defcon.radiation.RadiationManager
-import me.mochibit.defcon.registry.*
-import me.mochibit.defcon.registry.items.ItemRegistry
-import me.mochibit.defcon.registry.listeners.EventRegister
-import me.mochibit.defcon.registry.pack.DatapackRegister
-import me.mochibit.defcon.registry.pack.ResourcePackRegister
+import me.mochibit.defcon.content.*
+import me.mochibit.defcon.content.items.ItemRegistry
+import me.mochibit.defcon.content.listeners.EventRegister
+import me.mochibit.defcon.content.pack.DatapackRegister
+import me.mochibit.defcon.content.pack.ResourcePackRegister
 import me.mochibit.defcon.server.ResourcePackServer
 import org.bukkit.Bukkit
 

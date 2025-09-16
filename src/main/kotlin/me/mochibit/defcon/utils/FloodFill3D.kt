@@ -2,7 +2,7 @@ package me.mochibit.defcon.utils
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import me.mochibit.defcon.registry.BlockRegister
+import me.mochibit.defcon.content.BlockRegister
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.World

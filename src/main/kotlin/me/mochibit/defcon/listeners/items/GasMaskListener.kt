@@ -25,13 +25,13 @@ import com.github.shynixn.mccoroutine.bukkit.ticks
 import io.papermc.paper.event.entity.EntityEquipmentChangedEvent
 import kotlinx.coroutines.delay
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.registry.items.ItemBehaviour
+import me.mochibit.defcon.content.items.ItemBehaviour
 import me.mochibit.defcon.events.equip.CustomItemEquipEvent
 import me.mochibit.defcon.events.radiationarea.RadiationSuffocationEvent
 import me.mochibit.defcon.extensions.getBehaviour
 import me.mochibit.defcon.extensions.random
-import me.mochibit.defcon.registry.listeners.UniversalVersionIndicator
-import me.mochibit.defcon.registry.listeners.VersionIndicator
+import me.mochibit.defcon.content.listeners.UniversalVersionIndicator
+import me.mochibit.defcon.content.listeners.VersionIndicator
 import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -101,88 +101,6 @@ class GasMaskEquipListenerLegacy: Listener {
             }
         }
     }
-
-//    @EventHandler()
-//    fun onGasMaskEquip(event: InventoryClickEvent) {
-//        val player = event.whoClicked as? Player ?: return
-//
-//        // Case 1: Player clicks on helmet slot (slot 39)
-//        if (event.slot == 39 || event.rawSlot == 39) {
-//            // Check if player is putting on gas mask from cursor
-//            val cursorItem = event.cursor
-//            if (!cursorItem.type.isAir && cursorItem.getBehaviour() == ItemBehaviour.GAS_MASK) {
-//                // Player is placing gas mask on head - schedule check after event processes
-//                Defcon.instance.launch {
-//                    delay(1.ticks)
-//                    val helmet = player.inventory.helmet
-//                    if (helmet != null && helmet.getBehaviour() == ItemBehaviour.GAS_MASK) {
-//                        playGasMaskSound(player)
-//                    }
-//                }
-//                return
-//            }
-//        }
-//
-//        // Case 2: Shift-clicking gas mask from inventory
-//        if (event.isShiftClick) {
-//            val clickedItem = event.currentItem ?: return
-//            if (clickedItem.getBehaviour() == ItemBehaviour.GAS_MASK) {
-//                // Check if helmet slot is empty (so shift-click would equip it)
-//                if (player.inventory.helmet == null || player.inventory.helmet?.type?.isAir == true) {
-//                    // Schedule task with slightly longer delay to ensure inventory updates first
-//                    Defcon.instance.launch {
-//                        delay(1.ticks)
-//                        val helmet = player.inventory.helmet
-//                        if (helmet != null && helmet.getBehaviour() == ItemBehaviour.GAS_MASK) {
-//                            playGasMaskSound(player)
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        // Case 3: Number key hotswap (pressing 1-9 while hovering over helmet)
-//        if (event.click == ClickType.NUMBER_KEY) {
-//            val hotbarItem = player.inventory.getItem(event.hotbarButton)
-//            if (hotbarItem != null && hotbarItem.getBehaviour() == ItemBehaviour.GAS_MASK &&
-//                (event.slot == 39 || event.rawSlot == 39)
-//            ) {
-//                Defcon.instance.launch {
-//                    delay(1.ticks)
-//                    val helmet = player.inventory.helmet
-//                    if (helmet != null && helmet.getBehaviour() == ItemBehaviour.GAS_MASK) {
-//                        playGasMaskSound(player)
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    @EventHandler
-//    fun onGasMaskEquipFast(event: PlayerInteractEvent) {
-//        // Only handle right-click air or right-click block events
-//        if (event.action != Action.RIGHT_CLICK_AIR && event.action != Action.RIGHT_CLICK_BLOCK) return
-//
-//        val player = event.player
-//        val item = event.item ?: return
-//
-//        // Check if item is gas mask
-//        if (item.getBehaviour() != ItemBehaviour.GAS_MASK) return
-//
-//        // Check if player has no helmet (so right-click would equip it)
-//        val currentHelmet = player.inventory.helmet
-//        if (currentHelmet != null && !currentHelmet.type.isAir) return
-//
-//        // The right-click auto-equip happens AFTER this event fires
-//        // So we need a delayed task to check if it was actually equipped
-//        Defcon.instance.launch {
-//            delay(1.ticks)
-//            val helmet = player.inventory.helmet
-//            if (helmet != null && helmet.getBehaviour() == ItemBehaviour.GAS_MASK) {
-//                playGasMaskSound(player)
-//            }
-//        }
-//    }
 }
 
 // Helper function to play the sound

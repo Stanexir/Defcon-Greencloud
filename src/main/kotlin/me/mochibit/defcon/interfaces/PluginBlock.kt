@@ -20,7 +20,7 @@
 package me.mochibit.defcon.interfaces
 
 import me.mochibit.defcon.enums.BlockBehaviour
-import me.mochibit.defcon.registry.items.variants.PluginItem
+import me.mochibit.defcon.content.items.PluginItem
 import org.bukkit.Location
 
 interface PluginBlock {

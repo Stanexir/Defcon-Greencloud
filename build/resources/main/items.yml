@@ -1,5 +1,3 @@
-
-
 items:
   gas-mask:
     display-name: "Gas mask"
@@ -9,7 +7,7 @@ items:
     legacy-model-id: 1 # Legacy model ID
     equip-slot: "head"
     max-stack-size: 1
-    behaviour: "gas-mask"
+    behaviour: "gas_mask"
 
   iodine-pills:
     display-name: "Iodine pills"
@@ -17,7 +15,7 @@ items:
       Decreases the absorbed radiation levels, helping to heal radiation sickness
     minecraft-id: PUMPKIN_SEEDS
     max-stack-size: 64
-    behaviour: "radiation-healer"
+    behaviour: "radiation_healer"
     properties:
       heal-amount: 0.5
       duration-seconds: 15
@@ -30,11 +28,11 @@ items:
       <yellow>RIGHT CLICK</yellow> to read the radiation values
     minecraft-id: COMPASS
     max-stack-size: 1
-    behaviour: "geiger-counter"
+    behaviour: "radiation_measurer"
 
   wrench:
     display-name: "<gradient:#fff3a3:#adadad>Wrench</gradient>"
     description: "Handy yet dangerous"
     minecraft-id: STONE_SWORD
     max-stack-size: 1
-    behaviour: "wrench"
+    behaviour: "structure_assembler"

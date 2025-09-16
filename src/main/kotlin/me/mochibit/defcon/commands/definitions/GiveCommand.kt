@@ -31,7 +31,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack
 import io.papermc.paper.command.brigadier.Commands
 import me.mochibit.defcon.commands.CommandInfo
 import me.mochibit.defcon.commands.GenericCommand
-import me.mochibit.defcon.registry.items.ItemRegistry
+import me.mochibit.defcon.content.items.ItemRegistry
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import java.util.concurrent.CompletableFuture

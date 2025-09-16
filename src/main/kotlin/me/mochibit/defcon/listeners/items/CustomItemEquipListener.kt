@@ -1,12 +1,12 @@
 package me.mochibit.defcon.listeners.items
 
 import me.mochibit.defcon.utils.Logger.warn
-import me.mochibit.defcon.registry.items.ItemBehaviour
+import me.mochibit.defcon.content.items.ItemBehaviour
 import me.mochibit.defcon.events.equip.CustomItemEquipEvent
 import me.mochibit.defcon.extensions.equipSlotName
 import me.mochibit.defcon.extensions.getBehaviour
 import me.mochibit.defcon.extensions.getItemID
-import me.mochibit.defcon.registry.listeners.VersionIndicator
+import me.mochibit.defcon.content.listeners.VersionIndicator
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -652,7 +652,7 @@ class CustomItemEquipListener : Listener {
         player: Player
     ): Boolean {
         // Get behavior for this item
-        val itemBehaviour = item.getBehaviour() ?: ItemBehaviour.GENERIC
+        val itemBehaviour = item.getBehaviour()
 
         // Create and call event
         val customItemEquipEvent = CustomItemEquipEvent(item, itemBehaviour, rawSlot, player)

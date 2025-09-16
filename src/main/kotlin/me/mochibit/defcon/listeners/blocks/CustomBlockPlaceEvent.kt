@@ -21,8 +21,8 @@ package me.mochibit.defcon.listeners.blocks
 
 import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.interfaces.PluginItem
-import me.mochibit.defcon.registry.BlockRegister
-import me.mochibit.defcon.registry.items.ItemRegistry
+import me.mochibit.defcon.content.BlockRegister
+import me.mochibit.defcon.content.items.ItemRegistry
 import org.bukkit.NamespacedKey
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
