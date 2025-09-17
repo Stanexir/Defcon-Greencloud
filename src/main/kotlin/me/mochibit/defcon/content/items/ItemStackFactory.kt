@@ -28,11 +28,11 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
 
 interface ItemStackFactory {
-    fun create(properties: ItemProperties): ItemStack
+    fun create(properties: PluginItemProperties): ItemStack
 }
 
 open class BaseItemStackFactory() : ItemStackFactory {
-    override fun create(properties: ItemProperties): ItemStack {
+    override fun create(properties: PluginItemProperties): ItemStack {
         val baseMaterial = getMaterial(properties)
         val item = ItemStack(baseMaterial)
         val meta = item.itemMeta
@@ -44,20 +44,20 @@ open class BaseItemStackFactory() : ItemStackFactory {
         return item
     }
 
-    open fun getMaterial(properties: ItemProperties): Material =
+    open fun getMaterial(properties: PluginItemProperties): Material =
         Material.getMaterial(properties.minecraftId)
             ?: throw IllegalArgumentException("Material ${properties.minecraftId} does not exist")
 
 
-    open fun applyId(baseMeta: ItemMeta, properties: ItemProperties) {
+    open fun applyId(baseMeta: ItemMeta, properties: PluginItemProperties) {
         baseMeta.setStringData(Defcon.namespacedKey("item-id"), properties.id)
     }
 
-    open fun applyDisplayName(baseMeta: ItemMeta, properties: ItemProperties) {
+    open fun applyDisplayName(baseMeta: ItemMeta, properties: PluginItemProperties) {
         baseMeta.customName(MiniMessage.miniMessage().deserialize(properties.displayName))
     }
 
-    open fun applyDescription(baseMeta: ItemMeta, properties: ItemProperties) {
+    open fun applyDescription(baseMeta: ItemMeta, properties: PluginItemProperties) {
         properties.description?.let { desc ->
             baseMeta.lore(
                 desc.split("\n").map { MiniMessage.miniMessage().deserialize(it) }
@@ -65,13 +65,13 @@ open class BaseItemStackFactory() : ItemStackFactory {
         }
     }
 
-    open fun applyItemModel(baseMeta: ItemMeta, properties: ItemProperties) {
+    open fun applyItemModel(baseMeta: ItemMeta, properties: PluginItemProperties) {
         properties.itemModel?.let {
             baseMeta.itemModel = it
         }
     }
 
-    open fun applyEquipmentSlot(baseMeta: ItemMeta, properties: ItemProperties) {
+    open fun applyEquipmentSlot(baseMeta: ItemMeta, properties: PluginItemProperties) {
         properties.equipmentSlot?.let {
             val component = baseMeta.equippable
             component.slot = it
@@ -82,13 +82,13 @@ open class BaseItemStackFactory() : ItemStackFactory {
 
 class LegacyItemStackFactory(
 ) : BaseItemStackFactory() {
-    override fun applyItemModel(baseMeta: ItemMeta, properties: ItemProperties) {
+    override fun applyItemModel(baseMeta: ItemMeta, properties: PluginItemProperties) {
         properties.legacyProperties.legacyItemModel?.let {
             baseMeta.setCustomModelData(it)
         }
     }
 
-    override fun getMaterial(properties: ItemProperties): Material {
+    override fun getMaterial(properties: PluginItemProperties): Material {
         val materialName = properties.legacyProperties.legacyMinecraftId ?: properties.minecraftId
         val material = Material.getMaterial(materialName) ?: throw IllegalArgumentException("Material $materialName does not exist")
         return material

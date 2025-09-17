@@ -19,4 +19,7 @@
 
 package me.mochibit.defcon.content.element
 
-interface ElementData
+interface Element {
+    val properties: ElementProperties
+    val behaviourProperties : ElementBehaviourProperties
+}

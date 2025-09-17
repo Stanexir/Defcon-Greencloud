@@ -23,19 +23,18 @@ import me.mochibit.defcon.content.element.ElementProperties
 import org.bukkit.NamespacedKey
 import org.bukkit.inventory.EquipmentSlot
 
-sealed interface ItemProperties : ElementProperties {
-    val id: String
-    val displayName: String
-    val description: String?
+open class PluginItemProperties(
+    val id: String,
+    val displayName: String,
+    val description: String?,
 
-    val minecraftId: String
-    val itemModel: NamespacedKey?
+    val minecraftId: String,
+    val itemModel: NamespacedKey?,
 
-    val equipmentSlot: EquipmentSlot?
-    val maxStackSize: Int
-
+    val equipmentSlot: EquipmentSlot?,
+    val maxStackSize: Int,
     val legacyProperties: LegacyProperties
-
+): ElementProperties {
     data class LegacyProperties(
         val legacyMinecraftId: String?,
         val legacyItemModel: Int?

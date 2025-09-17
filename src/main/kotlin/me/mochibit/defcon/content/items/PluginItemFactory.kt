@@ -21,12 +21,16 @@ package me.mochibit.defcon.content.items
 
 import me.mochibit.defcon.config.ItemsConfiguration
 import me.mochibit.defcon.content.element.AbstractElementFactory
-import me.mochibit.defcon.content.items.BaseItem
+import me.mochibit.defcon.content.items.gasMask.GasMaskItem
+import me.mochibit.defcon.content.items.radiationHealer.RadiationHealerDataParser
+import me.mochibit.defcon.content.items.radiationHealer.RadiationHealerItem
+import me.mochibit.defcon.content.items.radiationMeasurer.RadiationMeasurerItem
+import me.mochibit.defcon.content.items.structureAssembler.StructureAssemblerItem
 
 
-object ItemFactory : AbstractElementFactory<BaseItemProperties, BaseItem, ItemsConfiguration.ItemDefinition>() {
-    override fun makeBaseProperties(elementDefinition: ItemsConfiguration.ItemDefinition): BaseItemProperties {
-        return BaseItemProperties(
+object PluginItemFactory : AbstractElementFactory<PluginItemProperties, PluginItem, ItemsConfiguration.ItemDefinition>() {
+    override fun create(elementDefinition: ItemsConfiguration.ItemDefinition): PluginItem {
+        val properties = PluginItemProperties(
             id = elementDefinition.id,
             displayName = elementDefinition.displayName,
             description = elementDefinition.description,
@@ -35,14 +39,19 @@ object ItemFactory : AbstractElementFactory<BaseItemProperties, BaseItem, ItemsC
             itemModel = elementDefinition.itemModel,
             equipmentSlot = elementDefinition.equipmentSlot,
             maxStackSize = elementDefinition.maxStackSize,
-            legacyProperties = ItemProperties.LegacyProperties(
+            legacyProperties = PluginItemProperties.LegacyProperties(
                 legacyMinecraftId = elementDefinition.legacyMinecraftId,
                 legacyItemModel = elementDefinition.legacyItemModel
             )
         )
-    }
 
-    override fun getAdditionalData(elementDefinition: ItemsConfiguration.ItemDefinition): Map<String, Any> {
-        return elementDefinition.properties
+        return when (elementDefinition.behaviour) {
+            ItemBehaviour.GAS_MASK -> GasMaskItem(properties)
+            ItemBehaviour.RADIATION_MEASURER -> RadiationMeasurerItem(properties)
+            ItemBehaviour.RADIATION_HEALER -> {
+                RadiationHealerItem(properties, elementDefinition.additionalData)
+            }
+            ItemBehaviour.STRUCTURE_ASSEMBLER -> StructureAssemblerItem(properties)
+        }
     }
 }

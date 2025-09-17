@@ -19,6 +19,9 @@
 
 package me.mochibit.defcon.content.element
 
-interface ElementBehaviour<in P: ElementProperties, out Element> {
-    val factory: (baseProperties: P, additionalData: Map<String, Any>) -> Element
+import me.mochibit.defcon.content.items.PluginItem
+import me.mochibit.defcon.content.items.PluginItemProperties
+
+interface ElementBehaviour {
+    fun createElement()
 }

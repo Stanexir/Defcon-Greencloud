@@ -19,10 +19,10 @@
 
 package me.mochibit.defcon.content.items.radiationHealer
 
-import me.mochibit.defcon.content.items.BaseItemProperties
-import me.mochibit.defcon.content.items.BaseItem
+import me.mochibit.defcon.content.items.PluginItemProperties
+import me.mochibit.defcon.content.items.PluginItem
 
 class RadiationHealerItem(
-    baseProperties: BaseItemProperties,
-    val healerProperties: RadiationHealerData
-) : BaseItem(baseProperties)
+    baseProperties: PluginItemProperties,
+    additionalData: Map<String, Any>
+) : PluginItem<RadiationHealerProperties>(baseProperties, additionalData, RadiationHealerDataParser)

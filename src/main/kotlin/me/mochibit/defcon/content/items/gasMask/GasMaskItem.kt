@@ -19,9 +19,9 @@
 
 package me.mochibit.defcon.content.items.gasMask
 
-import me.mochibit.defcon.content.items.BaseItemProperties
-import me.mochibit.defcon.content.items.BaseItem
+import me.mochibit.defcon.content.items.PluginItemProperties
+import me.mochibit.defcon.content.items.PluginItem
 
 class GasMaskItem(
-    override val properties: BaseItemProperties
-) : BaseItem(properties) {}
+    override val properties: PluginItemProperties
+) : PluginItem(properties) {}

@@ -19,15 +19,8 @@
 
 package me.mochibit.defcon.content.items
 
-import io.papermc.paper.registry.RegistryAccess
 import me.mochibit.defcon.config.ItemsConfiguration
-import me.mochibit.defcon.content.items.PluginItem
-import me.mochibit.defcon.extensions.getMaterialTagFromString
 import me.mochibit.defcon.utils.Logger
-import org.bukkit.Bukkit
-import org.bukkit.Material
-import org.bukkit.Registry
-import org.bukkit.Tag
 
 /**
  * This class handles the registration of the definitions items
@@ -44,7 +37,7 @@ class ItemRegistry {
      */
     suspend fun registerItems(): Boolean {
         registeredItems = HashMap()
-        /* REGISTER THE ITEMS COMING FROM THE CONFIG */
+
         val configurationItems = ItemsConfiguration.getSchema()
         if (configurationItems.isEmpty()) {
             Logger.warn("No items found in the configuration, skipping item registration")
@@ -56,10 +49,7 @@ class ItemRegistry {
                 Logger.warn("Item ${item.id} is already registered (probably duplicated?), skipping")
                 return@forEach
             }
-
-
-
-            val customItem = ItemFactory.create(item)
+            val customItem = PluginItemFactory.create(item)
             Logger.info("Registered item ${item.id}")
             registeredItems[customItem.properties.id] = customItem
         }

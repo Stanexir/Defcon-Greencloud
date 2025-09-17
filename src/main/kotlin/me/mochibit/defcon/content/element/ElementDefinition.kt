@@ -19,6 +19,13 @@
 
 package me.mochibit.defcon.content.element
 
-interface ElementDefinition<Properties: ElementProperties, ProducedElement> {
-    val behaviour: ElementBehaviour<Properties, ProducedElement>
+/**
+ * Contract based definition of an element
+ * @param Properties The properties in common of the element
+ * @param ProducedElement The actual element produced by this definition, and it must be an Element
+ *
+ * It's useful for allowing data-driven element configuration, like loading from JSON or other formats.
+ */
+interface ElementDefinition<Properties: ElementProperties, ProducedElement: Element> {
+    val behaviour: ElementBehaviour
 }

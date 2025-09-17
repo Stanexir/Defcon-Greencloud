@@ -19,15 +19,6 @@
 
 package me.mochibit.defcon.content.element
 
-abstract class AbstractElementFactory<P : ElementProperties, ProducedElement, E : ElementDefinition<P, ProducedElement>> {
-    protected abstract fun makeBaseProperties(elementDefinition: E): P
-    protected open fun getAdditionalData(elementDefinition: E): Map<String, Any> {
-        return emptyMap()
-    }
-
-    fun create(elementDefinition: E): ProducedElement {
-        val baseProperties = makeBaseProperties(elementDefinition)
-        val factory = elementDefinition.behaviour.factory
-        return factory(baseProperties, getAdditionalData(elementDefinition))
-    }
+abstract class AbstractElementFactory<P : ElementProperties, ProducedElement: Element, E : ElementDefinition<P, ProducedElement>> {
+    abstract fun create(elementDefinition: E): ProducedElement
 }

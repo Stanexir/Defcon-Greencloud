@@ -19,10 +19,14 @@
 
 package me.mochibit.defcon.config
 
+import me.mochibit.defcon.content.element.ElementBehaviour
+import me.mochibit.defcon.content.element.ElementBehaviourProperties
 import me.mochibit.defcon.content.element.ElementDefinition
+import me.mochibit.defcon.content.element.ElementProperties
 import me.mochibit.defcon.content.items.ItemBehaviour
-import me.mochibit.defcon.content.items.BaseItemProperties
-import me.mochibit.defcon.content.items.BaseItem
+import me.mochibit.defcon.content.items.PluginItemProperties
+import me.mochibit.defcon.content.items.PluginItem
+import me.mochibit.defcon.content.items.radiationHealer.RadiationHealerProperties
 import me.mochibit.defcon.utils.Logger
 import org.bukkit.NamespacedKey
 import org.bukkit.inventory.EquipmentSlot
@@ -42,10 +46,9 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
 
         val equipmentSlot: EquipmentSlot?,
         val maxStackSize: Int,
-
-        val properties: Map<String, Any> = emptyMap(),
-        override val behaviour: ItemBehaviour,
-    ): ElementDefinition<BaseItemProperties, BaseItem>
+        val additionalData: Map<String, Any>,
+        override val behaviour: ItemBehaviour
+    ): ElementDefinition<PluginItemProperties, PluginItem>
 
     override suspend fun cleanupSchema() {}
 
@@ -77,7 +80,6 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
                     null
             }
 
-
             val maxStackSize = config.getInt("$id.max-stack-size", 64)
             val behaviourValue = config.getString("$id.behaviour") ?: return@forEach
 
@@ -106,7 +108,7 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
                     equipmentSlot = equipmentSlot,
                     maxStackSize = maxStackSize,
                     behaviour = itemBehaviour,
-                    properties = properties,
+                    additionalData = properties,
                 )
             )
         }

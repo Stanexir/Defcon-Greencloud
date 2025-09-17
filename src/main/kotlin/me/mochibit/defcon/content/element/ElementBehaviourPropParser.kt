@@ -17,11 +17,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.content.items.radiationHealer
+package me.mochibit.defcon.content.element
 
-import me.mochibit.defcon.content.element.ElementData
-
-data class RadiationHealerData(
-    val healAmount: Double,
-    val durationSeconds: Long
-) : ElementData
+interface ElementBehaviourPropParser<T: ElementBehaviourProperties> {
+    fun parse(data: Map<String, Any>): T
+}

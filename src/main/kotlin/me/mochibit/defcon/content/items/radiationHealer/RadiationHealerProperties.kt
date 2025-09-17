@@ -17,21 +17,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.content.items
+package me.mochibit.defcon.content.items.radiationHealer
 
-import org.bukkit.NamespacedKey
-import org.bukkit.inventory.EquipmentSlot
+import me.mochibit.defcon.content.element.ElementBehaviourProperties
 
-open class BaseItemProperties(
-    override val id: String,
-    override val displayName: String,
-    override val description: String?,
-
-    override val minecraftId: String,
-    override val itemModel: NamespacedKey?,
-
-    override val equipmentSlot: EquipmentSlot?,
-    override val maxStackSize: Int,
-
-    override val legacyProperties: ItemProperties.LegacyProperties
-): ItemProperties
+data class RadiationHealerProperties(
+    val healAmount: Double,
+    val durationSeconds: Long
+) : ElementBehaviourProperties

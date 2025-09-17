@@ -19,14 +19,14 @@
 
 package me.mochibit.defcon.content.items.radiationHealer
 
-import me.mochibit.defcon.content.element.ElementDataParser
+import me.mochibit.defcon.content.element.ElementBehaviourPropParser
 
-object RadiationHealerDataParser : ElementDataParser<RadiationHealerData> {
-    override fun parse(data: Map<String, Any>): RadiationHealerData {
+object RadiationHealerDataParser : ElementBehaviourPropParser<RadiationHealerProperties> {
+    override fun parse(data: Map<String, Any>): RadiationHealerProperties {
         val healAmount = (data["heal-amount"] as? Number)?.toDouble()
             ?: throw IllegalArgumentException("heal-amount is required and must be a number")
         val durationSeconds = (data["duration-seconds"] as? Number)?.toLong()
             ?: throw IllegalArgumentException("duration-seconds is required and must be a number")
-        return RadiationHealerData(healAmount, durationSeconds)
+        return RadiationHealerProperties(healAmount, durationSeconds)
     }
 }

@@ -19,9 +19,9 @@
 
 package me.mochibit.defcon.content.items.structureAssembler
 
-import me.mochibit.defcon.content.items.BaseItemProperties
-import me.mochibit.defcon.content.items.BaseItem
+import me.mochibit.defcon.content.items.PluginItemProperties
+import me.mochibit.defcon.content.items.PluginItem
 
 class StructureAssemblerItem(
-    override val properties: BaseItemProperties
-) : BaseItem(properties) {}
+    override val properties: PluginItemProperties
+) : PluginItem(properties) {}

@@ -21,11 +21,10 @@ package me.mochibit.defcon.content.items
 
 import me.mochibit.defcon.content.element.ElementData
 import me.mochibit.defcon.content.element.ElementDataParser
-import me.mochibit.defcon.content.items.BaseItem
 
 inline fun <T: ElementData> ElementDataParser<T>.withItemFactory(
-    crossinline factory: (BaseItemProperties, T) -> BaseItem
-): (BaseItemProperties, Map<String, Any>) -> BaseItem {
+    crossinline factory: (PluginItemProperties, T) -> PluginItem
+): (PluginItemProperties, Map<String, Any>) -> PluginItem {
     return { baseProperties, rawData ->
         val parsedData = this.parse(rawData)
         factory(baseProperties, parsedData)

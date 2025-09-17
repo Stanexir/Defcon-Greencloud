@@ -20,27 +20,18 @@
 package me.mochibit.defcon.content.items
 
 import me.mochibit.defcon.content.element.ElementBehaviour
-import me.mochibit.defcon.content.items.radiationHealer.RadiationHealerDataParser
+import me.mochibit.defcon.content.element.ElementBehaviourProperties
+
 import me.mochibit.defcon.content.items.gasMask.GasMaskItem
 import me.mochibit.defcon.content.items.radiationMeasurer.RadiationMeasurerItem
 import me.mochibit.defcon.content.items.radiationHealer.RadiationHealerItem
+import me.mochibit.defcon.content.items.radiationHealer.RadiationHealerProperties
 import me.mochibit.defcon.content.items.structureAssembler.StructureAssemblerItem
 
 
-enum class ItemBehaviour(
-    override val factory: (BaseItemProperties, Map<String, Any>) -> BaseItem,
-) : ElementBehaviour<BaseItemProperties, BaseItem> {
-    GAS_MASK({ baseProperties, _ ->
-        GasMaskItem(baseProperties)
-    }),
-    RADIATION_HEALER(
-        RadiationHealerDataParser.withItemFactory { baseProperties, additionalData ->
-            RadiationHealerItem(baseProperties, additionalData)
-        }),
-    RADIATION_MEASURER({ baseProperties, _ ->
-        RadiationMeasurerItem(baseProperties)
-    }),
-    STRUCTURE_ASSEMBLER({ baseProperties, _ ->
-        StructureAssemblerItem(baseProperties)
-    }),
+enum class ItemBehaviour: ElementBehaviour {
+    GAS_MASK,
+    RADIATION_MEASURER,
+    RADIATION_HEALER,
+    STRUCTURE_ASSEMBLER;
 }
