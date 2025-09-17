@@ -19,6 +19,6 @@
 
 package me.mochibit.defcon.content.element
 
-interface ElementBehaviourPropParser<T: ElementBehaviourProperties> {
-    fun parse(data: Map<String, Any>): T
+interface ElementBehaviourPropParser {
+    fun parse(data: Map<String, Any>): ElementBehaviourProperties
 }

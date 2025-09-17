@@ -28,7 +28,8 @@ import me.mochibit.defcon.content.items.radiationMeasurer.RadiationMeasurerItem
 import me.mochibit.defcon.content.items.structureAssembler.StructureAssemblerItem
 
 
-object PluginItemFactory : AbstractElementFactory<PluginItemProperties, PluginItem, ItemsConfiguration.ItemDefinition>() {
+object PluginItemFactory :
+    AbstractElementFactory<PluginItemProperties, PluginItem, ItemsConfiguration.ItemDefinition>() {
     override fun create(elementDefinition: ItemsConfiguration.ItemDefinition): PluginItem {
         val properties = PluginItemProperties(
             id = elementDefinition.id,
@@ -48,9 +49,8 @@ object PluginItemFactory : AbstractElementFactory<PluginItemProperties, PluginIt
         return when (elementDefinition.behaviour) {
             ItemBehaviour.GAS_MASK -> GasMaskItem(properties)
             ItemBehaviour.RADIATION_MEASURER -> RadiationMeasurerItem(properties)
-            ItemBehaviour.RADIATION_HEALER -> {
+            ItemBehaviour.RADIATION_HEALER ->
                 RadiationHealerItem(properties, elementDefinition.additionalData)
-            }
             ItemBehaviour.STRUCTURE_ASSEMBLER -> StructureAssemblerItem(properties)
         }
     }

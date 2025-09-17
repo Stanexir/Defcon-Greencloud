@@ -22,16 +22,15 @@ package me.mochibit.defcon.content.items
 import me.mochibit.defcon.content.element.Element
 import me.mochibit.defcon.content.element.ElementBehaviourPropParser
 import me.mochibit.defcon.content.element.ElementBehaviourProperties
-import me.mochibit.defcon.content.items.radiationHealer.RadiationHealerProperties
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.inventory.ItemStack
 
 
-abstract class PluginItem<T: ElementBehaviourProperties>(
+abstract class PluginItem(
     override val properties: PluginItemProperties,
-    additionalData : Map<String, Any>,
-    val behaviourDataParser: ElementBehaviourPropParser<T>,
-    override val behaviourProperties: T = behaviourDataParser.parse(additionalData),
+    additionalData : Map<String, Any> = mapOf(),
+    protected val behaviourDataParser: ElementBehaviourPropParser? = null,
+    override val behaviourProperties: ElementBehaviourProperties? = behaviourDataParser?.parse(additionalData),
     private val mini: MiniMessage = MiniMessage.miniMessage(),
     private val itemStackFactory: ItemStackFactory = ApplierSupplier.getApplier()
 ): Element {

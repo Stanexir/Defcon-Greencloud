@@ -22,6 +22,4 @@ package me.mochibit.defcon.content.element
 import me.mochibit.defcon.content.items.PluginItem
 import me.mochibit.defcon.content.items.PluginItemProperties
 
-interface ElementBehaviour {
-    fun createElement()
-}
+interface ElementBehaviour

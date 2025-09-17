@@ -21,7 +21,7 @@ package me.mochibit.defcon.content.items.radiationHealer
 
 import me.mochibit.defcon.content.element.ElementBehaviourPropParser
 
-object RadiationHealerDataParser : ElementBehaviourPropParser<RadiationHealerProperties> {
+object RadiationHealerDataParser : ElementBehaviourPropParser {
     override fun parse(data: Map<String, Any>): RadiationHealerProperties {
         val healAmount = (data["heal-amount"] as? Number)?.toDouble()
             ?: throw IllegalArgumentException("heal-amount is required and must be a number")
