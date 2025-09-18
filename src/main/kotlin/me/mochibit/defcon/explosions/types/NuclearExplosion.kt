@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.mochibit.defcon.Defcon
+import me.mochibit.defcon.config.MainConfiguration
 import me.mochibit.defcon.config.PluginConfiguration
 import me.mochibit.defcon.explosions.ExplosionComponent
 import me.mochibit.defcon.explosions.processor.Crater
@@ -36,31 +37,7 @@ class NuclearExplosion(center: Location, private val nuclearComponent: Explosion
     Explosion(center) {
     override fun explode() {
         Defcon.instance.launch {
-            val pluginConfiguration = PluginConfiguration.get(ConfigurationStorage.Config).config
-
-            val configShockwave = pluginConfiguration.getInt("nuke_shockwave_radius")
-            val configShockwaveHeight = pluginConfiguration.getInt("nuke_shockwave_height")
-            val configCrater = pluginConfiguration.getInt("nuke_crater_radius")
-            val configFallout = pluginConfiguration.getInt("nuke_fallout_radius")
-            val configFlashReach = pluginConfiguration.getInt("nuke_flash_radius")
-            val configThermalRadius = pluginConfiguration.getInt("nuke_thermal_radius")
-            val configSoundSpeed = pluginConfiguration.getInt("nuke_sound_speed")
-
-            val configFalloutSpreadAir = pluginConfiguration.getInt("nuke_fallout_spread_air")
-            val configFalloutSpreadUnderground = pluginConfiguration.getInt("nuke_fallout_spread_underground")
-
-            if (configShockwave <= 0) 800 else configShockwave
-            val shockwaveHeight = if (configShockwave <= 0) 300 else configShockwaveHeight
-            val shockwaveRadius = if (configShockwave <= 0) 800 else configShockwave
-            val craterRadius = if (configCrater <= 0) 180 else configCrater
-            if (configFallout <= 0) 1600 else configFallout
-            if (configFlashReach <= 0) 1000 else configFlashReach
-            if (configThermalRadius <= 0) 1000 else configThermalRadius
-            if (configSoundSpeed <= 0) 50 else configSoundSpeed
-
-            if (configFalloutSpreadAir <= 0) 150 else configFalloutSpreadAir
-            if (configFalloutSpreadUnderground <= 0) 30 else configFalloutSpreadUnderground
-
+            val pluginConfiguration = MainConfiguration.getSchema()
             // VFX
 //            val nuclearExplosion = NuclearExplosionVFX(nuclearComponent, center)
 //            val condensationCloud = CondensationCloudVFX(nuclearComponent, center)
@@ -165,7 +142,7 @@ class NuclearExplosion(center: Location, private val nuclearComponent: Explosion
                 // Kill all the players within the crater radius instantly
                 for (player in players) {
                     val playerDistance = player.location.distance(center)
-                    if (playerDistance < craterRadius) {
+                    if (playerDistance < pluginConfiguration.nuclearExplosionConfig.craterConfig.baseRadius) {
                         withContext(Defcon.instance.minecraftDispatcher) {
                             player.damage(1000.0)
                         }
@@ -183,9 +160,9 @@ class NuclearExplosion(center: Location, private val nuclearComponent: Explosion
 
                 val shockwaveJob = Shockwave(
                     center,
-                    craterRadius,
-                    shockwaveRadius,
-                    shockwaveHeight,
+                    pluginConfiguration.nuclearExplosionConfig.craterConfig.baseRadius,
+                    pluginConfiguration.nuclearExplosionConfig.shockwaveConfig.baseRadius,
+                    pluginConfiguration.nuclearExplosionConfig.shockwaveConfig.baseHeight,
                 ).explode()
                 shockwaveJob.join()
             }

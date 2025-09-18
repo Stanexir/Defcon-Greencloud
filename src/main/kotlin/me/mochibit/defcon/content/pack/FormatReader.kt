@@ -18,10 +18,14 @@
  */
 package me.mochibit.defcon.content.pack
 
+import com.github.shynixn.mccoroutine.bukkit.launch
+import kotlinx.coroutines.runBlocking
+import me.mochibit.defcon.Defcon
+import me.mochibit.defcon.config.MainConfiguration
 import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.utils.Logger.warn
 import me.mochibit.defcon.config.PluginConfiguration
-import me.mochibit.defcon.enums.ConfigurationStorage
+
 import me.mochibit.defcon.utils.compareVersions
 import org.bukkit.Bukkit
 
@@ -72,7 +76,7 @@ object FormatReader {
     private fun findVersionRange(version: String): VersionRange? {
         return PACK_FORMAT_RANGES.find { range ->
             compareVersions(version, range.minVersion) >= 0 &&
-            compareVersions(version, range.maxVersion) <= 0
+                    compareVersions(version, range.maxVersion) <= 0
         }
     }
 
@@ -87,28 +91,35 @@ object FormatReader {
         val matchingRange = findVersionRange(serverVersion)
 
         if (matchingRange != null) {
-            info("Found pack format for version $serverVersion: ${matchingRange.packFormat} " +
-                 "(range: ${matchingRange.minVersion} to ${matchingRange.maxVersion})")
+            info(
+                "Found pack format for version $serverVersion: ${matchingRange.packFormat} " +
+                        "(range: ${matchingRange.minVersion} to ${matchingRange.maxVersion})"
+            )
             return matchingRange.packFormat
         }
 
         // If no range matches, check if we're beyond the latest known version
         val latestRange = PACK_FORMAT_RANGES.last()
         if (compareVersions(serverVersion, latestRange.maxVersion) > 0) {
-            warn("Server version $serverVersion is newer than latest known version ${latestRange.maxVersion}. " +
-                 "Using latest known pack format as best guess: ${latestRange.packFormat}")
+            warn(
+                "Server version $serverVersion is newer than latest known version ${latestRange.maxVersion}. " +
+                        "Using latest known pack format as best guess: ${latestRange.packFormat}"
+            )
             return latestRange.packFormat
         }
 
-        // Last resort: use fallback values from config
-        val config = PluginConfiguration.get(ConfigurationStorage.Config).config
-        val resourcePackFallback = config.getInt("pack_format_fallback.resource_pack")
-        val datapackFallback = config.getInt("pack_format_fallback.datapack")
+        val config = runBlocking {
+            MainConfiguration.getSchema()
+        }
+        val resourcePackFallback = config.resourcePackConfig.fallbackResourceInteger
+        val datapackFallback = config.resourcePackConfig.fallbackDatapackInteger
 
-        warn("No suitable pack format found for $serverVersion. Using fallback values: " +
-             "datapack=$datapackFallback, resource_pack=$resourcePackFallback")
+        warn(
+            "No suitable pack format found for $serverVersion. Using fallback values: " +
+                    "datapack=$datapackFallback, resource_pack=$resourcePackFallback"
+        )
 
-        return PackFormat(datapackFallback, resourcePackFallback)
+        return PackFormat(datapackFallback.value, resourcePackFallback.value)
     }
 
 

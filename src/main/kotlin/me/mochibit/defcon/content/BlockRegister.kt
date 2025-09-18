@@ -24,7 +24,6 @@ import me.mochibit.defcon.classes.CustomBlockDefinition
 import me.mochibit.defcon.config.PluginConfiguration
 import me.mochibit.defcon.enums.BlockBehaviour
 import me.mochibit.defcon.enums.BlockDataKey
-import me.mochibit.defcon.enums.ConfigurationStorage
 import me.mochibit.defcon.exceptions.BlockNotRegisteredException
 import me.mochibit.defcon.interfaces.PluginBlock
 import me.mochibit.defcon.utils.MetaManager
@@ -46,29 +45,29 @@ class BlockRegister() {
      */
     fun registerBlocks() {
         registeredBlocks = HashMap()
-        /* REGISTER THE ITEMS COMING FROM THE CONFIG */
-        val blockConfig = PluginConfiguration.get(ConfigurationStorage.Blocks).config
-        blockConfig.getList("enabled-blocks")!!.forEach { item: Any? ->
-            val blockId = item.toString()
-            if (registeredBlocks!![blockId] != null) return@forEach
-            val blockMinecraftId = blockConfig.getString("$item.block-minecraft-id") ?: throw BlockNotRegisteredException(blockId)
-            val blockDataModelId = blockConfig.getInt("$item.block-data-model-id")
-
-
-            var behaviourName = blockConfig.getString("$item.behaviour")
-            if (behaviourName == null) {
-                behaviourName = "generic"
-            }
-            val behaviourValue = BlockBehaviour.fromString(behaviourName) ?: throw BlockNotRegisteredException(blockId)
-
-            val customBlock: PluginBlock = CustomBlockDefinition(
-                id = blockId,
-                customModelId = blockDataModelId,
-                minecraftId = blockMinecraftId,
-                behaviour = behaviourValue)
-
-            registeredBlocks!![customBlock.id] = customBlock
-        }
+//        /* REGISTER THE ITEMS COMING FROM THE CONFIG */
+//        val blockConfig = PluginConfiguration.get(ConfigurationStorage.Blocks).config
+//        blockConfig.getList("enabled-blocks")!!.forEach { item: Any? ->
+//            val blockId = item.toString()
+//            if (registeredBlocks!![blockId] != null) return@forEach
+//            val blockMinecraftId = blockConfig.getString("$item.block-minecraft-id") ?: throw BlockNotRegisteredException(blockId)
+//            val blockDataModelId = blockConfig.getInt("$item.block-data-model-id")
+//
+//
+//            var behaviourName = blockConfig.getString("$item.behaviour")
+//            if (behaviourName == null) {
+//                behaviourName = "generic"
+//            }
+//            val behaviourValue = BlockBehaviour.fromString(behaviourName) ?: throw BlockNotRegisteredException(blockId)
+//
+//            val customBlock: PluginBlock = CustomBlockDefinition(
+//                id = blockId,
+//                customModelId = blockDataModelId,
+//                minecraftId = blockMinecraftId,
+//                behaviour = behaviourValue)
+//
+//            registeredBlocks!![customBlock.id] = customBlock
+//        }
     }
 
     companion object {

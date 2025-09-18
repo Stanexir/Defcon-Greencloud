@@ -21,7 +21,6 @@ package me.mochibit.defcon.utils
 
 import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.enums.BlockDataKey
-import me.mochibit.defcon.enums.ItemDataKey
 import com.jeff_media.customblockdata.CustomBlockData
 import me.mochibit.defcon.extensions.toBoolean
 import me.mochibit.defcon.extensions.toByte
@@ -78,49 +77,6 @@ object MetaManager {
 
         blockData.remove(key.key)
         return blockData
-    }
-
-    inline fun <reified T> getItemData(itemMeta: ItemMeta, key: ItemDataKey): T? {
-        val itemData: PersistentDataContainer = itemMeta.persistentDataContainer
-        val dataType = getPersistentDataType(T::class)
-
-        val value: Any = itemData.get(key.key, dataType) ?: return null
-
-        // if the type is boolean, we need to convert the value to boolean
-        if (T::class == Boolean::class) {
-            return (value as Byte).toBoolean() as T
-        }
-
-        return value as T
-    }
-
-    inline fun <reified T : Any> setItemData(itemMeta: ItemMeta, key: ItemDataKey, value: T): ItemMeta {
-        val itemData: PersistentDataContainer = itemMeta.persistentDataContainer
-
-        // If the type is boolean, we need to convert value to byte
-        if (T::class == Boolean::class) {
-            itemData.set(key.key, PersistentDataType.BYTE, (value as Boolean).toByte())
-            return itemMeta
-        }
-
-        @Suppress("UNCHECKED_CAST")
-        val dataType = getPersistentDataType(T::class) as? PersistentDataType<T, T> ?: return itemMeta
-
-        itemData.set(key.key, dataType, value)
-        return itemMeta
-    }
-
-    inline fun <reified T: Any> setItemData(itemStack: ItemStack, key: ItemDataKey, value: T): ItemStack {
-        val itemMeta = itemStack.itemMeta
-        setItemData(itemMeta, key, value)
-        return itemStack
-    }
-
-    fun removeItemData(itemMeta: ItemMeta, key: ItemDataKey): ItemMeta {
-        val itemData: PersistentDataContainer = itemMeta.persistentDataContainer
-
-        itemData.remove(key.key)
-        return itemMeta
     }
 
 

@@ -21,11 +21,11 @@ package me.mochibit.defcon.server
 import com.github.shynixn.mccoroutine.bukkit.launch
 import kotlinx.coroutines.*
 import me.mochibit.defcon.Defcon
+import me.mochibit.defcon.config.MainConfiguration
 import me.mochibit.defcon.utils.Logger
 import me.mochibit.defcon.utils.Logger.err
 import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.config.PluginConfiguration
-import me.mochibit.defcon.enums.ConfigurationStorage
 import java.io.BufferedReader
 import java.io.FileInputStream
 import java.io.InputStreamReader
@@ -43,7 +43,9 @@ object ResourcePackServer {
 
     val port: Int
         get() = try {
-            PluginConfiguration.get(ConfigurationStorage.Config).config.getInt("resource_pack_server_port")
+            runBlocking {
+                MainConfiguration.getSchema().resourcePackConfig.serverPort
+            }
         } catch (e: Exception) {
             err("Failed to get resource pack server port from config, using default port 8080")
             8080

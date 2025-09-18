@@ -8,6 +8,22 @@ items:
     equip-slot: "head"
     max-stack-size: 1
     behaviour: "gas_mask"
+    crafting:
+      type: "shaped"
+      result-amount: 1
+      pattern:
+        - "LLL"
+        - "LGL"
+        - "NPN"
+      key:
+        L:
+          item: "minecraft:leather"
+        G:
+          tag: "minecraft:impermeable"
+        N:
+          item: "minecraft:string"
+        P:
+          item: "minecraft:paper"
 
   iodine-pills:
     display-name: "Iodine pills"
@@ -19,6 +35,14 @@ items:
     properties:
       heal-amount: 0.5
       duration-seconds: 15
+    crafting:
+      type: "shapeless"
+      result-amount: 2
+      ingredients:
+          - item: "minecraft:wheat_seeds"
+            count: 2
+          - tag: "minecraft:crimson_stems"
+            count: 1
 
 
   geiger:

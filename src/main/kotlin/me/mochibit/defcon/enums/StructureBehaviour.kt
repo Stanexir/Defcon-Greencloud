@@ -19,25 +19,25 @@
 
 package me.mochibit.defcon.enums
 
-import me.mochibit.defcon.classes.structures.NuclearWarhead
+//import me.mochibit.defcon.classes.structures.NuclearWarhead
 
 
-enum class StructureBehaviour(name: String) {
-    BOMB("BOMB");
-
-    val structureClass: Class<out StructureDefinition?>?
-        get() = when (this) {
-            BOMB -> NuclearWarhead::class.java
-        }
-
-    companion object {
-        fun fromString(text: String?): StructureBehaviour? {
-            for (b in entries) {
-                if (b.name.equals(text, ignoreCase = true)) {
-                    return b
-                }
-            }
-            return null
-        }
-    }
-}
+//enum class StructureBehaviour(name: String) {
+//    BOMB("BOMB");
+//
+//    val structureClass: Class<out StructureDefinition?>?
+//        get() = when (this) {
+//            BOMB -> NuclearWarhead::class.java
+//        }
+//
+//    companion object {
+//        fun fromString(text: String?): StructureBehaviour? {
+//            for (b in entries) {
+//                if (b.name.equals(text, ignoreCase = true)) {
+//                    return b
+//                }
+//            }
+//            return null
+//        }
+//    }
+//}

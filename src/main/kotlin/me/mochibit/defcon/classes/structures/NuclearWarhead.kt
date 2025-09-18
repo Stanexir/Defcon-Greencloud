@@ -25,9 +25,8 @@ import me.mochibit.defcon.interfaces.ExplodingStructure
 import org.bukkit.Location
 
 
-class NuclearWarhead : AbstractStructureDefinition(), ExplodingStructure {
-    override fun explode(center: Location, explosionComponent: ExplosionComponent) {
-        NuclearExplosion(center, explosionComponent).explode()
-    }
-
-}
+//class NuclearWarhead : AbstractStructureDefinition(), ExplodingStructure {
+//    override fun explode(center: Location, explosionComponent: ExplosionComponent) {
+//        NuclearExplosion(center, explosionComponent).explode()
+//    }
+//}

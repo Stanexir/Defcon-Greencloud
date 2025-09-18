@@ -71,7 +71,7 @@ class Defcon : SuspendingJavaPlugin() {
         CommandRegister().registerCommands()
 
         /* Register structures */
-        StructureRegister().registerStructures()
+//        StructureRegister().registerStructures()
 
 
         // Start radiation processor

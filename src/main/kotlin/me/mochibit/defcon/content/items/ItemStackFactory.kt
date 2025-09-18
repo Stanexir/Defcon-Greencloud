@@ -41,6 +41,7 @@ open class BaseItemStackFactory() : ItemStackFactory {
         applyDescription(meta, properties)
         applyItemModel(meta, properties)
         applyEquipmentSlot(meta, properties)
+        item.itemMeta = meta
         return item
     }
 
@@ -95,8 +96,8 @@ class LegacyItemStackFactory(
     }
 }
 
-object ApplierSupplier {
-    fun getApplier(): ItemStackFactory {
+object FactoryMetaStrategies {
+    fun getFactory(): ItemStackFactory {
         return if (versionGreaterOrEqualThan("1.21.3"))
             BaseItemStackFactory()
         else

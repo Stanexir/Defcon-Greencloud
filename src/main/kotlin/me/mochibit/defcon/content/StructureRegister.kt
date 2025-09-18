@@ -38,6 +38,6 @@ class StructureRegister() {
     }
 
     companion object {
-        private var registeredStructures: HashMap<String, StructureDefinition> = HashMap()
+//        private var registeredStructures: HashMap<String, StructureDefinition> = HashMap()
     }
 }

@@ -139,8 +139,8 @@ abstract class PluginConfiguration<out T>(private val configName: String) {
         suspend fun loadAll() = coroutineScope {
             configurations.add(MainConfiguration)
             configurations.add(ItemsConfiguration)
-            configurations.add(BlocksConfiguration)
-            configurations.add(StructuresConfiguration)
+//            configurations.add(BlocksConfiguration)
+//            configurations.add(StructuresConfiguration)
 
             for (config in configurations) {
                 launch {

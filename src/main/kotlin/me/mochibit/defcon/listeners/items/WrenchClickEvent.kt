@@ -21,7 +21,6 @@ package me.mochibit.defcon.listeners.items
 
 import me.mochibit.defcon.enums.BlockDataKey
 import me.mochibit.defcon.content.items.ItemBehaviour
-import me.mochibit.defcon.enums.ItemDataKey
 import me.mochibit.defcon.content.items.ItemRegistry
 import me.mochibit.defcon.content.StructureRegister
 import me.mochibit.defcon.utils.MetaManager
@@ -33,21 +32,21 @@ class WrenchClickEvent: Listener {
 
     @EventHandler
     fun onBlockClickWithWrench(event: PlayerInteractEvent) {
-        // Check if the player is holding a wrench
-        val itemInHand = event.item ?: return;
-        // Check if the block clicked is a structure
-        val clickedBlock = event.clickedBlock ?: return;
-        val itemID = MetaManager.getItemData<String>(itemInHand.itemMeta, ItemDataKey.ItemID) ?: return;
-
-        // Check if the item is a wrench
-        val wrenchItem = ItemRegistry.registeredItems[itemID] ?: return;
-        if (wrenchItem.behaviour != ItemBehaviour.WRENCH) return;
-
-        if (MetaManager.getBlockData<String>(clickedBlock.location, BlockDataKey.StructureId) == null) return;
-
-        // The item is a wrench, so we can search for the clicked structure, the returned structures will be inserted in a menu for the player to choose from
-        val query = StructureRegister().searchByBlock(clickedBlock.location);
-        if (query.structures.isEmpty()) return;
+//        // Check if the player is holding a wrench
+//        val itemInHand = event.item ?: return;
+//        // Check if the block clicked is a structure
+//        val clickedBlock = event.clickedBlock ?: return;
+//        val itemID = MetaManager.getItemData<String>(itemInHand.itemMeta, ItemDataKey.ItemID) ?: return;
+//
+//        // Check if the item is a wrench
+//        val wrenchItem = ItemRegistry.registeredItems[itemID] ?: return;
+//        if (wrenchItem.behaviour != ItemBehaviour.WRENCH) return;
+//
+//        if (MetaManager.getBlockData<String>(clickedBlock.location, BlockDataKey.StructureId) == null) return;
+//
+//        // The item is a wrench, so we can search for the clicked structure, the returned structures will be inserted in a menu for the player to choose from
+//        val query = StructureRegister().searchByBlock(clickedBlock.location);
+//        if (query.structures.isEmpty()) return;
 
 
     }

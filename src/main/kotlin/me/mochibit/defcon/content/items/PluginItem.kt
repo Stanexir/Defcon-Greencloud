@@ -32,7 +32,7 @@ abstract class PluginItem(
     protected val behaviourDataParser: ElementBehaviourPropParser? = null,
     override val behaviourProperties: ElementBehaviourProperties? = behaviourDataParser?.parse(additionalData),
     private val mini: MiniMessage = MiniMessage.miniMessage(),
-    private val itemStackFactory: ItemStackFactory = ApplierSupplier.getApplier()
+    private val itemStackFactory: ItemStackFactory = FactoryMetaStrategies.getFactory()
 ): Element {
     val name: String
         get() = mini.stripTags(properties.displayName)

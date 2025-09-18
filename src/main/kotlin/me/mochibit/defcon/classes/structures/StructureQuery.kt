@@ -21,4 +21,4 @@ package me.mochibit.defcon.classes.structures
 
 import org.bukkit.Location
 
-data class StructureQuery(val structures: List<StructureDefinition>, val appliedLocations: List<Location>)
+//data class StructureQuery(val structures: List<StructureDefinition>, val appliedLocations: List<Location>)

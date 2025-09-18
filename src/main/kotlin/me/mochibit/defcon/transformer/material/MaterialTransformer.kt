@@ -19,6 +19,8 @@
 
 package me.mochibit.defcon.transformer.material
 
+import me.mochibit.defcon.palette.MaterialPalette
+import me.mochibit.defcon.palette.MaterialPaletteEntry
 import org.bukkit.Material
 import java.util.*
 import kotlin.random.Random
