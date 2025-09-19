@@ -19,19 +19,15 @@
 
 package me.mochibit.defcon.extensions
 
-import me.mochibit.defcon.content.items.ItemBehaviour
-import me.mochibit.defcon.utils.MetaManager
+import me.mochibit.defcon.content.items.ItemRegistry
+import me.mochibit.defcon.content.items.PluginItem
 import org.bukkit.inventory.ItemStack
 
 
-fun ItemStack.getItemID(): String? {
-    return "item_id"
+fun ItemStack.getPluginItem(): PluginItem? {
+    val meta = this.itemMeta ?: return null
+    val pluginItemId = meta.getData(PluginItemPropertyKeys.itemId) ?: return null
+    return ItemRegistry.registeredItems[pluginItemId]
 }
 
-fun ItemStack.equipSlotName(): String {
-    return "HAND"
-}
 
-fun ItemStack.getBehaviour(): ItemBehaviour {
-    return ItemBehaviour.RADIATION_MEASURER
-}

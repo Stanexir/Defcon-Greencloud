@@ -26,12 +26,13 @@ import io.papermc.paper.event.entity.EntityEquipmentChangedEvent
 import kotlinx.coroutines.delay
 import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.content.items.ItemBehaviour
+import me.mochibit.defcon.content.items.gasMask.GasMaskItem
 import me.mochibit.defcon.events.equip.CustomItemEquipEvent
 import me.mochibit.defcon.events.radiationarea.RadiationSuffocationEvent
-import me.mochibit.defcon.extensions.getBehaviour
 import me.mochibit.defcon.extensions.random
 import me.mochibit.defcon.content.listeners.UniversalVersionIndicator
 import me.mochibit.defcon.content.listeners.VersionIndicator
+import me.mochibit.defcon.extensions.getPluginItem
 import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -47,8 +48,8 @@ class GasMaskProtectListener: Listener {
         // Check if the player has a gas mask
         val helmet = player.inventory.helmet ?: return
 
-        val itemBehaviour = helmet.getBehaviour()
-        if (itemBehaviour != ItemBehaviour.GAS_MASK) return
+        val helmetPluginItem = helmet.getPluginItem() ?: return
+        if (helmetPluginItem !is GasMaskItem) return
 
         // Cancel the event
         event.setCancelled(true)
@@ -63,9 +64,8 @@ class GasMaskEquipListener : Listener {
 
         // Check if the player has equipped a gas mask
         val helmet = player.inventory.helmet ?: return
-
-        val itemBehaviour = helmet.getBehaviour()
-        if (itemBehaviour != ItemBehaviour.GAS_MASK) return
+        val helmetPluginItem = helmet.getPluginItem() ?: return
+        if (helmetPluginItem !is GasMaskItem) return
 
         // Play the sound
         playGasMaskSound(player)
@@ -85,7 +85,7 @@ class GasMaskEquipListenerLegacy: Listener {
     @EventHandler
     fun onGasMaskEquip(event: CustomItemEquipEvent) {
         // Check if the item is a gas mask
-        if (event.equippedItem.getBehaviour() != ItemBehaviour.GAS_MASK) return
+        if (event.equippedItem !is GasMaskItem) return
 
         // Check if the player has no helmet (so right-click would equip it)
         val currentHelmet = event.player.inventory.helmet
@@ -96,7 +96,8 @@ class GasMaskEquipListenerLegacy: Listener {
         Defcon.instance.launch {
             delay(1.ticks)
             val helmet = event.player.inventory.helmet
-            if (helmet != null && helmet.getBehaviour() == ItemBehaviour.GAS_MASK) {
+            val helmetPluginItem = helmet?.getPluginItem() ?: return@launch
+            if (helmetPluginItem is GasMaskItem) {
                 playGasMaskSound(event.player)
             }
         }

@@ -32,7 +32,7 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
     data class ItemDefinition(
         val id: String,
         val displayName: String,
-        val description: String,
+        val description: String?,
 
         val minecraftId: String,
         val legacyMinecraftId: String,
@@ -72,7 +72,7 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
             val itemSection = itemsSection.getConfigurationSection(id) ?: return@forEach
 
             val displayName = itemSection.getString("display-name") ?: return@forEach
-            val description = itemSection.getString("description") ?: ""
+            val description = itemSection.getString("description")
             val minecraftId = itemSection.getString("minecraft-id") ?: return@forEach
             val legacyMinecraftId = itemSection.getString("legacy-minecraft-id") ?: minecraftId
 

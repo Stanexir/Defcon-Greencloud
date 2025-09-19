@@ -20,6 +20,7 @@
 package me.mochibit.defcon
 
 import com.github.shynixn.mccoroutine.bukkit.SuspendingJavaPlugin
+import me.mochibit.defcon.Defcon.Companion.instance
 import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.biomes.CustomBiomeHandler
 import me.mochibit.defcon.config.PluginConfiguration
@@ -94,7 +95,7 @@ class Defcon : SuspendingJavaPlugin() {
         private lateinit var _instance: Defcon
         val instance get() = _instance
         val minecraftVersion = Bukkit.getServer().bukkitVersion.split("-")[0]
-        fun namespacedKey(key: String) = org.bukkit.NamespacedKey(instance, key)
     }
-
 }
+
+internal fun pluginNamespacedKey(key: String) = org.bukkit.NamespacedKey(instance, key)

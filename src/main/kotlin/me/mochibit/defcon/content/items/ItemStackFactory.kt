@@ -19,9 +19,12 @@
 
 package me.mochibit.defcon.content.items
 
-import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.extensions.setStringData
+import me.mochibit.defcon.extensions.PluginItemPropertyKeys
+import me.mochibit.defcon.extensions.setData
 import me.mochibit.defcon.utils.versionGreaterOrEqualThan
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
@@ -32,6 +35,10 @@ interface ItemStackFactory {
 }
 
 open class BaseItemStackFactory() : ItemStackFactory {
+    private fun textDefaultStyle(c: Component): Component =
+        c.colorIfAbsent { NamedTextColor.WHITE.value() }
+            .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE)
+
     override fun create(properties: PluginItemProperties): ItemStack {
         val baseMaterial = getMaterial(properties)
         val item = ItemStack(baseMaterial)
@@ -51,17 +58,24 @@ open class BaseItemStackFactory() : ItemStackFactory {
 
 
     open fun applyId(baseMeta: ItemMeta, properties: PluginItemProperties) {
-        baseMeta.setStringData(Defcon.namespacedKey("item-id"), properties.id)
+        baseMeta.setData(PluginItemPropertyKeys.itemId, properties.id)
     }
 
     open fun applyDisplayName(baseMeta: ItemMeta, properties: PluginItemProperties) {
-        baseMeta.customName(MiniMessage.miniMessage().deserialize(properties.displayName))
+        val formattedName = textDefaultStyle(
+            MiniMessage.miniMessage().deserialize(properties.displayName)
+        )
+        baseMeta.customName(formattedName)
     }
 
     open fun applyDescription(baseMeta: ItemMeta, properties: PluginItemProperties) {
-        properties.description?.let { desc ->
+        if (properties.description.isNullOrEmpty()) return
+
+        properties.description.let { desc ->
             baseMeta.lore(
-                desc.split("\n").map { MiniMessage.miniMessage().deserialize(it) }
+                desc.split("\n").map {
+                    textDefaultStyle(MiniMessage.miniMessage().deserialize(it))
+                }
             )
         }
     }
@@ -91,7 +105,8 @@ class LegacyItemStackFactory(
 
     override fun getMaterial(properties: PluginItemProperties): Material {
         val materialName = properties.legacyProperties.legacyMinecraftId ?: properties.minecraftId
-        val material = Material.getMaterial(materialName) ?: throw IllegalArgumentException("Material $materialName does not exist")
+        val material = Material.getMaterial(materialName)
+            ?: throw IllegalArgumentException("Material $materialName does not exist")
         return material
     }
 }

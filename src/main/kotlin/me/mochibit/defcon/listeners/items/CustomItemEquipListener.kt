@@ -2,11 +2,10 @@ package me.mochibit.defcon.listeners.items
 
 import me.mochibit.defcon.utils.Logger.warn
 import me.mochibit.defcon.content.items.ItemBehaviour
+import me.mochibit.defcon.content.items.PluginItem
 import me.mochibit.defcon.events.equip.CustomItemEquipEvent
-import me.mochibit.defcon.extensions.equipSlotName
-import me.mochibit.defcon.extensions.getBehaviour
-import me.mochibit.defcon.extensions.getItemID
 import me.mochibit.defcon.content.listeners.VersionIndicator
+import me.mochibit.defcon.extensions.getPluginItem
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -45,6 +44,14 @@ class CustomItemEquipListener : Listener {
             fun fromEquipSlotName(equipSlotName: String): ArmorSlot? =
                 entries.firstOrNull { it.equipSlotName.equals(equipSlotName, ignoreCase = true) }
 
+            fun fromEquipmentSlot(equipmentSlot: EquipmentSlot?): ArmorSlot? = when (equipmentSlot) {
+                EquipmentSlot.HEAD -> HELMET
+                EquipmentSlot.CHEST -> CHESTPLATE
+                EquipmentSlot.LEGS -> LEGGINGS
+                EquipmentSlot.FEET -> BOOTS
+                else -> null
+            }
+
             fun fromVanillaArmorType(material: Material): ArmorSlot? = when {
                 material.name.endsWith("_HELMET") || material.name.endsWith("_HEAD") ||
                 material.name.contains("SKULL") || material == Material.CARVED_PUMPKIN -> HELMET
@@ -70,13 +77,6 @@ class CustomItemEquipListener : Listener {
     }
 
     /**
-     * Checks if an ItemStack is a custom equippable item
-     */
-    private fun ItemStack.isCustomEquippable(): Boolean {
-        return this.getItemID() != null && this.equipSlotName().isNotEmpty()
-    }
-
-    /**
      * Direct armor slot click handler
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -84,17 +84,19 @@ class CustomItemEquipListener : Listener {
         // Only process armor slot clicks
         if (event.slotType != InventoryType.SlotType.ARMOR) return
 
-        val cursor = event.cursor ?: return
+        val cursor = event.cursor
         if (cursor.type == Material.AIR) return
 
         val player = event.whoClicked as? Player ?: return
 
         // Skip vanilla items
-        if (!cursor.isCustomEquippable()) return
+        val pluginItem = cursor.getPluginItem() ?: return
+        if (!pluginItem.isEquippable) return
+
 
         // Get slot information
         val targetSlot = ArmorSlot.fromRawSlot(event.rawSlot) ?: return
-        val itemSlot = ArmorSlot.fromEquipSlotName(cursor.equipSlotName()) ?: return
+        val itemSlot = ArmorSlot.fromEquipmentSlot(pluginItem.properties.equipmentSlot) ?: return
 
         // Verify item can go in this slot
         if (targetSlot != itemSlot) {
@@ -104,7 +106,7 @@ class CustomItemEquipListener : Listener {
 
         // Handle equipment process
         val oldItem = event.currentItem ?: ItemStack(Material.AIR)
-        if (processEquipmentChange(cursor, targetSlot, event.rawSlot, player, event)) {
+        if (processEquipmentChange(cursor, targetSlot, event.rawSlot, player, event, pluginItem)) {
             // Complete the equipment change
             player.inventory.setItem(event.slot, cursor)
             player.setItemOnCursor(oldItem)
@@ -125,7 +127,9 @@ class CustomItemEquipListener : Listener {
         if (currentItem.type == Material.AIR) return
 
         // Skip vanilla items
-        if (!currentItem.isCustomEquippable()) return
+        val pluginItem = currentItem.getPluginItem() ?: return
+        if (!pluginItem.isEquippable) return
+
 
         // Ignore clicks in crafting or already in armor slots
         if (event.slotType == InventoryType.SlotType.CRAFTING ||
@@ -134,7 +138,7 @@ class CustomItemEquipListener : Listener {
         val player = event.whoClicked as? Player ?: return
 
         // Get slot information
-        val itemSlot = ArmorSlot.fromEquipSlotName(currentItem.equipSlotName()) ?: return
+        val itemSlot = ArmorSlot.fromEquipmentSlot(pluginItem.properties.equipmentSlot) ?: return
         val equipmentSlot = itemSlot.inventorySlot
 
         // Check if target slot is occupied
@@ -148,7 +152,7 @@ class CustomItemEquipListener : Listener {
         }
 
         // Process the equipment change
-        if (processEquipmentChange(currentItem, itemSlot, itemSlot.rawSlot, player, event)) {
+        if (processEquipmentChange(currentItem, itemSlot, itemSlot.rawSlot, player, event, pluginItem)) {
             // Complete the equipment change
             player.inventory.setItem(event.slot, null)
             player.inventory.setItem(equipmentSlot, currentItem)
@@ -205,7 +209,8 @@ class CustomItemEquipListener : Listener {
         val player = event.whoClicked as? Player ?: return
 
         // Skip vanilla items
-        if (!cursor.isCustomEquippable()) return
+        val pluginItem = cursor.getPluginItem() ?: return
+        if (!pluginItem.isEquippable) return
 
         // Get slot information
         val targetSlot = ArmorSlot.fromRawSlot(armorSlot) ?: run {
@@ -213,7 +218,10 @@ class CustomItemEquipListener : Listener {
             return
         }
 
-        val itemSlot = ArmorSlot.fromEquipSlotName(cursor.equipSlotName()) ?: return
+        val itemSlot = ArmorSlot.fromEquipmentSlot(pluginItem.properties.equipmentSlot) ?: run {
+            event.isCancelled = true
+            return
+        }
 
         // Verify item can go in this slot
         if (targetSlot != itemSlot) {
@@ -226,7 +234,7 @@ class CustomItemEquipListener : Listener {
         val oldItem = player.inventory.getItem(inventorySlot) ?: ItemStack(Material.AIR)
 
         // Process the equipment change
-        if (processEquipmentChange(cursor, targetSlot, armorSlot, player, event)) {
+        if (processEquipmentChange(cursor, targetSlot, armorSlot, player, event, pluginItem)) {
             player.inventory.setItem(inventorySlot, cursor)
             player.setItemOnCursor(oldItem)
             player.updateInventory()
@@ -251,11 +259,12 @@ class CustomItemEquipListener : Listener {
         if (hotbarItem.type == Material.AIR) return
 
         // Skip vanilla items
-        if (!hotbarItem.isCustomEquippable()) return
+        val pluginItem = hotbarItem.getPluginItem() ?: return
+        if (!pluginItem.isEquippable) return
 
         // Get slot information
         val targetSlot = ArmorSlot.fromRawSlot(event.rawSlot) ?: return
-        val itemSlot = ArmorSlot.fromEquipSlotName(hotbarItem.equipSlotName()) ?: return
+        val itemSlot = ArmorSlot.fromEquipmentSlot(pluginItem.properties.equipmentSlot) ?: return
 
         // Verify item can go in this slot
         if (targetSlot != itemSlot) {
@@ -266,7 +275,7 @@ class CustomItemEquipListener : Listener {
         val oldItem = event.currentItem ?: ItemStack(Material.AIR)
 
         // Process the equipment change
-        if (processEquipmentChange(hotbarItem, targetSlot, event.rawSlot, player, event)) {
+        if (processEquipmentChange(hotbarItem, targetSlot, event.rawSlot, player, event, pluginItem)) {
             // Swap the items
             player.inventory.setItem(event.slot, hotbarItem)
             player.inventory.setItem(event.hotbarButton, oldItem)
@@ -285,7 +294,8 @@ class CustomItemEquipListener : Listener {
         if (cursor.type == Material.AIR) return
 
         // Prevent collecting custom equipable items with double-click
-        if (cursor.isCustomEquippable()) {
+        val pluginItem = cursor.getPluginItem() ?: return
+        if (pluginItem.isEquippable) {
             event.isCancelled = true
         }
     }
@@ -303,15 +313,14 @@ class CustomItemEquipListener : Listener {
         val hand = event.hand ?: return
 
         // Skip vanilla items
-        if (!item.isCustomEquippable()) return
+        val pluginItem = item.getPluginItem() ?: return
 
         // Must cancel early to prevent vanilla behavior
         event.isCancelled = true
 
         // Get slot information
-        val equipSlotName = item.equipSlotName()
-        val targetSlot = ArmorSlot.fromEquipSlotName(equipSlotName) ?: run {
-            warn("Could not map equipment slot name $equipSlotName to any armor slot")
+        val targetSlot = ArmorSlot.fromEquipmentSlot(pluginItem.properties.equipmentSlot) ?: run {
+            warn("Could not map equipment slot name to any armor slot")
             event.isCancelled = false
             return
         }
@@ -321,7 +330,7 @@ class CustomItemEquipListener : Listener {
 
         // Verify and trigger equip event
         if (checkItemSlotCompatibility(item, targetSlot) &&
-            triggerEquipEvent(item, targetSlot.rawSlot, player)) {
+            triggerEquipEvent(pluginItem, targetSlot.rawSlot, player)) {
 
             // Create copy with amount 1 for equipping
             val itemToEquip = item.clone().apply { amount = 1 }
@@ -392,7 +401,8 @@ class CustomItemEquipListener : Listener {
         if (currentItem.type == Material.AIR) return
 
         // Skip vanilla items
-        if (!currentItem.isCustomEquippable()) return
+        val pluginItem = currentItem.getPluginItem() ?: return
+        if (!pluginItem.isEquippable) return
 
         // Don't allow swapping custom armor with offhand from armor slots
         if (event.slotType == InventoryType.SlotType.ARMOR) {
@@ -401,7 +411,7 @@ class CustomItemEquipListener : Listener {
         }
 
         // Get slot information
-        val itemSlot = ArmorSlot.fromEquipSlotName(currentItem.equipSlotName()) ?: return
+        val itemSlot = ArmorSlot.fromEquipmentSlot(pluginItem.properties.equipmentSlot) ?: return
         val equipmentSlot = itemSlot.inventorySlot
 
         // Check if target slot is occupied
@@ -414,7 +424,7 @@ class CustomItemEquipListener : Listener {
         val offhandItem = player.inventory.itemInOffHand
 
         // Process the equipment change
-        if (processEquipmentChange(currentItem, itemSlot, itemSlot.rawSlot, player, event)) {
+        if (processEquipmentChange(currentItem, itemSlot, itemSlot.rawSlot, player, event, pluginItem)) {
             // Cancel default behavior and handle manually
             event.isCancelled = true
 
@@ -438,7 +448,8 @@ class CustomItemEquipListener : Listener {
         if (currentItem.type == Material.AIR) return
 
         // Only interested in custom equipable items
-        if (!currentItem.isCustomEquippable()) return
+        val pluginItem = currentItem.getPluginItem() ?: return
+        if (!pluginItem.isEquippable) return
 
         val player = event.whoClicked as? Player ?: return
 
@@ -451,14 +462,16 @@ class CustomItemEquipListener : Listener {
         }
 
         // Get slot information
-        val itemSlot = ArmorSlot.fromEquipSlotName(currentItem.equipSlotName()) ?: return
+        val itemSlot = ArmorSlot.fromEquipmentSlot(pluginItem.properties.equipmentSlot) ?: return
         val equipmentSlot = itemSlot.inventorySlot
 
         // Prevent vanilla items from being dragged onto custom items in offhand
         val cursor = event.cursor
-        if (cursor.type != Material.AIR && !cursor.isCustomEquippable()) {
-            event.isCancelled = true
-            return
+        cursor.getPluginItem()?.let {
+            if (cursor.type != Material.AIR && !it.isEquippable) {
+                event.isCancelled = true
+                return
+            }
         }
 
         // Handle move to other inventory and hotbar swap
@@ -471,7 +484,7 @@ class CustomItemEquipListener : Listener {
             val armorItem = player.inventory.getItem(equipmentSlot)
             if (armorItem == null || armorItem.type == Material.AIR) {
                 // Process equipment change to armor slot
-                if (processEquipmentChange(currentItem, itemSlot, itemSlot.rawSlot, player, event)) {
+                if (processEquipmentChange(currentItem, itemSlot, itemSlot.rawSlot, player, event, pluginItem)) {
                     player.inventory.setItem(equipmentSlot, currentItem)
                     player.inventory.setItemInOffHand(null)
                     player.updateInventory()
@@ -540,11 +553,12 @@ class CustomItemEquipListener : Listener {
             if (item.type == Material.AIR) return
 
             // Skip vanilla items
-            if (!item.isCustomEquippable()) return
+            val pluginItem = item.getPluginItem() ?: return
+            if (!pluginItem.isEquippable) return
 
             // Get slot information
             val targetSlot = ArmorSlot.fromRawSlot(event.rawSlot) ?: return
-            val itemSlot = ArmorSlot.fromEquipSlotName(item.equipSlotName()) ?: return
+            val itemSlot = ArmorSlot.fromEquipmentSlot(pluginItem.properties.equipmentSlot) ?: return
 
             // Verify correct slot
             if (targetSlot != itemSlot) {
@@ -562,7 +576,7 @@ class CustomItemEquipListener : Listener {
                 return
             }
 
-            if (!triggerEquipEvent(item, event.rawSlot, player)) {
+            if (!triggerEquipEvent(pluginItem, event.rawSlot, player)) {
                 event.isCancelled = true
                 event.result = Event.Result.DENY
                 return
@@ -586,7 +600,8 @@ class CustomItemEquipListener : Listener {
         targetSlot: ArmorSlot,
         rawSlot: Int,
         player: Player,
-        event: InventoryEvent
+        event: InventoryEvent,
+        movedPluginItem: PluginItem
     ): Boolean {
         // Check if item can be equipped in this slot
         if (!checkItemSlotCompatibility(item, targetSlot)) {
@@ -595,7 +610,7 @@ class CustomItemEquipListener : Listener {
         }
 
         // Trigger custom equip event
-        if (!triggerEquipEvent(item, rawSlot, player)) {
+        if (!triggerEquipEvent(movedPluginItem, rawSlot, player)) {
             setCancelled(event)
             return false
         }
@@ -630,13 +645,10 @@ class CustomItemEquipListener : Listener {
      */
     private fun checkItemSlotCompatibility(item: ItemStack, targetSlot: ArmorSlot): Boolean {
         // Skip if not a custom equippable item
-        if (!item.isCustomEquippable()) return false
-
-        // Get the custom equipment slot for this item
-        val equipSlotName = item.equipSlotName()
+        val pluginItem = item.getPluginItem() ?: return false
 
         // Map to appropriate armor slot
-        val itemSlot = ArmorSlot.fromEquipSlotName(equipSlotName) ?: return false
+        val itemSlot = ArmorSlot.fromEquipmentSlot(pluginItem.properties.equipmentSlot) ?: return false
 
         // Check if slot types match
         return itemSlot == targetSlot
@@ -647,15 +659,13 @@ class CustomItemEquipListener : Listener {
      * Returns true if event was not cancelled
      */
     private fun triggerEquipEvent(
-        item: ItemStack,
+        item: PluginItem,
         rawSlot: Int,
         player: Player
     ): Boolean {
-        // Get behavior for this item
-        val itemBehaviour = item.getBehaviour()
 
         // Create and call event
-        val customItemEquipEvent = CustomItemEquipEvent(item, itemBehaviour, rawSlot, player)
+        val customItemEquipEvent = CustomItemEquipEvent(item, rawSlot, player)
         Bukkit.getServer().pluginManager.callEvent(customItemEquipEvent)
 
         return !customItemEquipEvent.isCancelled

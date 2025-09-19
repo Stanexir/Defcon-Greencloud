@@ -21,8 +21,9 @@ package me.mochibit.defcon.listeners.items
 
 import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.content.items.ItemBehaviour
+import me.mochibit.defcon.content.items.radiationMeasurer.RadiationMeasurerItem
 import me.mochibit.defcon.events.geiger.GeigerDetectEvent
-import me.mochibit.defcon.extensions.getBehaviour
+import me.mochibit.defcon.extensions.getPluginItem
 import org.bukkit.Bukkit
 import org.bukkit.Sound
 import org.bukkit.event.EventHandler
@@ -36,8 +37,8 @@ class RadiationMeasurerListener : Listener {
 
         if (event.radiationLevel <= 0) return;
         // Check if the item on the player's hand is a Geiger Counter
-        if (player.inventory.itemInMainHand.getBehaviour() != ItemBehaviour.RADIATION_MEASURER &&
-            player.inventory.itemInOffHand.getBehaviour() != ItemBehaviour.RADIATION_MEASURER) return;
+        if (player.inventory.itemInMainHand.getPluginItem() !is RadiationMeasurerItem &&
+            player.inventory.itemInOffHand.getPluginItem() !is RadiationMeasurerItem) return;
 
         // Player a ticking sound randomly, to simulate the Geiger Counter, and with a density based on the radiation level, repeating a random number of times
         val ticks = (1.. event.radiationLevel.toInt() * 6).random()

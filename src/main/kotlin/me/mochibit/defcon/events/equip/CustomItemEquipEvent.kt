@@ -38,6 +38,7 @@ package me.mochibit.defcon.events.equip
  */
 
 import me.mochibit.defcon.content.items.ItemBehaviour
+import me.mochibit.defcon.content.items.PluginItem
 import org.bukkit.entity.Player
 import org.bukkit.event.Cancellable
 import org.bukkit.event.Event
@@ -45,8 +46,7 @@ import org.bukkit.event.HandlerList
 import org.bukkit.inventory.ItemStack
 
 class CustomItemEquipEvent(
-    val equippedItem: ItemStack,
-    val equippedItemBehaviour: ItemBehaviour,
+    val equippedItem: PluginItem,
     val equippedItemSlot: Int,
     val player: Player
 ) : Event(), Cancellable {

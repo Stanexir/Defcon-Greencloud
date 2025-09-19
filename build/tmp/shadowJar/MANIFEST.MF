@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Built-By: rynos
-Build-Timestamp: 2025-09-18T16:52:03.151718200Z
+Build-Timestamp: 2025-09-19T17:44:00.079419Z
 Created-By: Gradle 8.14
 Implementation-Title: Defcon
 Implementation-Version: 1.3.5b-SNAPSHOT

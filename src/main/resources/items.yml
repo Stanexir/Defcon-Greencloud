@@ -28,7 +28,8 @@ items:
   iodine-pills:
     display-name: "Iodine pills"
     description: |
-      Decreases the absorbed radiation levels, helping to heal radiation sickness
+      Decreases the absorbed radiation levels
+      helping to heal radiation sickness
     minecraft-id: PUMPKIN_SEEDS
     max-stack-size: 64
     behaviour: "radiation_healer"

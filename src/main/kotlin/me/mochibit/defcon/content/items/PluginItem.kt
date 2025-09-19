@@ -28,15 +28,20 @@ import org.bukkit.inventory.ItemStack
 
 abstract class PluginItem(
     override val properties: PluginItemProperties,
-    additionalData : Map<String, Any> = mapOf(),
+    additionalData: Map<String, Any> = mapOf(),
     protected val behaviourDataParser: ElementBehaviourPropParser? = null,
     override val behaviourProperties: ElementBehaviourProperties? = behaviourDataParser?.parse(additionalData),
     private val mini: MiniMessage = MiniMessage.miniMessage(),
     private val itemStackFactory: ItemStackFactory = FactoryMetaStrategies.getFactory()
-): Element {
+) : Element {
     val name: String
         get() = mini.stripTags(properties.displayName)
 
     val itemStack: ItemStack
         get() = itemStackFactory.create(properties)
+
+    val isEquippable: Boolean
+        get() = properties.equipmentSlot.let {
+            it != null && it.isArmor
+        }
 }
