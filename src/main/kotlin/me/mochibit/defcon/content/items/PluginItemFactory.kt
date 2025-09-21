@@ -46,12 +46,9 @@ object PluginItemFactory :
             )
         )
 
-        return when (elementDefinition.behaviour) {
-            ItemBehaviour.GAS_MASK -> GasMaskItem(properties)
-            ItemBehaviour.RADIATION_MEASURER -> RadiationMeasurerItem(properties)
-            ItemBehaviour.RADIATION_HEALER ->
-                RadiationHealerItem(properties, elementDefinition.additionalData)
-            ItemBehaviour.STRUCTURE_ASSEMBLER -> StructureAssemblerItem(properties)
-        }
+        return elementDefinition.behaviour.elementConstructor(
+            properties,
+            elementDefinition.behaviourData
+        )
     }
 }

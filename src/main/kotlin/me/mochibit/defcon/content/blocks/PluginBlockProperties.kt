@@ -17,26 +17,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.content.items
+package me.mochibit.defcon.content.blocks
 
 import me.mochibit.defcon.content.element.ElementProperties
-import org.bukkit.NamespacedKey
-import org.bukkit.inventory.EquipmentSlot
 
-data class PluginItemProperties(
+data class PluginBlockProperties(
     val id: String,
     val displayName: String,
     val description: String?,
 
     val minecraftId: String,
-    val itemModel: NamespacedKey?,
-
-    val equipmentSlot: EquipmentSlot?,
-    val maxStackSize: Int,
-    val legacyProperties: LegacyProperties
-): ElementProperties {
-    data class LegacyProperties(
-        val legacyMinecraftId: String?,
-        val legacyItemModel: Int?
-    )
-}
+) : ElementProperties

@@ -22,4 +22,8 @@ package me.mochibit.defcon.content.element
 import me.mochibit.defcon.content.items.PluginItem
 import me.mochibit.defcon.content.items.PluginItemProperties
 
-interface ElementBehaviour
+
+
+interface ElementBehaviour<in P: ElementProperties, out E: Element> {
+    val elementConstructor: (P, Map<String, Any>) -> E
+}

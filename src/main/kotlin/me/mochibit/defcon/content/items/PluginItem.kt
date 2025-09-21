@@ -28,9 +28,10 @@ import org.bukkit.inventory.ItemStack
 
 abstract class PluginItem(
     override val properties: PluginItemProperties,
-    additionalData: Map<String, Any> = mapOf(),
-    protected val behaviourDataParser: ElementBehaviourPropParser? = null,
-    override val behaviourProperties: ElementBehaviourProperties? = behaviourDataParser?.parse(additionalData),
+    override val unparsedBehaviourData: Map<String, Any>,
+    override val behaviourPropParser: ElementBehaviourPropParser? = null,
+    override val behaviourProperties: ElementBehaviourProperties? = behaviourPropParser?.parse(unparsedBehaviourData),
+
     private val mini: MiniMessage = MiniMessage.miniMessage(),
     private val itemStackFactory: ItemStackFactory = FactoryMetaStrategies.getFactory()
 ) : Element {
@@ -44,4 +45,5 @@ abstract class PluginItem(
         get() = properties.equipmentSlot.let {
             it != null && it.isArmor
         }
+
 }

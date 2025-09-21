@@ -27,5 +27,6 @@ package me.mochibit.defcon.content.element
  * It's useful for allowing data-driven element configuration, like loading from JSON or other formats.
  */
 interface ElementDefinition<Properties: ElementProperties, ProducedElement: Element> {
-    val behaviour: ElementBehaviour
+    val behaviour: ElementBehaviour<Properties, ProducedElement>
+    val behaviourData: Map<String, Any>
 }

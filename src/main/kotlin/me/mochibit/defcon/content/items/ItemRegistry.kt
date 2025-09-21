@@ -65,14 +65,12 @@ class ItemRegistry {
 
         Logger.info("Registering recipes for the items")
         configurationItems.forEach { item ->
-            when {
-                item.shapedRecipe != null -> {
-                    registerShapedRecipe(item.shapedRecipe, item)
-                }
+            when (item.craftingRecipe) {
+                is ItemsConfiguration.ItemDefinition.CraftingRecipe.ShapedCraftingRecipe ->
+                    registerShapedRecipe(item.craftingRecipe, item)
 
-                item.shapelessCraftingRecipe != null -> {
-                    registerShapelessRecipe(item.shapelessCraftingRecipe, item)
-                }
+                is ItemsConfiguration.ItemDefinition.CraftingRecipe.ShapelessCraftingRecipe ->
+                    registerShapelessRecipe(item.craftingRecipe, item)
 
                 else -> return@forEach
             }
@@ -82,7 +80,7 @@ class ItemRegistry {
 
 
     private fun registerShapedRecipe(
-        recipe: ItemsConfiguration.ItemDefinition.ShapedCraftingRecipe,
+        recipe: ItemsConfiguration.ItemDefinition.CraftingRecipe.ShapedCraftingRecipe,
         item: ItemsConfiguration.ItemDefinition
     ) {
         val resultItem = registeredItems[item.id] ?: return
@@ -134,7 +132,7 @@ class ItemRegistry {
     }
 
     private fun registerShapelessRecipe(
-        recipe: ItemsConfiguration.ItemDefinition.ShapelessCraftingRecipe,
+        recipe: ItemsConfiguration.ItemDefinition.CraftingRecipe.ShapelessCraftingRecipe,
         item: ItemsConfiguration.ItemDefinition
     ) {
         val resultItem = registeredItems[item.id] ?: return

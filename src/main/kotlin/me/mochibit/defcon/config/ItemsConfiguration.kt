@@ -25,6 +25,7 @@ import me.mochibit.defcon.content.items.PluginItem
 import me.mochibit.defcon.content.items.PluginItemProperties
 import me.mochibit.defcon.utils.Logger
 import org.bukkit.NamespacedKey
+import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.inventory.EquipmentSlot
 
 object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefinition>>("items") {
@@ -32,7 +33,7 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
     data class ItemDefinition(
         val id: String,
         val displayName: String,
-        val description: String?,
+        val description: String? = null,
 
         val minecraftId: String,
         val legacyMinecraftId: String,
@@ -42,23 +43,24 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
 
         val equipmentSlot: EquipmentSlot?,
         val maxStackSize: Int,
-        val additionalData: Map<String, Any>,
         override val behaviour: ItemBehaviour,
-        val shapedRecipe: ShapedCraftingRecipe?,
-        val shapelessCraftingRecipe: ShapelessCraftingRecipe?,
+        override val behaviourData: Map<String, Any> = emptyMap(),
+
+        val craftingRecipe: CraftingRecipe?,
     ) : ElementDefinition<PluginItemProperties, PluginItem> {
+        sealed interface CraftingRecipe {
+            data class ShapedCraftingRecipe(
+                val resultAmount: Int, val pattern: List<String>, val keys: Map<Char, IngredientEntry>
+            ) : CraftingRecipe
 
-        data class ShapedCraftingRecipe(
-            val resultAmount: Int, val pattern: List<String>, val keys: Map<Char, IngredientEntry>
-        )
+            data class ShapelessCraftingRecipe(
+                val resultAmount: Int, val ingredients: List<IngredientEntry>
+            ) : CraftingRecipe
 
-        data class ShapelessCraftingRecipe(
-            val resultAmount: Int, val ingredients: List<IngredientEntry>
-        )
-
-        data class IngredientEntry(
-            val itemNamespaced: String?, val tag: String?, val count: Int = 1
-        )
+            data class IngredientEntry(
+                val itemNamespaced: String?, val tag: String?, val count: Int = 1
+            )
+        }
     }
 
     override suspend fun cleanupSchema() {}
@@ -108,90 +110,8 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
                 }
             }
 
-
-            var shapedRecipe: ItemDefinition.ShapedCraftingRecipe? = null
-            var shapelessRecipe: ItemDefinition.ShapelessCraftingRecipe? = null
-
-            itemSection.getConfigurationSection("crafting")?.let { craftingSection ->
-                val craftingType = craftingSection.getString("type") ?: return@let
-                val resultAmount = craftingSection.getInt("result-amount", 1)
-
-                when (craftingType.lowercase()) {
-                    "shaped" -> {
-                        val pattern = craftingSection.getStringList("pattern")
-                        if (pattern.isEmpty()) {
-                            Logger.err("Empty pattern for shaped recipe in item $id, skipping crafting")
-                            return@let
-                        }
-
-                        val keys = mutableMapOf<Char, ItemDefinition.IngredientEntry>()
-                        val keySection = craftingSection.getConfigurationSection("key")
-
-                        keySection?.getKeys(false)?.forEach { charKey ->
-                            if (charKey.length != 1) {
-                                Logger.err("Invalid key character '$charKey' for item $id, skipping this key entry")
-                                return@forEach
-                            }
-
-                            val keyEntrySection = keySection.getConfigurationSection(charKey)
-                            if (keyEntrySection != null) {
-                                val itemId = keyEntrySection.getString("item", null)
-                                val tag = keyEntrySection.getString("tag", null)
-                                val count = keyEntrySection.getInt("count", 1)
-
-                                when {
-                                    tag != null -> {
-                                        keys[charKey[0]] = ItemDefinition.IngredientEntry(null, tag, count)
-                                    }
-                                    itemId != null -> {
-                                        keys[charKey[0]] = ItemDefinition.IngredientEntry(itemId, null, count)
-                                    }
-                                    else -> {
-                                        Logger.err("Missing 'item' or 'tag' in key entry for character '$charKey' in item $id")
-                                    }
-                                }
-                            }
-                        }
-
-                        shapedRecipe = ItemDefinition.ShapedCraftingRecipe(
-                            resultAmount = resultAmount, pattern = pattern, keys = keys
-                        )
-                    }
-
-                    "shapeless" -> {
-                        val ingredientsList = craftingSection.getMapList("ingredients")
-                        if (ingredientsList.isEmpty()) {
-                            Logger.err("Empty ingredients list for shapeless recipe in item $id, skipping crafting")
-                            return@let
-                        }
-
-                        val ingredients = ingredientsList.mapNotNull { ingredientMap ->
-                            val itemId = ingredientMap["item"] as? String
-                            val tag = ingredientMap["tag"] as? String
-                            val count = (ingredientMap["count"] as? Number)?.toInt() ?: 1
-
-                            when {
-                                tag != null -> ItemDefinition.IngredientEntry(null, tag, count)
-                                itemId != null -> ItemDefinition.IngredientEntry(itemId, null, count)
-                                else -> {
-                                    Logger.err("Missing 'item' or 'tag' in ingredient for item $id")
-                                    null
-                                }
-                            }
-                        }
-
-                        if (ingredients.isNotEmpty()) {
-                            shapelessRecipe = ItemDefinition.ShapelessCraftingRecipe(
-                                resultAmount = resultAmount, ingredients = ingredients
-                            )
-                        }
-                    }
-
-                    else -> {
-                        Logger.err("Invalid crafting type '$craftingType' for item $id, skipping crafting")
-                    }
-                }
-            }
+            val itemRecipe: ItemDefinition.CraftingRecipe? =
+                parseRecipe(itemSection.getConfigurationSection("crafting"))
 
             tempItems.add(
                 ItemDefinition(
@@ -205,14 +125,115 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
                     equipmentSlot = equipmentSlot,
                     maxStackSize = maxStackSize,
                     behaviour = itemBehaviour,
-                    additionalData = properties,
-                    shapedRecipe = shapedRecipe,
-                    shapelessCraftingRecipe = shapelessRecipe
+                    behaviourData = properties,
+                    craftingRecipe = itemRecipe,
                 )
             )
         }
 
         return tempItems.toList()
     }
+
+    private fun parseRecipe(craftingSection: ConfigurationSection?): ItemDefinition.CraftingRecipe? {
+        craftingSection ?: return null
+
+        val craftingType = craftingSection.getString("type") ?: return null
+        val resultAmount = craftingSection.getInt("result-amount", 1)
+
+        return when (craftingType.lowercase()) {
+            "shaped" -> parseShapedRecipe(craftingSection, resultAmount)
+            "shapeless" -> parseShapelessRecipe(craftingSection, resultAmount)
+            else -> {
+                Logger.err("Invalid crafting type '$craftingType' for item, skipping crafting")
+                null
+            }
+        }
+    }
+
+    private fun parseShapedRecipe(
+        craftingSection: ConfigurationSection,
+        resultAmount: Int
+    ): ItemDefinition.CraftingRecipe.ShapedCraftingRecipe? {
+        val pattern = craftingSection.getStringList("pattern")
+        if (pattern.isEmpty()) {
+            Logger.err("Empty pattern for shaped recipe in item, skipping crafting")
+            return null
+        }
+
+        val keys = parseRecipeKeys(craftingSection.getConfigurationSection("key"))
+        return ItemDefinition.CraftingRecipe.ShapedCraftingRecipe(resultAmount, pattern, keys)
+    }
+
+    private fun parseShapelessRecipe(
+        craftingSection: ConfigurationSection,
+        resultAmount: Int
+    ): ItemDefinition.CraftingRecipe.ShapelessCraftingRecipe? {
+        val ingredientsList = craftingSection.getMapList("ingredients")
+
+        if (ingredientsList.isEmpty()) {
+            Logger.err("Empty ingredients list for shapeless recipe in item, skipping crafting")
+            return null
+        }
+
+        val ingredients = ingredientsList.mapNotNull { ingredientMap ->
+            parseIngredientEntry(ingredientMap)
+        }
+
+        return if (ingredients.isNotEmpty()) {
+            ItemDefinition.CraftingRecipe.ShapelessCraftingRecipe(resultAmount, ingredients)
+        } else {
+            null
+        }
+    }
+
+
+    private fun parseRecipeKeys(keySection: ConfigurationSection?): Map<Char, ItemDefinition.CraftingRecipe.IngredientEntry> {
+        keySection ?: return emptyMap()
+
+        return keySection.getKeys(false).mapNotNull { charKey ->
+            if (charKey.length != 1) {
+                Logger.err("Invalid key character '$charKey' for item, skipping this key entry")
+                return@mapNotNull null
+            }
+
+            val keyEntrySection = keySection.getConfigurationSection(charKey) ?: return@mapNotNull null
+            val ingredient = parseIngredientFromSection(keyEntrySection, charKey)
+            ingredient?.let { charKey[0] to it }
+        }.toMap()
+    }
+
+    private fun parseIngredientFromSection(
+        section: ConfigurationSection,
+        charKey: String
+    ): ItemDefinition.CraftingRecipe.IngredientEntry? {
+        val itemId = section.getString("item")
+        val tag = section.getString("tag")
+        val count = section.getInt("count", 1)
+
+        return when {
+            tag != null -> ItemDefinition.CraftingRecipe.IngredientEntry(null, tag, count)
+            itemId != null -> ItemDefinition.CraftingRecipe.IngredientEntry(itemId, null, count)
+            else -> {
+                Logger.err("Missing 'item' or 'tag' in key entry for character '$charKey' in item")
+                null
+            }
+        }
+    }
+
+    private fun parseIngredientEntry(ingredientMap: Map<out Any?, Any?>?): ItemDefinition.CraftingRecipe.IngredientEntry? {
+        val itemId = ingredientMap?.get("item") as? String
+        val tag = ingredientMap?.get("tag") as? String
+        val count = (ingredientMap?.get("count") as? Number)?.toInt() ?: 1
+
+        return when {
+            tag != null -> ItemDefinition.CraftingRecipe.IngredientEntry(null, tag, count)
+            itemId != null -> ItemDefinition.CraftingRecipe.IngredientEntry(itemId, null, count)
+            else -> {
+                Logger.err("Missing 'item' or 'tag' in ingredient for item")
+                null
+            }
+        }
+    }
+
 }
 

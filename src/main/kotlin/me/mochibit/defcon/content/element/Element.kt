@@ -22,4 +22,6 @@ package me.mochibit.defcon.content.element
 interface Element {
     val properties: ElementProperties
     val behaviourProperties : ElementBehaviourProperties?
+    val unparsedBehaviourData : Map<String, Any>
+    val behaviourPropParser: ElementBehaviourPropParser?
 }

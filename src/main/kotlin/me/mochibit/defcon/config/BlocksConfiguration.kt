@@ -19,17 +19,18 @@
 
 package me.mochibit.defcon.config
 
+import me.mochibit.defcon.content.blocks.PluginBlock
+import me.mochibit.defcon.content.blocks.PluginBlockProperties
+import me.mochibit.defcon.content.element.ElementBehaviour
+import me.mochibit.defcon.content.element.ElementDefinition
 import me.mochibit.defcon.enums.BlockBehaviour
 import me.mochibit.defcon.utils.Logger
 
 object BlocksConfiguration : PluginConfiguration<List<BlocksConfiguration.BlockDefinition>>("blocks") {
     data class BlockDefinition(
-        val id: String,
-        val displayName: String,
-        val description: String,
-        val minecraftId: String,
-        val behaviour: BlockBehaviour
-    )
+        override val behaviour: ElementBehaviour
+    ): ElementDefinition<PluginBlockProperties, PluginBlock>
+
 
     override suspend fun loadSchema(): List<BlockDefinition> {
         val tempBlocks = mutableListOf<BlockDefinition>()

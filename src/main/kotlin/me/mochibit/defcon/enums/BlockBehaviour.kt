@@ -19,19 +19,10 @@
 
 package me.mochibit.defcon.enums
 
-enum class BlockBehaviour(name: String) {
-    GENERIC("GENERIC"),
-    STRUCTURE_COMPONENT("STRUCTURE_COMPONENT"),
-    STRUCTURE_INTERFACE("STRUCTURE_INTERFACE");
+import me.mochibit.defcon.content.element.ElementBehaviour
 
-    companion object {
-        fun fromString(text: String?): BlockBehaviour? {
-            for (b in values()) {
-                if (b.name.equals(text, ignoreCase = true)) {
-                    return b
-                }
-            }
-            return null
-        }
-    }
+enum class BlockBehaviour : ElementBehaviour {
+    FISSION_CORE,
+    FUSION_CORE,
+    WARHEAD_INTERFACE
 }

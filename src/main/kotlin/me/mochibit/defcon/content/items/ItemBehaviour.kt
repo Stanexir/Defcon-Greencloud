@@ -20,18 +20,17 @@
 package me.mochibit.defcon.content.items
 
 import me.mochibit.defcon.content.element.ElementBehaviour
-import me.mochibit.defcon.content.element.ElementBehaviourProperties
-
 import me.mochibit.defcon.content.items.gasMask.GasMaskItem
-import me.mochibit.defcon.content.items.radiationMeasurer.RadiationMeasurerItem
 import me.mochibit.defcon.content.items.radiationHealer.RadiationHealerItem
-import me.mochibit.defcon.content.items.radiationHealer.RadiationHealerProperties
+import me.mochibit.defcon.content.items.radiationMeasurer.RadiationMeasurerItem
 import me.mochibit.defcon.content.items.structureAssembler.StructureAssemblerItem
 
 
-enum class ItemBehaviour: ElementBehaviour {
-    GAS_MASK,
-    RADIATION_MEASURER,
-    RADIATION_HEALER,
-    STRUCTURE_ASSEMBLER;
+enum class ItemBehaviour(
+    override val elementConstructor: (PluginItemProperties, Map<String, Any>) -> PluginItem
+) : ElementBehaviour<PluginItemProperties, PluginItem> {
+    GAS_MASK(::GasMaskItem),
+    RADIATION_MEASURER(::RadiationMeasurerItem),
+    RADIATION_HEALER(::RadiationHealerItem),
+    STRUCTURE_ASSEMBLER(::StructureAssemblerItem);
 }

@@ -23,5 +23,6 @@ import me.mochibit.defcon.content.items.PluginItemProperties
 import me.mochibit.defcon.content.items.PluginItem
 
 class GasMaskItem(
-    override val properties: PluginItemProperties
-) : PluginItem(properties) {}
+    override val properties: PluginItemProperties,
+    unparsedBehaviourData: Map<String, Any>
+) : PluginItem(properties, unparsedBehaviourData) {}
