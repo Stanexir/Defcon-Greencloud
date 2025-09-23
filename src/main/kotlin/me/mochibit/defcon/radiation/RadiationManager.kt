@@ -28,6 +28,7 @@ import me.mochibit.defcon.events.radiationarea.RadiationSuffocationEvent
 import me.mochibit.defcon.player.PlayerData
 import me.mochibit.defcon.save.savedata.PlayerDataSave
 import me.mochibit.defcon.threading.scheduling.intervalAsync
+import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.utils.versionGreaterOrEqualThan
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
@@ -38,6 +39,7 @@ import kotlin.time.Duration.Companion.seconds
 
 object RadiationManager {
     fun start() {
+        info("Starting Radiation processor...")
         intervalAsync(1.seconds) {
             updatePlayers()
         }

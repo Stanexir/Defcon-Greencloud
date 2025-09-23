@@ -19,11 +19,6 @@
 
 package me.mochibit.defcon.listeners.items
 
-import me.mochibit.defcon.enums.BlockDataKey
-import me.mochibit.defcon.content.items.ItemBehaviour
-import me.mochibit.defcon.content.items.ItemRegistry
-import me.mochibit.defcon.content.StructureRegister
-import me.mochibit.defcon.utils.MetaManager
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerInteractEvent

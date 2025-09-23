@@ -21,71 +21,52 @@ package me.mochibit.defcon
 
 import com.github.shynixn.mccoroutine.bukkit.SuspendingJavaPlugin
 import me.mochibit.defcon.Defcon.Companion.instance
-import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.biomes.CustomBiomeHandler
 import me.mochibit.defcon.config.PluginConfiguration
+import me.mochibit.defcon.content.listeners.EventRegister
+import me.mochibit.defcon.content.pack.DatapackRegistry
+import me.mochibit.defcon.content.pack.ResourcePackRegistry
 import me.mochibit.defcon.notification.NotificationManager
 import me.mochibit.defcon.radiation.RadiationManager
-import me.mochibit.defcon.content.*
-import me.mochibit.defcon.content.items.ItemRegistry
-import me.mochibit.defcon.content.listeners.EventRegister
-import me.mochibit.defcon.content.pack.DatapackRegister
-import me.mochibit.defcon.content.pack.ResourcePackRegister
+import me.mochibit.defcon.registry.BlockRegistry
+import me.mochibit.defcon.registry.CommandRegistry
+import me.mochibit.defcon.registry.ItemRegistry
+import me.mochibit.defcon.registry.StructureRegistry
 import me.mochibit.defcon.server.ResourcePackServer
+import me.mochibit.defcon.utils.Logger.info
 import org.bukkit.Bukkit
 
 
 class Defcon : SuspendingJavaPlugin() {
     override fun onLoad() {
+        info("Defcon is starting up ☢️")
         _instance = this
-//        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this))
-//        PacketEvents.getAPI().load()
 
         EventRegister.registerPacketListeners()
-        info("Defcon is starting up ☢️")
     }
 
     override suspend fun onEnableAsync() {
-        ResourcePackServer.startServer()
-//        PacketEvents.getAPI().init()
-        info("Plugin is enabled! Loading configurations...")
         PluginConfiguration.loadAll()
 
-        info("Registering resource pack and datapack")
-        DatapackRegister.register()
-        ResourcePackRegister.register()
+        DatapackRegistry.register()
+        ResourcePackRegistry.register()
 
         NotificationManager.startBroadcastTask()
 
-        /* Register all plugin's listeners */
-        EventRegister.registerAllListeners()
+        EventRegister.registerBukkitListeners()
 
-        /* Register definitions items */
-        if (!ItemRegistry().registerItems()) {
-            info("Some items were not registered!")
-        }
+        BlockRegistry.registerBlocks()
+        ItemRegistry.registerItems()
+        StructureRegistry.registerStructures()
+        CommandRegistry.registerCommands()
 
-        /* Register definitions blocks */
-        BlockRegister().registerBlocks()
-
-        /* Register commands */
-        CommandRegister().registerCommands()
-
-        /* Register structures */
-//        StructureRegister().registerStructures()
-
-
-        // Start radiation processor
         RadiationManager.start()
-
-
-        // Start the custom biome handler
         CustomBiomeHandler.initialize()
+        ResourcePackServer.startServer()
     }
 
     override suspend fun onDisableAsync() {
         NotificationManager.saveNotifications()
-//        PacketEvents.getAPI().terminate()
         ResourcePackServer.stopServer()
         CustomBiomeHandler.shutdown()
         info("Plugin disabled!")
@@ -97,5 +78,9 @@ class Defcon : SuspendingJavaPlugin() {
         val minecraftVersion = Bukkit.getServer().bukkitVersion.split("-")[0]
     }
 }
+
+internal val pluginInstance
+    get() =
+        instance
 
 internal fun pluginNamespacedKey(key: String) = org.bukkit.NamespacedKey(instance, key)

@@ -49,7 +49,7 @@ import kotlin.io.path.pathString
 /**
  * Handles registration and generation of the resource pack.
  */
-object ResourcePackRegister : PackRegister(true) {
+object ResourcePackRegistry : PackRegistry(true) {
 
     private val pluginResourcePackPath = Defcon.instance.dataFolder.toPath().resolve("resourcepack")
 

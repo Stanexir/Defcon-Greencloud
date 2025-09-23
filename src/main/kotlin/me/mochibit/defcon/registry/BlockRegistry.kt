@@ -1,7 +1,7 @@
 /*
  *
  * DEFCON: Nuclear warfare plugin for minecraft servers.
- * Copyright (c) 2024 mochibit.
+ * Copyright (c) 2025 mochibit.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -17,19 +17,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.content
+package me.mochibit.defcon.registry
 
-import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.classes.CustomBlockDefinition
-import me.mochibit.defcon.config.PluginConfiguration
-import me.mochibit.defcon.enums.BlockBehaviour
 import me.mochibit.defcon.enums.BlockDataKey
 import me.mochibit.defcon.exceptions.BlockNotRegisteredException
 import me.mochibit.defcon.interfaces.PluginBlock
+import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.utils.MetaManager
 import org.bukkit.Location
 import org.bukkit.World
-import org.bukkit.plugin.java.JavaPlugin
 import org.joml.Vector3i
 
 /**
@@ -37,13 +33,13 @@ import org.joml.Vector3i
  * All the registered items are stored and returned in a form of a HashMap(id, CustomBlock
  *
  */
-class BlockRegister() {
-    private val pluginInstance: JavaPlugin = JavaPlugin.getPlugin(Defcon::class.java)
+object BlockRegistry {
 
     /**
      *
      */
     fun registerBlocks() {
+        info("Registering plugin blocks...")
         registeredBlocks = HashMap()
 //        /* REGISTER THE ITEMS COMING FROM THE CONFIG */
 //        val blockConfig = PluginConfiguration.get(ConfigurationStorage.Blocks).config
@@ -70,33 +66,33 @@ class BlockRegister() {
 //        }
     }
 
-    companion object {
-        /**
-         * Static member to access the registered items
-         */
-        private var registeredBlocks: HashMap<String?, PluginBlock?>? = null
 
-        fun getBlock(location: Location): PluginBlock? {
-            val customBlockId = MetaManager.getBlockData<String>(location, BlockDataKey.CustomBlockId) ?: return null
-            return getBlock(customBlockId)
-        }
+    /**
+     * Static member to access the registered items
+     */
+    private var registeredBlocks: HashMap<String?, PluginBlock?>? = null
 
-        fun getBlock(loc: Vector3i, world: World): PluginBlock? {
-            val location = Location(world, loc.x.toDouble(), loc.y.toDouble(), loc.z.toDouble())
-            return getBlock(location)
-        }
-
-        fun getBlock(id: String): PluginBlock? {
-            return registeredBlocks!![id]
-        }
-
-        /* Registered items getter */
-        @Throws(BlockNotRegisteredException::class)
-        fun getRegisteredBlocks(): HashMap<String?, PluginBlock?>? {
-            if (registeredBlocks == null) {
-                throw BlockNotRegisteredException("Block not registered for some reason. Verify the initialization")
-            }
-            return registeredBlocks
-        }
+    fun getBlock(location: Location): PluginBlock? {
+        val customBlockId = MetaManager.getBlockData<String>(location, BlockDataKey.CustomBlockId) ?: return null
+        return getBlock(customBlockId)
     }
+
+    fun getBlock(loc: Vector3i, world: World): PluginBlock? {
+        val location = Location(world, loc.x.toDouble(), loc.y.toDouble(), loc.z.toDouble())
+        return getBlock(location)
+    }
+
+    fun getBlock(id: String): PluginBlock? {
+        return registeredBlocks!![id]
+    }
+
+    /* Registered items getter */
+    @Throws(BlockNotRegisteredException::class)
+    fun getRegisteredBlocks(): HashMap<String?, PluginBlock?>? {
+        if (registeredBlocks == null) {
+            throw BlockNotRegisteredException("Block not registered for some reason. Verify the initialization")
+        }
+        return registeredBlocks
+    }
+
 }

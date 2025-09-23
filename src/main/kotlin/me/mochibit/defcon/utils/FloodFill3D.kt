@@ -2,7 +2,7 @@ package me.mochibit.defcon.utils
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import me.mochibit.defcon.content.BlockRegister
+import me.mochibit.defcon.registry.BlockRegistry
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.World
@@ -167,7 +167,7 @@ object FloodFill3D {
      */
     private fun isCustomBlock(pos: Vector3i, world: World): Boolean {
         return customBlockCache.computeIfAbsent(pos) {
-            BlockRegister.getBlock(pos, world) != null
+            BlockRegistry.getBlock(pos, world) != null
         }
     }
 }

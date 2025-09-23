@@ -1,12 +1,12 @@
 blocks:
   fission-core:
     block-basis: BLACK_GLAZED_TERRACOTTA
-    behaviour: "fission-core"
+    behaviour: "fission_core"
 
   fusion-core:
     block-basis: END_ROD
-    behaviour: "fusion-core"
+    behaviour: "fusion_core"
 
   warhead-interface:
     block-basis: CRAFTER
-    behaviour: "warhead-interface"
+    behaviour: "warhead_interface"

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.chunked
 import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.utils.Logger
 import me.mochibit.defcon.save.savedata.BiomeAreaSave
+import me.mochibit.defcon.utils.Logger.info
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
@@ -165,6 +166,7 @@ object CustomBiomeHandler {
     const val PLAYER_UPDATE_BATCH_SIZE = 50
 
     fun initialize() {
+        info("Initializing custom biome handler...")
         taskScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
         // Periodic biome management tasks

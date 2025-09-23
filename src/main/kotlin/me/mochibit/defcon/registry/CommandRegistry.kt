@@ -1,7 +1,7 @@
 /*
  *
  * DEFCON: Nuclear warfare plugin for minecraft servers.
- * Copyright (c) 2024 mochibit.
+ * Copyright (c) 2025 mochibit.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -17,21 +17,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.content
+package me.mochibit.defcon.registry
 
 import io.papermc.paper.command.brigadier.Commands
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.commands.GenericCommand
+import me.mochibit.defcon.utils.Logger
 import org.reflections.Reflections
 import java.lang.reflect.InvocationTargetException
 
-class CommandRegister {
-    private val packageName: String = Defcon.instance.javaClass.getPackage().name
+object CommandRegistry {
+    private val packageName: String = Defcon.Companion.instance.javaClass.getPackage().name
 
     fun registerCommands() {
-        info("Registering commands from $packageName.commands")
+        Logger.info("Registering plugin commands")
 
         val commandBuilderLeafs = mutableListOf<GenericCommand>()
 
@@ -40,7 +40,7 @@ class CommandRegister {
                 val genericCommand = commandClass.getDeclaredConstructor().newInstance()
                 commandBuilderLeafs.add(genericCommand)
                 // debug info
-                info("Registering command: ${genericCommand.commandInfo.name}")
+                Logger.info("Registering command: ${genericCommand.commandInfo.name}")
 
             } catch (e: InstantiationException) {
                 throw RuntimeException(e)
@@ -54,13 +54,13 @@ class CommandRegister {
         }
 
         val commandTree = Commands
-            .literal(GenericCommand.COMMAND_ROOT)
+            .literal(GenericCommand.Companion.COMMAND_ROOT)
 
         for (command in commandBuilderLeafs) {
             commandTree.then(command.getCommand())
         }
 
-        Defcon.instance.lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) { commands ->
+        Defcon.Companion.instance.lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) { commands ->
             commands.registrar().register(commandTree.build())
         }
     }

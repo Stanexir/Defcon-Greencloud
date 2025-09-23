@@ -1,7 +1,7 @@
 /*
  *
  * DEFCON: Nuclear warfare plugin for minecraft servers.
- * Copyright (c) 2024 mochibit.
+ * Copyright (c) 2025 mochibit.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -17,27 +17,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.content
+package me.mochibit.defcon.content.blocks.fusionCore
 
-import me.mochibit.defcon.Defcon
-import org.bukkit.plugin.java.JavaPlugin
+import me.mochibit.defcon.content.blocks.PluginBlock
+import me.mochibit.defcon.content.blocks.PluginBlockProperties
 
-import java.util.*
-import kotlin.collections.HashMap
-
-class StructureRegister() {
-    private var pluginInstance: JavaPlugin? = null
-
-    init {
-        // Get the instance of the plugin
-        this.pluginInstance = JavaPlugin.getPlugin(Defcon::class.java);
-    }
-
-    fun registerStructures() {
-
-    }
-
-    companion object {
-//        private var registeredStructures: HashMap<String, StructureDefinition> = HashMap()
-    }
-}
+class FusionCoreBlock(
+    override val properties: PluginBlockProperties,
+    unparsedBehaviourData: Map<String, Any>
+) : PluginBlock(properties, unparsedBehaviourData)

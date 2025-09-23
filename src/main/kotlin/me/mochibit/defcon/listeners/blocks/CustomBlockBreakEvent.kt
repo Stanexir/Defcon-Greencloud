@@ -20,7 +20,7 @@
 package me.mochibit.defcon.listeners.blocks
 
 import me.mochibit.defcon.interfaces.PluginBlock
-import me.mochibit.defcon.content.BlockRegister
+import me.mochibit.defcon.registry.BlockRegistry
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
@@ -32,7 +32,7 @@ class CustomBlockBreakEvent : Listener {
         val customBlock: PluginBlock
         val block = event.block
 
-        customBlock = BlockRegister.getBlock(block.location)?: return
+        customBlock = BlockRegistry.getBlock(block.location)?: return
         customBlock.removeBlock(block.location)
     }
 

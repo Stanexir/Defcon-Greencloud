@@ -17,11 +17,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.content.items
+package me.mochibit.defcon.registry
 
 import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.config.ItemsConfiguration
+import me.mochibit.defcon.content.items.PluginItem
+import me.mochibit.defcon.content.items.PluginItemFactory
 import me.mochibit.defcon.utils.Logger
+import me.mochibit.defcon.utils.Logger.info
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
@@ -39,12 +42,13 @@ import org.bukkit.inventory.ShapelessRecipe
  * load up correctly the definitions items
  *
  */
-class ItemRegistry {
+object ItemRegistry {
     /**
      *
      * @return boolean - True if all items are registered, false if some error occurred.
      */
     suspend fun registerItems(): Boolean {
+        info("Registering plugin items...")
         registeredItems = HashMap()
 
         val configurationItems = ItemsConfiguration.getSchema()
@@ -63,7 +67,7 @@ class ItemRegistry {
             registeredItems[customItem.properties.id] = customItem
         }
 
-        Logger.info("Registering recipes for the items")
+        info("Registering recipes for the items")
         configurationItems.forEach { item ->
             when (item.craftingRecipe) {
                 is ItemsConfiguration.ItemDefinition.CraftingRecipe.ShapedCraftingRecipe ->
@@ -84,11 +88,11 @@ class ItemRegistry {
         item: ItemsConfiguration.ItemDefinition
     ) {
         val resultItem = registeredItems[item.id] ?: return
-        val resultItemStack = resultItem.itemStack.clone().apply {
+        val resultItemStack = resultItem.itemStack.apply {
             amount = recipe.resultAmount
         }
 
-        val namespacedKey = NamespacedKey(Defcon.instance, "item_${item.id}_shaped")
+        val namespacedKey = NamespacedKey(Defcon.Companion.instance, "item_${item.id}_shaped")
         val shapedRecipe = ShapedRecipe(namespacedKey, resultItemStack)
 
         // Validate pattern
@@ -140,7 +144,7 @@ class ItemRegistry {
             amount = recipe.resultAmount
         }
 
-        val namespacedKey = NamespacedKey(Defcon.instance, "item_${item.id}_shapeless")
+        val namespacedKey = NamespacedKey(Defcon.Companion.instance, "item_${item.id}_shapeless")
         val shapelessRecipe = ShapelessRecipe(namespacedKey, resultItemStack)
         recipe.ingredients.forEach { ingredientEntry ->
             when {
@@ -223,11 +227,6 @@ class ItemRegistry {
         return null
     }
 
-    companion object {
-        /**
-         * Static member to access the registered items
-         */
-        var registeredItems: HashMap<String?, PluginItem?> = HashMap()
 
-    }
+    var registeredItems: HashMap<String?, PluginItem?> = HashMap()
 }

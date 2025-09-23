@@ -40,7 +40,7 @@ import java.util.*
 /**
  * Handles registration and generation of the datapack.
  */
-object DatapackRegister : PackRegister() {
+object DatapackRegistry : PackRegistry() {
     override val tempPath: Path = Paths.get("./defcon_temp_datapack")
 
     private val tempBiomesPath: Path by lazy {

@@ -35,7 +35,7 @@ import java.util.zip.ZipOutputStream
  * Base class for creating resource and data packs.
  * @param zipDestination Whether to create a zip file of the pack.
  */
-abstract class PackRegister(private val zipDestination: Boolean = false) {
+abstract class PackRegistry(private val zipDestination: Boolean = false) {
 
     abstract val tempPath: Path
     abstract val destinationPath: Path?

@@ -20,10 +20,16 @@
 package me.mochibit.defcon.content.blocks
 
 import me.mochibit.defcon.content.element.Element
+import me.mochibit.defcon.content.element.ElementBehaviourPropParser
+import me.mochibit.defcon.content.element.ElementBehaviourProperties
 import net.kyori.adventure.text.minimessage.MiniMessage
 
 abstract class PluginBlock(
     override val properties: PluginBlockProperties,
+    override val unparsedBehaviourData: Map<String, Any>,
+    override val behaviourPropParser: ElementBehaviourPropParser? = null,
+    override val behaviourProperties: ElementBehaviourProperties? = behaviourPropParser?.parse(unparsedBehaviourData),
+
     private val mini: MiniMessage = MiniMessage.miniMessage()
 ): Element {
     val name : String

@@ -26,6 +26,8 @@ import me.mochibit.defcon.utils.Logger
 import me.mochibit.defcon.utils.Logger.err
 import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.config.PluginConfiguration
+import me.mochibit.defcon.pluginInstance
+import me.mochibit.defcon.utils.Logger.warn
 import java.io.BufferedReader
 import java.io.FileInputStream
 import java.io.InputStreamReader
@@ -41,33 +43,29 @@ object ResourcePackServer {
     private var running = false
     private var serverJob: Job? = null
 
-    val port: Int
-        get() = try {
-            runBlocking {
-                MainConfiguration.getSchema().resourcePackConfig.serverPort
-            }
-        } catch (e: Exception) {
-            err("Failed to get resource pack server port from config, using default port 8080")
-            8080
-        }
-
     fun updatePackPath(path: Path) {
         resourcePackPath = path
     }
 
-    fun startServer() {
+    suspend fun startServer() {
+        val configuration = MainConfiguration.getSchema().resourcePackConfig
+        if (!configuration.enabled) {
+            info("Resource pack server is disabled in the configuration")
+            return
+        }
+
         if (running) {
-            Logger.warn("Server is already running")
+            warn("Server is already running")
             return
         }
 
         // Launch the server in a coroutine using the IO dispatcher
         serverJob = Defcon.instance.launch(Dispatchers.IO) {
             try {
-                serverSocket = ServerSocket(port)
+                serverSocket = ServerSocket(configuration.serverPort)
                 running = true
 
-                info("Resource pack server started on port $port")
+                info("Resource pack server started on port ${configuration.serverPort}")
 
                 while (running) {
                     try {

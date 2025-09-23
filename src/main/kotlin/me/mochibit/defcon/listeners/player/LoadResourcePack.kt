@@ -20,7 +20,7 @@
 package me.mochibit.defcon.listeners.player
 
 import me.mochibit.defcon.utils.Logger
-import me.mochibit.defcon.content.pack.ResourcePackRegister
+import me.mochibit.defcon.content.pack.ResourcePackRegistry
 import net.kyori.adventure.resource.ResourcePackRequest
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.event.EventHandler
@@ -30,15 +30,15 @@ import org.bukkit.event.player.PlayerJoinEvent
 class LoadResourcePack : Listener {
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
-        if (!ResourcePackRegister.isPackRegistered) {
+        if (!ResourcePackRegistry.isPackRegistered) {
             Logger.warn("Resource pack is not registered, check for errors in the console")
             return
         }
         val player = event.player
         val resourcePackInfo = if (player.address.hostString == "127.0.0.1") {
-            ResourcePackRegister.localPackInfo
+            ResourcePackRegistry.localPackInfo
         } else {
-            ResourcePackRegister.packInfo
+            ResourcePackRegistry.packInfo
         }
 
         val miniMessage = MiniMessage.miniMessage()

@@ -24,6 +24,7 @@ import com.github.retrooper.packetevents.event.PacketListener
 import com.github.retrooper.packetevents.event.PacketListenerPriority
 import com.github.shynixn.mccoroutine.bukkit.registerSuspendingEvents
 import me.mochibit.defcon.Defcon
+import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.utils.compareVersions
 import org.bukkit.Bukkit
 import org.bukkit.event.Listener
@@ -42,16 +43,10 @@ object EventRegister {
     private val registeredListeners = mutableSetOf<Class<*>>()
 
     /**
-     * Register all listeners and return this instance for chaining
-     */
-    fun registerAllListeners(): EventRegister {
-        return registerPacketListeners().registerBukkitListeners()
-    }
-
-    /**
      * Register packet listeners that are compatible with the current server version
      */
     fun registerPacketListeners(): EventRegister {
+        info("Registering packet listeners")
         val packetListenersPackage = "$packageName.listeners.packet"
         logger.info("Scanning for packet listeners in $packetListenersPackage")
 
@@ -84,14 +79,14 @@ object EventRegister {
      * Register Bukkit listeners that are compatible with the current server version
      */
     fun registerBukkitListeners(): EventRegister {
+        info("Registering Bukkit listeners")
+
         val listenerPackages = listOf(
             "$packageName.listeners",
             "$packageName.listeners.items",
             "$packageName.listeners.blocks",
             "$packageName.listeners.entities"
         )
-
-        logger.info("Scanning for Bukkit listeners in ${listenerPackages.size} packages")
 
         // Process each package for Bukkit listeners
         for (packagePath in listenerPackages) {

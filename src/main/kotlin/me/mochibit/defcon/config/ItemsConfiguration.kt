@@ -47,6 +47,7 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
         override val behaviourData: Map<String, Any> = emptyMap(),
 
         val craftingRecipe: CraftingRecipe?,
+        val isBlockItem: Boolean = false,
     ) : ElementDefinition<PluginItemProperties, PluginItem> {
         sealed interface CraftingRecipe {
             data class ShapedCraftingRecipe(
@@ -68,70 +69,84 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
     override suspend fun loadSchema(): List<ItemDefinition> {
         val tempItems = mutableListOf<ItemDefinition>()
 
-        val itemsSection = config.getConfigurationSection("items") ?: return listOf()
+        config.getConfigurationSection("items")?.let { itemsSection ->
+            tempItems += parseItemsFromSection(itemsSection, false)
+        }
 
-        itemsSection.getKeys(false).forEach { id ->
-            val itemSection = itemsSection.getConfigurationSection(id) ?: return@forEach
-
-            val displayName = itemSection.getString("display-name") ?: return@forEach
-            val description = itemSection.getString("description")
-            val minecraftId = itemSection.getString("minecraft-id") ?: return@forEach
-            val legacyMinecraftId = itemSection.getString("legacy-minecraft-id") ?: minecraftId
-
-            val itemModel = itemSection.getString("model", null)?.let {
-                NamespacedKey.fromString(it)
-            }
-
-            val legacyModelId = itemSection.getInt("legacy-model-id", 0)
-
-            val equipmentSlot = itemSection.getString("equip-slot", null)?.let {
-                try {
-                    EquipmentSlot.valueOf(it.uppercase())
-                } catch (ex: IllegalArgumentException) {
-                    Logger.err("Invalid equipment slot '$it' for item $id, using null")
-                    null
-                }
-            }
-
-            val maxStackSize = itemSection.getInt("max-stack-size", 64)
-            val behaviourValue = itemSection.getString("behaviour") ?: return@forEach
-
-            val itemBehaviour = try {
-                ItemBehaviour.valueOf(behaviourValue.uppercase())
-            } catch (ex: IllegalArgumentException) {
-                Logger.err("Invalid item behaviour '$behaviourValue' for item $id, skipping..")
-                return@forEach
-            }
-
-            val properties = mutableMapOf<String, Any>()
-            itemSection.getConfigurationSection("properties")?.let { propertiesSection ->
-                propertiesSection.getKeys(false).forEach { key ->
-                    properties[key] = propertiesSection.get(key) ?: ""
-                }
-            }
-
-            val itemRecipe: ItemDefinition.CraftingRecipe? =
-                parseRecipe(itemSection.getConfigurationSection("crafting"))
-
-            tempItems.add(
-                ItemDefinition(
-                    id = id,
-                    displayName = displayName,
-                    description = description,
-                    minecraftId = minecraftId,
-                    legacyMinecraftId = legacyMinecraftId,
-                    itemModel = itemModel,
-                    legacyItemModel = legacyModelId,
-                    equipmentSlot = equipmentSlot,
-                    maxStackSize = maxStackSize,
-                    behaviour = itemBehaviour,
-                    behaviourData = properties,
-                    craftingRecipe = itemRecipe,
-                )
-            )
+        config.getConfigurationSection("block-items")?.let { blockItemsSection ->
+            tempItems += parseItemsFromSection(blockItemsSection, true)
         }
 
         return tempItems.toList()
+    }
+
+    private fun parseItemsFromSection(section: ConfigurationSection, isBlockItem: Boolean): List<ItemDefinition> {
+        return section.getKeys(false).mapNotNull { id ->
+            val itemSection = section.getConfigurationSection(id) ?: return@mapNotNull null
+            parseItemDefinition(id, itemSection, isBlockItem)
+        }
+    }
+
+    private fun parseItemDefinition(
+        id: String,
+        itemSection: ConfigurationSection,
+        blockItem: Boolean
+    ): ItemDefinition? {
+        val displayName = itemSection.getString("display-name") ?: return null
+        val description = itemSection.getString("description")
+        val minecraftId = itemSection.getString("minecraft-id") ?: return null
+        val legacyMinecraftId = itemSection.getString("legacy-minecraft-id") ?: minecraftId
+
+        val itemModel = itemSection.getString("model", null)?.let {
+            NamespacedKey.fromString(it)
+        }
+
+        val legacyModelId = itemSection.getInt("legacy-model-id", 0)
+
+        val equipmentSlot = itemSection.getString("equip-slot", null)?.let {
+            try {
+                EquipmentSlot.valueOf(it.uppercase())
+            } catch (ex: IllegalArgumentException) {
+                Logger.err("Invalid equipment slot '$it' for item $id, using null")
+                null
+            }
+        }
+
+        val maxStackSize = itemSection.getInt("max-stack-size", 64)
+        val behaviourValue = itemSection.getString("behaviour") ?: return null
+
+        val itemBehaviour = try {
+            ItemBehaviour.valueOf(behaviourValue.uppercase())
+        } catch (ex: IllegalArgumentException) {
+            Logger.err("Invalid item behaviour '$behaviourValue' for item $id, skipping..")
+            return null
+        }
+
+        val properties = mutableMapOf<String, Any>()
+        itemSection.getConfigurationSection("properties")?.let { propertiesSection ->
+            propertiesSection.getKeys(false).forEach { key ->
+                properties[key] = propertiesSection.get(key) ?: ""
+            }
+        }
+
+        val itemRecipe: ItemDefinition.CraftingRecipe? =
+            parseRecipe(itemSection.getConfigurationSection("crafting"))
+
+        return ItemDefinition(
+            id = id,
+            displayName = displayName,
+            description = description,
+            minecraftId = minecraftId,
+            legacyMinecraftId = legacyMinecraftId,
+            itemModel = itemModel,
+            legacyItemModel = legacyModelId,
+            equipmentSlot = equipmentSlot,
+            maxStackSize = maxStackSize,
+            behaviour = itemBehaviour,
+            behaviourData = properties,
+            craftingRecipe = itemRecipe,
+            isBlockItem = blockItem
+        )
     }
 
     private fun parseRecipe(craftingSection: ConfigurationSection?): ItemDefinition.CraftingRecipe? {
