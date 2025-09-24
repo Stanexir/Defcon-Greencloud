@@ -19,6 +19,7 @@
 
 package me.mochibit.defcon.content.items
 
+import me.mochibit.defcon.content.blocks.PluginBlock
 import me.mochibit.defcon.content.element.Element
 import me.mochibit.defcon.content.element.ElementBehaviourPropParser
 import me.mochibit.defcon.content.element.ElementBehaviourProperties
@@ -33,7 +34,9 @@ abstract class PluginItem(
     override val behaviourProperties: ElementBehaviourProperties? = behaviourPropParser?.parse(unparsedBehaviourData),
 
     private val mini: MiniMessage = MiniMessage.miniMessage(),
-    private val itemStackFactory: ItemStackFactory = FactoryMetaStrategies.getFactory()
+    private val itemStackFactory: ItemStackFactory = FactoryMetaStrategies.getFactory(),
+
+    private var _linkedBlock: PluginBlock? = null
 ) : Element {
     val name: String
         get() = mini.stripTags(properties.displayName)
@@ -42,8 +45,45 @@ abstract class PluginItem(
         get() = itemStackFactory.create(properties)
 
     val isEquippable: Boolean
-        get() = properties.equipmentSlot.let {
-            it != null && it.isArmor
+        get() = properties.equipmentSlot?.isArmor ?: false
+
+    /**
+     * Links this item to a block. This creates a bidirectional relationship.
+     * @param block The block to link to this item
+     */
+    fun linkBlock(block: PluginBlock) {
+        if (_linkedBlock == block) return
+
+        _linkedBlock?.unlinkItem() // Unlink from previous block if exists
+        _linkedBlock = block
+
+        if (block.linkedItem != this) {
+            block.linkItem(this)
         }
+    }
+
+    /**
+     * Unlinks this item from its associated block
+     */
+    fun unlinkBlock() {
+        _linkedBlock?.let { block ->
+            _linkedBlock = null
+            if (block.linkedItem == this) {
+                block.unlinkItem()
+            }
+        }
+    }
+
+    val linkedBlock: PluginBlock?
+        get() = _linkedBlock
+
+    val hasLinkedBlock: Boolean
+        get() = _linkedBlock != null
+
+    /**
+     * Creates a copy of this item instance with independent mutable state.
+     * Override this method in concrete implementations using data class copy() when possible.
+     */
+    abstract override fun copy(): PluginItem
 
 }

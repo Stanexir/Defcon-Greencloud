@@ -19,6 +19,11 @@
 
 package me.mochibit.defcon.content.items
 
+import me.mochibit.defcon.content.blocks.fissionCore.FissionCoreBlock
+import me.mochibit.defcon.content.blocks.fissionCore.FissionCoreBlockItem
+import me.mochibit.defcon.content.blocks.fusionCore.FusionCoreBlock
+import me.mochibit.defcon.content.blocks.fusionCore.FusionCoreBlockItem
+import me.mochibit.defcon.content.blocks.warheadInterface.WarheadInterfaceBlockItem
 import me.mochibit.defcon.content.element.ElementBehaviour
 import me.mochibit.defcon.content.items.gasMask.GasMaskItem
 import me.mochibit.defcon.content.items.radiationHealer.RadiationHealerItem
@@ -32,5 +37,10 @@ enum class ItemBehaviour(
     GAS_MASK(::GasMaskItem),
     RADIATION_MEASURER(::RadiationMeasurerItem),
     RADIATION_HEALER(::RadiationHealerItem),
-    STRUCTURE_ASSEMBLER(::StructureAssemblerItem);
+    STRUCTURE_ASSEMBLER(::StructureAssemblerItem),
+
+    // BLOCK ITEMS
+    FISSION_CORE_BLOCK(::FissionCoreBlockItem),
+    FUSION_CORE_BLOCK(::FusionCoreBlockItem),
+    WARHEAD_INTERFACE_BLOCK(::WarheadInterfaceBlockItem),
 }

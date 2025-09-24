@@ -22,7 +22,9 @@ package me.mochibit.defcon.content.items.gasMask
 import me.mochibit.defcon.content.items.PluginItemProperties
 import me.mochibit.defcon.content.items.PluginItem
 
-class GasMaskItem(
+data class GasMaskItem(
     override val properties: PluginItemProperties,
-    unparsedBehaviourData: Map<String, Any>
-) : PluginItem(properties, unparsedBehaviourData) {}
+    override val unparsedBehaviourData: Map<String, Any>
+) : PluginItem(properties, unparsedBehaviourData) {
+    override fun copy(): PluginItem = copy()
+}

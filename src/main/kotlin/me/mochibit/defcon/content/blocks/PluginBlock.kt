@@ -22,6 +22,7 @@ package me.mochibit.defcon.content.blocks
 import me.mochibit.defcon.content.element.Element
 import me.mochibit.defcon.content.element.ElementBehaviourPropParser
 import me.mochibit.defcon.content.element.ElementBehaviourProperties
+import me.mochibit.defcon.content.items.PluginItem
 import net.kyori.adventure.text.minimessage.MiniMessage
 
 abstract class PluginBlock(
@@ -30,8 +31,42 @@ abstract class PluginBlock(
     override val behaviourPropParser: ElementBehaviourPropParser? = null,
     override val behaviourProperties: ElementBehaviourProperties? = behaviourPropParser?.parse(unparsedBehaviourData),
 
-    private val mini: MiniMessage = MiniMessage.miniMessage()
+    private val mini: MiniMessage = MiniMessage.miniMessage(),
+
+    private var _linkedItem: PluginItem? = null
 ): Element {
-    val name : String
-        get() = mini.stripTags(properties.displayName)
+    /**
+     * Links this block to an item. This creates a bidirectional relationship.
+     * @param item The item to link to this block
+     */
+    fun linkItem(item: PluginItem) {
+        if (_linkedItem == item) return
+
+        _linkedItem?.unlinkBlock() // Unlink from previous item if exists
+        _linkedItem = item
+
+        if (item.linkedBlock != this) {
+            item.linkBlock(this)
+        }
+    }
+
+    /**
+     * Unlinks this block from its associated item
+     */
+    fun unlinkItem() {
+        _linkedItem?.let { item ->
+            _linkedItem = null
+            if (item.linkedBlock == this) {
+                item.unlinkBlock()
+            }
+        }
+    }
+
+    val linkedItem: PluginItem?
+        get() = _linkedItem
+
+    val hasLinkedItem: Boolean
+        get() = _linkedItem != null
+
+    abstract override fun copy(): PluginBlock
 }

@@ -43,13 +43,17 @@ import org.bukkit.inventory.ShapelessRecipe
  *
  */
 object ItemRegistry {
+    // Change from HashMap<String?, PluginItem?> to Map<String, PluginItem> for type safety
+    private var _registeredItems: MutableMap<String, PluginItem> = mutableMapOf()
+    val registeredItems: Map<String, PluginItem> get() = _registeredItems
+
     /**
      *
      * @return boolean - True if all items are registered, false if some error occurred.
      */
     suspend fun registerItems(): Boolean {
         info("Registering plugin items...")
-        registeredItems = HashMap()
+        _registeredItems.clear()
 
         val configurationItems = ItemsConfiguration.getSchema()
         if (configurationItems.isEmpty()) {
@@ -58,13 +62,19 @@ object ItemRegistry {
         }
 
         configurationItems.forEach { item ->
-            registeredItems[item.id]?.let {
+            if (_registeredItems.containsKey(item.id)) {
                 Logger.warn("Item ${item.id} is already registered (probably duplicated?), skipping")
                 return@forEach
             }
             val customItem = PluginItemFactory.create(item)
-            Logger.info("Registered item ${item.id}")
-            registeredItems[customItem.properties.id] = customItem
+            if (item.isBlockItem) {
+                val block = BlockRegistry.getBlockTemplate(item.id)
+                if (block != null) {
+                    customItem.linkBlock(block)
+                }
+            }
+            info("Registered item ${item.id}")
+            _registeredItems[customItem.properties.id] = customItem
         }
 
         info("Registering recipes for the items")
@@ -227,6 +237,29 @@ object ItemRegistry {
         return null
     }
 
+    // Add proper getter methods with cloning support
 
-    var registeredItems: HashMap<String?, PluginItem?> = HashMap()
+    /**
+     * Retrieves an item by ID. Returns a copy to prevent shared state issues.
+     * This is the main retrieval method that ensures thread safety and state isolation.
+     */
+    fun getItem(id: String): PluginItem? = _registeredItems[id]?.copy()
+
+    /**
+     * Gets the original registered item template (not a copy).
+     * USE WITH CAUTION: This returns the actual registered instance.
+     * Only use this for template inspection, never for runtime item instances.
+     */
+    fun getItemTemplate(id: String): PluginItem? = _registeredItems[id]
+
+    /**
+     * Returns copies of all registered items to prevent shared state issues.
+     */
+    fun getAllItems(): Collection<PluginItem> = _registeredItems.values.map { it.copy() }
+
+    /**
+     * Returns the original templates of all registered items.
+     * USE WITH CAUTION: These are the actual registered instances.
+     */
+    fun getAllItemTemplates(): Collection<PluginItem> = _registeredItems.values
 }

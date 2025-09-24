@@ -21,8 +21,20 @@ package me.mochibit.defcon.content.blocks.warheadInterface
 
 import me.mochibit.defcon.content.blocks.PluginBlock
 import me.mochibit.defcon.content.blocks.PluginBlockProperties
+import me.mochibit.defcon.content.items.PluginItem
+import me.mochibit.defcon.content.items.PluginItemProperties
 
-class WarheadInterfaceBlock (
+data class WarheadInterfaceBlock (
     override val properties: PluginBlockProperties,
-    unparsedBehaviourData: Map<String, Any>
-) : PluginBlock(properties, unparsedBehaviourData)
+    override val unparsedBehaviourData: Map<String, Any>
+) : PluginBlock(properties, unparsedBehaviourData) {
+    override fun copy(): WarheadInterfaceBlock = copy()
+}
+
+data class WarheadInterfaceBlockItem(
+    override val properties: PluginItemProperties,
+    override val unparsedBehaviourData: Map<String, Any>
+): PluginItem(properties, unparsedBehaviourData)
+{
+    override fun copy(): WarheadInterfaceBlockItem = copy()
+}

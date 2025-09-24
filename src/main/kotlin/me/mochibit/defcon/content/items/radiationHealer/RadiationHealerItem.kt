@@ -22,11 +22,13 @@ package me.mochibit.defcon.content.items.radiationHealer
 import me.mochibit.defcon.content.items.PluginItem
 import me.mochibit.defcon.content.items.PluginItemProperties
 
-class RadiationHealerItem(
+data class RadiationHealerItem(
     override val properties: PluginItemProperties,
-    unparsedBehaviourData: Map<String, Any>,
+    override val unparsedBehaviourData: Map<String, Any>,
 ) : PluginItem(properties, unparsedBehaviourData, RadiationHealerDataParser) {
     override val behaviourProperties: RadiationHealerProperties by lazy {
         super.behaviourProperties as RadiationHealerProperties
     }
+
+    override fun copy(): RadiationHealerItem = copy()
 }

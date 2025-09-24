@@ -122,10 +122,10 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
             return null
         }
 
-        val properties = mutableMapOf<String, Any>()
+        val behaviourData = mutableMapOf<String, Any>()
         itemSection.getConfigurationSection("properties")?.let { propertiesSection ->
             propertiesSection.getKeys(false).forEach { key ->
-                properties[key] = propertiesSection.get(key) ?: ""
+                behaviourData[key] = propertiesSection.get(key) ?: ""
             }
         }
 
@@ -143,7 +143,7 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
             equipmentSlot = equipmentSlot,
             maxStackSize = maxStackSize,
             behaviour = itemBehaviour,
-            behaviourData = properties,
+            behaviourData = behaviourData,
             craftingRecipe = itemRecipe,
             isBlockItem = blockItem
         )

@@ -21,8 +21,20 @@ package me.mochibit.defcon.content.blocks.fusionCore
 
 import me.mochibit.defcon.content.blocks.PluginBlock
 import me.mochibit.defcon.content.blocks.PluginBlockProperties
+import me.mochibit.defcon.content.items.PluginItem
+import me.mochibit.defcon.content.items.PluginItemProperties
 
-class FusionCoreBlock(
+data class FusionCoreBlock(
     override val properties: PluginBlockProperties,
-    unparsedBehaviourData: Map<String, Any>
-) : PluginBlock(properties, unparsedBehaviourData)
+    override val unparsedBehaviourData: Map<String, Any>
+) : PluginBlock(properties, unparsedBehaviourData) {
+    override fun copy(): FusionCoreBlock = copy()
+}
+
+data class FusionCoreBlockItem(
+    override val properties: PluginItemProperties,
+    override val unparsedBehaviourData: Map<String, Any>
+): PluginItem(properties, unparsedBehaviourData)
+{
+    override fun copy(): FusionCoreBlockItem = copy()
+}

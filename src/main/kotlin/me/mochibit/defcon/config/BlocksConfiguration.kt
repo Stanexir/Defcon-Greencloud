@@ -25,43 +25,61 @@ import me.mochibit.defcon.content.element.ElementBehaviour
 import me.mochibit.defcon.content.element.ElementDefinition
 import me.mochibit.defcon.enums.BlockBehaviour
 import me.mochibit.defcon.utils.Logger
+import org.bukkit.configuration.ConfigurationSection
 
 object BlocksConfiguration : PluginConfiguration<List<BlocksConfiguration.BlockDefinition>>("blocks") {
     data class BlockDefinition(
-        override val behaviour: ElementBehaviour
+        val id: String,
+        override val behaviour: ElementBehaviour<PluginBlockProperties, PluginBlock>,
+        override val behaviourData: Map<String, Any>
     ): ElementDefinition<PluginBlockProperties, PluginBlock>
 
 
     override suspend fun loadSchema(): List<BlockDefinition> {
         val tempBlocks = mutableListOf<BlockDefinition>()
-        val blocksList = config.getList("blocks") ?: listOf()
 
-        blocksList.forEach { block ->
-            val id = block.toString()
-            val displayName = config.getString("$id.display-name") ?: return@forEach
-            val description = config.getString("$id.description") ?: return@forEach
-            val minecraftId = config.getString("$id.minecraft-id") ?: return@forEach
-            val behaviourValue = config.getString("$id.block-behaviour") ?: return@forEach
-            val blockBehaviour = try {
-                BlockBehaviour.valueOf(behaviourValue.uppercase())
-            } catch (ex: IllegalArgumentException) {
-                Logger.err("Invalid block behaviour, skipping.. CAUSE: $behaviourValue")
-                return@forEach
-            }
-
-            tempBlocks.add(
-                BlockDefinition(
-                    id = id,
-                    displayName = displayName,
-                    description = description,
-                    minecraftId = minecraftId,
-                    behaviour = blockBehaviour
-                )
-            )
+        config.getConfigurationSection("blocks")?.let { section ->
+            tempBlocks += parseBlocksFromSection(section)
         }
 
         return tempBlocks.toList()
     }
+
+    private fun parseBlocksFromSection(section: ConfigurationSection) : List<BlockDefinition> {
+        return section.getKeys(false).mapNotNull { blockId ->
+            val blockSection = section.getConfigurationSection(blockId) ?: run {
+                Logger.warn("Block $blockId has no configuration section, skipping")
+                return@mapNotNull null
+            }
+
+            val behaviourStr = blockSection.getString("behaviour") ?: run {
+                Logger.warn("Block $blockId has no behaviour defined, skipping")
+                return@mapNotNull null
+            }
+
+            val behaviour = try {
+                BlockBehaviour.valueOf(behaviourStr.uppercase())
+            } catch (e: IllegalArgumentException) {
+                Logger.warn("Block $blockId has invalid behaviour '$behaviourStr', skipping")
+                return@mapNotNull null
+            }
+
+            val behaviourData = mutableMapOf<String, Any>()
+            blockSection.getConfigurationSection("properties")?.let { propertiesSection ->
+                propertiesSection.getKeys(false).forEach { key ->
+                    behaviourData[key] = propertiesSection.get(key) ?: ""
+                }
+            }
+
+            BlockDefinition(
+                id = blockId,
+                behaviour = behaviour,
+                behaviourData = behaviourData
+            )
+        }
+    }
+
+
 
     override suspend fun cleanupSchema() {}
 }

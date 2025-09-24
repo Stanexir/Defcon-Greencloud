@@ -23,8 +23,4 @@ import me.mochibit.defcon.content.element.ElementProperties
 
 data class PluginBlockProperties(
     val id: String,
-    val displayName: String,
-    val description: String?,
-
-    val minecraftId: String,
 ) : ElementProperties

@@ -24,4 +24,9 @@ interface Element {
     val behaviourProperties : ElementBehaviourProperties?
     val unparsedBehaviourData : Map<String, Any>
     val behaviourPropParser: ElementBehaviourPropParser?
+
+    /**
+     * Creates a copy of this element with independent mutable state.
+     */
+    fun copy(): Element
 }

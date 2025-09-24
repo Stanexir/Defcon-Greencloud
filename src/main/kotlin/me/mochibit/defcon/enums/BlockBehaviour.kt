@@ -19,10 +19,17 @@
 
 package me.mochibit.defcon.enums
 
+import me.mochibit.defcon.content.blocks.PluginBlock
+import me.mochibit.defcon.content.blocks.PluginBlockProperties
+import me.mochibit.defcon.content.blocks.fissionCore.FissionCoreBlock
+import me.mochibit.defcon.content.blocks.fusionCore.FusionCoreBlock
+import me.mochibit.defcon.content.blocks.warheadInterface.WarheadInterfaceBlock
 import me.mochibit.defcon.content.element.ElementBehaviour
 
-enum class BlockBehaviour : ElementBehaviour {
-    FISSION_CORE,
-    FUSION_CORE,
-    WARHEAD_INTERFACE
+enum class BlockBehaviour(
+    override val elementConstructor: (PluginBlockProperties, Map<String, Any>) -> PluginBlock
+) : ElementBehaviour<PluginBlockProperties, PluginBlock> {
+    FISSION_CORE(::FissionCoreBlock),
+    FUSION_CORE(::FusionCoreBlock),
+    WARHEAD_INTERFACE(::WarheadInterfaceBlock);
 }
