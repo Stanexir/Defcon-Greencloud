@@ -23,10 +23,10 @@ import me.mochibit.defcon.Defcon
 import org.bukkit.NamespacedKey
 
 enum class BlockDataKey(val key: NamespacedKey) {
-    CustomBlockId(NamespacedKey(Defcon.instance, "definitions-block-id")),
-    ItemId(NamespacedKey(Defcon.instance, "item-id")),
-    StructureId(NamespacedKey(Defcon.instance, "structure-id")),
+    CustomBlockId(NamespacedKey(Defcon, "definitions-block-id")),
+    ItemId(NamespacedKey(Defcon, "item-id")),
+    StructureId(NamespacedKey(Defcon, "structure-id")),
 
-    RadiationAreaId(NamespacedKey(Defcon.instance, "radiation-area-id")),
-    RadiationLevel(NamespacedKey(Defcon.instance, "radiation-level")),
+    RadiationAreaId(NamespacedKey(Defcon, "radiation-area-id")),
+    RadiationLevel(NamespacedKey(Defcon, "radiation-level")),
 }

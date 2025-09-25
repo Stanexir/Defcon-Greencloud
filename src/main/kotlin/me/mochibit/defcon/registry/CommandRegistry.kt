@@ -28,7 +28,7 @@ import org.reflections.Reflections
 import java.lang.reflect.InvocationTargetException
 
 object CommandRegistry {
-    private val packageName: String = Defcon.Companion.instance.javaClass.getPackage().name
+    private val packageName: String = Defcon.javaClass.getPackage().name
 
     fun registerCommands() {
         Logger.info("Registering plugin commands")
@@ -60,7 +60,7 @@ object CommandRegistry {
             commandTree.then(command.getCommand())
         }
 
-        Defcon.Companion.instance.lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) { commands ->
+        Defcon.lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) { commands ->
             commands.registrar().register(commandTree.build())
         }
     }

@@ -35,7 +35,7 @@ class ClientSideBiome : PacketListener {
         if (event.packetType != PacketType.Play.Server.CHUNK_DATA) return
 
         val user = event.user
-        val player = Defcon.instance.server.getPlayer(user.uuid)
+        val player = Defcon.server.getPlayer(user.uuid)
         if (player == null || !player.isOnline) {
             // Player is offline, skip processing
             return

@@ -129,7 +129,7 @@ object ExplosionSoundManager {
         stopRepeatingSounds("${sound.id}_${player.uniqueId}")
 
         // Start new coroutine for repeating sound
-        val job = Defcon.instance.launch {
+        val job = Defcon.launch {
             val endTime = System.currentTimeMillis() + duration.inWholeMilliseconds
 
             while (isActive && System.currentTimeMillis() < endTime) {
@@ -169,7 +169,7 @@ object ExplosionSoundManager {
         }
 
         // Launch coroutine for each delay group
-        Defcon.instance.launch {
+        Defcon.launch {
             playersByDelay.entries.sortedBy { it.key }.forEach { (delayMs, playerGroup) ->
                 delay(delayMs)
 
@@ -223,7 +223,7 @@ object ExplosionSoundManager {
         lastPlayedTimes[sound] = currentTime
 
         // Use a single coroutine for efficiency
-        Defcon.instance.launch {
+        Defcon.launch {
             // Group players by distance for batch processing
             val playersByDelay = players.groupBy { player ->
                 val distance = center.distance(player.location)

@@ -28,6 +28,7 @@ import me.mochibit.defcon.biomes.data.*
 import me.mochibit.defcon.biomes.enums.PrecipitationType
 import me.mochibit.defcon.biomes.enums.TemperatureModifier
 import org.bukkit.NamespacedKey
+import org.bukkit.block.Biome
 
 
 abstract class CustomBiome {
@@ -42,7 +43,7 @@ abstract class CustomBiome {
             return NamespacedKey.fromString(biomeKey) ?: NamespacedKey("minecraft", "forest")
         }
 
-    val asBukkitBiome by lazy {
+    val asBukkitBiome: Biome by lazy {
         try {
             RegistryAccess.registryAccess().getRegistry(RegistryKey.BIOME).getOrThrow(key)
         } catch (e: Exception) {

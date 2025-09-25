@@ -125,7 +125,7 @@ abstract class RaycastedEffector(
      * Optimized to use the bounding box for faster entity collection
      */
     protected open suspend fun getTargetEntities(): List<Entity> {
-        return withContext(Defcon.instance.minecraftDispatcher) {
+        return withContext(Defcon.minecraftDispatcher) {
             // Use getNearbyEntities instead of filtering all world entities
             center.world.getNearbyEntities(effectBoundingBox).filter { entity ->
                 // Quick distance check for spherical range

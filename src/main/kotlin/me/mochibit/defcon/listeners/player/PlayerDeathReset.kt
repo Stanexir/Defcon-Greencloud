@@ -38,7 +38,7 @@ class PlayerDeathReset : Listener {
 
     @EventHandler
     fun onPlayerDeath(event: PlayerDeathEvent){
-        Defcon.instance.launch(Defcon.instance.asyncDispatcher) {
+        Defcon.launch(Defcon.asyncDispatcher) {
             // Get the player's UUID
             val player = event.player
 

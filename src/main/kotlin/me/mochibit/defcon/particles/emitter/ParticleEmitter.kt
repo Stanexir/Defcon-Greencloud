@@ -97,7 +97,7 @@ class ParticleEmitter<T : EmitterShape>(
         activeCount.set(0)
 
         // Single main loop
-        mainJob = Defcon.instance.launch(Dispatchers.Default) {
+        mainJob = Defcon.launch(Dispatchers.Default) {
             try {
                 var lastPlayerCheck = 0L
                 var lastCleanup = 0L
@@ -129,7 +129,7 @@ class ParticleEmitter<T : EmitterShape>(
             } catch (e: CancellationException) {
                 // Expected
             } catch (e: Exception) {
-                Defcon.instance.logger.severe("Particle emitter error: ${e.message}")
+                Defcon.logger.severe("Particle emitter error: ${e.message}")
             } finally {
                 cleanup()
             }
@@ -167,7 +167,7 @@ class ParticleEmitter<T : EmitterShape>(
                     newParticles.add(particle)
                 }
             } catch (e: Exception) {
-                Defcon.instance.logger.warning("Spawn error: ${e.message}")
+                Defcon.logger.warning("Spawn error: ${e.message}")
             }
         }
 
@@ -290,7 +290,7 @@ class ParticleEmitter<T : EmitterShape>(
                 }
 
             } catch (e: Exception) {
-                Defcon.instance.logger.warning("Packet error for ${player.name}: ${e.message}")
+                Defcon.logger.warning("Packet error for ${player.name}: ${e.message}")
                 playerPackets.remove(player)
             }
         }

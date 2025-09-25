@@ -37,8 +37,8 @@ class ScheduledRunnable(val maxTimeBeforeStop: Int = 5000, val name: String = "!
     private lateinit var updater: BukkitTask
 
     fun start(async: Boolean = false) : ScheduledRunnable = apply {
-        updater = if (async) Bukkit.getScheduler().runTaskTimerAsynchronously(Defcon.instance, this, delay, period)
-        else Bukkit.getScheduler().runTaskTimer(Defcon.instance, this, delay, period)
+        updater = if (async) Bukkit.getScheduler().runTaskTimerAsynchronously(Defcon, this, delay, period)
+        else Bukkit.getScheduler().runTaskTimer(Defcon, this, delay, period)
     }
 
     override fun run() {

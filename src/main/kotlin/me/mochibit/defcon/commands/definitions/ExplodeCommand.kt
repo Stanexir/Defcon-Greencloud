@@ -157,7 +157,7 @@ class ExplodeCommand : GenericCommand() {
                 ?: throw IllegalStateException("Could not instantiate explosion of type $explosionName")
 
 
-            Bukkit.getScheduler().runTaskAsynchronously(Defcon.instance) { ->
+            Bukkit.getScheduler().runTaskAsynchronously(Defcon) { ->
                 explosionInstance.explode()
             }
 

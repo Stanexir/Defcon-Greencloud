@@ -20,7 +20,6 @@
 package me.mochibit.defcon
 
 import com.github.shynixn.mccoroutine.bukkit.SuspendingJavaPlugin
-import me.mochibit.defcon.Defcon.Companion.instance
 import me.mochibit.defcon.biomes.CustomBiomeHandler
 import me.mochibit.defcon.config.PluginConfiguration
 import me.mochibit.defcon.content.listeners.EventRegister
@@ -37,11 +36,19 @@ import me.mochibit.defcon.utils.Logger.info
 import org.bukkit.Bukkit
 
 
-class Defcon : SuspendingJavaPlugin() {
+class DefconPlugin : SuspendingJavaPlugin() {
+    companion object {
+        @JvmStatic
+        lateinit var instance: DefconPlugin
+            private set
+    }
+
+    init {
+        instance = this
+    }
+
     override fun onLoad() {
         info("Defcon is starting up ☢️")
-        _instance = this
-
         EventRegister.registerPacketListeners()
     }
 
@@ -72,15 +79,9 @@ class Defcon : SuspendingJavaPlugin() {
         info("Plugin disabled!")
     }
 
-    companion object {
-        private lateinit var _instance: Defcon
-        val instance get() = _instance
-        val minecraftVersion = Bukkit.getServer().bukkitVersion.split("-")[0]
-    }
+    val minecraftVersion get() = Bukkit.getServer().bukkitVersion.split("-")[0]
 }
 
-internal val pluginInstance
-    get() =
-        instance
+val Defcon get() = me.mochibit.defcon.DefconPlugin.instance
+internal fun pluginNamespacedKey(key: String) = org.bukkit.NamespacedKey(Defcon, key)
 
-internal fun pluginNamespacedKey(key: String) = org.bukkit.NamespacedKey(instance, key)

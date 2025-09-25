@@ -72,7 +72,7 @@ class GasMaskEquipListener : Listener {
     }
 
     private fun playGasMaskSound(player: Player) {
-        Defcon.instance.launch(Defcon.instance.minecraftDispatcher) {
+        Defcon.launch(Defcon.minecraftDispatcher) {
             val randomizedPitch = (0.6f..0.9f).random()
             player.world.playSound(player.location, Sound.ENTITY_PLAYER_BREATH, 2.0f, randomizedPitch)
         }
@@ -93,7 +93,7 @@ class GasMaskEquipListenerLegacy: Listener {
 
         // The right-click auto-equip happens AFTER this event fires
         // So we need a delayed task to check if it was actually equipped
-        Defcon.instance.launch {
+        Defcon.launch {
             delay(1.ticks)
             val helmet = event.player.inventory.helmet
             val helmetPluginItem = helmet?.getPluginItem() ?: return@launch
@@ -106,7 +106,7 @@ class GasMaskEquipListenerLegacy: Listener {
 
 // Helper function to play the sound
 private fun playGasMaskSound(player: Player) {
-    Defcon.instance.launch(Defcon.instance.minecraftDispatcher) {
+    Defcon.launch(Defcon.minecraftDispatcher) {
         val randomizedPitch = (0.6f..0.9f).random()
         player.world.playSound(player.location, Sound.ENTITY_PLAYER_BREATH, 2.0f, randomizedPitch)
     }

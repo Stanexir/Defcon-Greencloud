@@ -32,7 +32,7 @@ import java.io.File
 
 abstract class PluginConfiguration<out T>(private val configName: String) {
     private val resourcePath = "$configName.yml"
-    private val dataFolderFile = File(Defcon.instance.dataFolder, resourcePath)
+    private val dataFolderFile = File(Defcon.dataFolder, resourcePath)
 
     val config: YamlConfiguration by lazy { YamlConfiguration.loadConfiguration(dataFolderFile) }
 
@@ -121,12 +121,12 @@ abstract class PluginConfiguration<out T>(private val configName: String) {
 
 
         try {
-            if (Defcon.Companion.instance.getResource(resourcePath) == null) {
+            if (Defcon.getResource(resourcePath) == null) {
                 info("Resource $resourcePath not found in the jar resources, assuming it's handled by the sub-configuration.")
                 return
             }
 
-            Defcon.Companion.instance.saveResource(resourcePath, false)
+            Defcon.saveResource(resourcePath, false)
             info("Default configuration saved for $configName")
         } catch (e: Exception) {
             err("Could not save default configuration for $configName: ${e.message}")
@@ -141,7 +141,8 @@ abstract class PluginConfiguration<out T>(private val configName: String) {
             configurations.add(MainConfiguration)
             configurations.add(ItemsConfiguration)
             configurations.add(BlocksConfiguration)
-            configurations.add(StructuresConfiguration)
+            // Temporarily disabled StructuresConfiguration due to NotImplementedError
+            // configurations.add(StructuresConfiguration)
 
             for (config in configurations) {
                 launch {

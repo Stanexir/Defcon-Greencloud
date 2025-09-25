@@ -19,7 +19,9 @@
 
 package me.mochibit.defcon.content.pack
 
+import kotlinx.coroutines.runBlocking
 import me.mochibit.defcon.Defcon
+import me.mochibit.defcon.config.MainConfiguration
 import me.mochibit.defcon.utils.Logger.err
 import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.utils.Logger.warn
@@ -51,7 +53,7 @@ import kotlin.io.path.pathString
  */
 object ResourcePackRegistry : PackRegistry(true) {
 
-    private val pluginResourcePackPath = Defcon.instance.dataFolder.toPath().resolve("resourcepack")
+    private val pluginResourcePackPath = Defcon.dataFolder.toPath().resolve("resourcepack")
 
     override val tempPath: Path = Paths.get(pluginResourcePackPath.pathString, "defcon_temp_resourcepack")
     override val destinationPath: Path? = Paths.get(pluginResourcePackPath.pathString, "defcon_resourcepack")
@@ -65,17 +67,31 @@ object ResourcePackRegistry : PackRegistry(true) {
 
 
     private fun generateResourcePackHash(path: Path): String {
-        BufferedInputStream(FileInputStream(path.toFile())).use { bis ->
-            val digest = MessageDigest.getInstance("SHA-1")
-            val buffer = ByteArray(8192)
-            var bytesRead: Int
-
-            while (bis.read(buffer).also { bytesRead = it } != -1) {
-                digest.update(buffer, 0, bytesRead)
+        return try {
+            if (!Files.exists(path) || Files.size(path) == 0L) {
+                warn("Cannot generate hash for non-existent or empty file: $path")
+                return "0"
             }
 
-            return digest.digest().joinToString("") { "%02x".format(it) }
+            BufferedInputStream(FileInputStream(path.toFile())).use { bis ->
+                val digest = MessageDigest.getInstance("SHA-1")
+                val buffer = ByteArray(8192)
+                var bytesRead: Int
+
+                while (bis.read(buffer).also { bytesRead = it } != -1) {
+                    digest.update(buffer, 0, bytesRead)
+                }
+
+                digest.digest().joinToString("") { "%02x".format(it) }
+            }
+        } catch (e: Exception) {
+            err("Failed to generate resource pack hash: ${e.message}")
+            "0"
         }
+    }
+
+    private val mainConfiguration by lazy {
+        runBlocking { MainConfiguration.getSchema() }
     }
 
     val packInfo: ResourcePackInfo
@@ -90,7 +106,7 @@ object ResourcePackRegistry : PackRegistry(true) {
             }
 
             return ResourcePackInfo.resourcePackInfo()
-                .uri(URI.create("http://${Defcon.instance.server.ip}:${ResourcePackServer.port}/resourcepack.zip"))
+                .uri(URI.create("http://${Defcon.server.ip}:${mainConfiguration.resourcePackConfig.serverPort}/resourcepack.zip"))
                 .hash(hash)
                 .build()
                 .also {
@@ -104,13 +120,14 @@ object ResourcePackRegistry : PackRegistry(true) {
                 return it
             }
 
+
             val hash = resourcePackHash ?: run {
                 warn("Resource pack hash is null !")
                 "0"
             }
 
             return ResourcePackInfo.resourcePackInfo()
-                .uri(URI.create("http://127.0.0.1:${ResourcePackServer.port}/resourcepack.zip"))
+                .uri(URI.create("http://127.0.0.1:${mainConfiguration.resourcePackConfig.serverPort}/resourcepack.zip"))
                 .hash(hash)
                 .build()
                 .also {

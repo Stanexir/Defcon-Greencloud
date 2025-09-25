@@ -26,7 +26,6 @@ import me.mochibit.defcon.utils.Logger
 import me.mochibit.defcon.utils.Logger.err
 import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.config.PluginConfiguration
-import me.mochibit.defcon.pluginInstance
 import me.mochibit.defcon.utils.Logger.warn
 import java.io.BufferedReader
 import java.io.FileInputStream
@@ -60,7 +59,7 @@ object ResourcePackServer {
         }
 
         // Launch the server in a coroutine using the IO dispatcher
-        serverJob = Defcon.instance.launch(Dispatchers.IO) {
+        serverJob = Defcon.launch(Dispatchers.IO) {
             try {
                 serverSocket = ServerSocket(configuration.serverPort)
                 running = true

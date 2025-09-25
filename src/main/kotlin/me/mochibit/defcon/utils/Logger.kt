@@ -51,7 +51,7 @@ object Logger {
     private val miniMessage = MiniMessage.miniMessage()
 
     private val pluginLogger = PluginLogger {
-        Defcon.Companion.instance.componentLogger.info(miniMessage.deserialize(it))
+        Defcon.componentLogger.info(miniMessage.deserialize(it))
     }
 
     fun info(message: String) {

@@ -50,7 +50,7 @@ abstract class AbstractSaveData<T : SaveSchema>(
 
     // Data folder determined at runtime from plugin instance
     private val dataFolder: Lazy<File> = lazy {
-        val pluginFolder = Defcon.instance.dataFolder
+        val pluginFolder = Defcon.dataFolder
         File(pluginFolder, "data").also { it.mkdirs() }
     }
 

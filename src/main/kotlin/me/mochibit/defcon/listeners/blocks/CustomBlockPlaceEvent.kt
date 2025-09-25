@@ -55,8 +55,8 @@ class CustomBlockPlaceEvent : Listener {
         customItem = ItemRegistry.registeredItems[customItemId] ?: throw Exception("Item not registered")
 
         try {
-            BlockRegistry.getBlock(customBlockId)
-                    ?.placeBlock(customItem, block.location)
+//            BlockRegistry.getBlock(customBlockId)
+//                    ?.placeBlock(customItem, block.location)
         } catch (e: Exception) {
             e.printStackTrace()
         }

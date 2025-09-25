@@ -33,7 +33,7 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-private val plugin = Defcon.instance
+private val plugin = Defcon
 
 fun interval(period: Duration, delay: Duration = 0.seconds, task: suspend () -> Unit): Closeable {
     val job = plugin.launch {

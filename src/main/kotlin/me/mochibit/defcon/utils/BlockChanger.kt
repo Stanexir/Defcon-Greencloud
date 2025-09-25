@@ -6,6 +6,7 @@ import io.github.retrooper.packetevents.util.SpigotReflectionUtil
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import me.mochibit.defcon.Defcon
+import me.mochibit.defcon.DefconPlugin
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Biome
@@ -42,7 +43,7 @@ data class BlockChange(
 class BlockChanger private constructor(
     private val world: World,
 ) {
-    private val plugin = Defcon.instance
+    private val plugin = Defcon
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     // Configuration properties with more aggressive defaults
@@ -534,6 +535,6 @@ class BlockChanger private constructor(
 /**
  * Extension method for Defcon class for convenient access
  */
-fun Defcon.getBlockChanger(world: World): BlockChanger {
+fun DefconPlugin.getBlockChanger(world: World): BlockChanger {
     return BlockChanger.getInstance(world)
 }

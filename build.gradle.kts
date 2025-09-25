@@ -55,7 +55,7 @@ kotlin {
 
 // Plugin.yml generation
 bukkit {
-    main = "me.mochibit.defcon.Defcon"
+    main = "me.mochibit.defcon.DefconPlugin"
     apiVersion = "1.21"
     name = "Defcon"
     version = project.version.toString()

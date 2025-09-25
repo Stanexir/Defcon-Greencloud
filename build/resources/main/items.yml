@@ -21,7 +21,7 @@ items:
         G:
           tag: "minecraft:impermeable"
         N:
-          item: "minecraft:string"
+          item: "minecraft:iron_nugget"
         P:
           item: "minecraft:paper"
 
@@ -40,10 +40,10 @@ items:
       type: "shapeless"
       result-amount: 2
       ingredients:
-          - item: "minecraft:wheat_seeds"
-            count: 2
-          - tag: "minecraft:crimson_stems"
-            count: 1
+        - item: "minecraft:wheat_seeds"
+          count: 2
+        - tag: "minecraft:crimson_stems"
+          count: 1
 
 
   geiger:
@@ -61,3 +61,27 @@ items:
     minecraft-id: STONE_SWORD
     max-stack-size: 1
     behaviour: "structure_assembler"
+
+block-items:
+  fission-core:
+    display-name: "Fission core block"
+    description: |
+      Fission core for the nuclear warhead.
+      It can be configured to be either a gun-type or implosion-type warhead through a <yellow> warhead interface </yellow>
+    behaviour: "fission_core"
+
+  fusion-core:
+    display-name: "Fusion core block"
+    description: |
+      Fusion-enabled block for a warhead.
+      It can be configured through a <yellow> warhead interface </yellow>
+      It needs to be <red>boosted</red> by a fission core block to work.
+    behaviour: "fusion_core"
+
+  warhead-interface:
+    display-name: "Warhead interface block"
+    description: |
+      Essential configuration block for arming nuclear warheads.
+      It allows the management of the fusion and fissile materials,
+      and lets you configure the specific warhead settings.
+    behaviour: "warhead_interface"

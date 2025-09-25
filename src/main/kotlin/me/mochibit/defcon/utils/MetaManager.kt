@@ -35,7 +35,7 @@ import kotlin.reflect.KClass
 object MetaManager {
     inline fun <reified T> getBlockData(location: Location, key: BlockDataKey): T? {
         val block = location.world.getBlockAt(location)
-        val blockData: PersistentDataContainer = CustomBlockData(block, Defcon.instance)
+        val blockData: PersistentDataContainer = CustomBlockData(block, Defcon)
 
         // Get the PersistentDataType from the function type
         val dataType = getPersistentDataType(T::class)
@@ -66,14 +66,14 @@ object MetaManager {
 
     inline fun <reified T: Any> setBlockData(location: Location, key: BlockDataKey, value: T): PersistentDataContainer {
         val block = location.world.getBlockAt(location)
-        val blockData: PersistentDataContainer = CustomBlockData(block, Defcon.instance)
+        val blockData: PersistentDataContainer = CustomBlockData(block, Defcon)
 
         return setBlockData(blockData, key, value)
     }
 
     fun removeBlockData(location: Location, key: BlockDataKey): PersistentDataContainer {
         val block = location.world.getBlockAt(location)
-        val blockData: PersistentDataContainer = CustomBlockData(block, Defcon.instance)
+        val blockData: PersistentDataContainer = CustomBlockData(block, Defcon)
 
         blockData.remove(key.key)
         return blockData

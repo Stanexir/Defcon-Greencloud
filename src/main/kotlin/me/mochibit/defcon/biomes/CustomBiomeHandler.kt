@@ -258,7 +258,7 @@ object CustomBiomeHandler {
         val groupedUpdates = updates.groupBy { it.playerId }
 
         groupedUpdates.forEach { (playerId, playerUpdates) ->
-            val player = Defcon.instance.server.getPlayer(playerId) ?: return@forEach
+            val player = Defcon.server.getPlayer(playerId) ?: return@forEach
 
             playerUpdates.forEach { update ->
                 if (player.world.name == update.worldName) {
@@ -391,7 +391,7 @@ object CustomBiomeHandler {
     }
 
     private suspend fun updateAffectedPlayers(boundary: CustomBiomeBoundary) {
-        val world = Defcon.instance.server.getWorld(boundary.worldName) ?: return
+        val world = Defcon.server.getWorld(boundary.worldName) ?: return
 
         world.players.forEach { player ->
             val playerChunkX = player.location.blockX shr 4

@@ -72,7 +72,7 @@ class ThermalRadiationBurn(
      * Filter entities to only get living entities that can be damaged
      */
     override suspend fun getTargetEntities(): List<Entity> {
-        val entities = withContext(Defcon.instance.minecraftDispatcher) {
+        val entities = withContext(Defcon.minecraftDispatcher) {
             world.entities.filter { entity ->
                 entity is LivingEntity && entity.isValid && !entity.isDead
             }
@@ -147,7 +147,7 @@ class ThermalRadiationBurn(
         affectedEntities[entity.uniqueId] = effectData
 
         // Apply immediate effects
-        Defcon.instance.launch {
+        Defcon.launch {
             applyImmediateBurnEffects(entity, burnLevel, fireTicks)
         }
 

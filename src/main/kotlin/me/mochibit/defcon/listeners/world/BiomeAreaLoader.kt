@@ -68,7 +68,7 @@ class BiomeChunkLoader : Listener {
 
         worldProcessedChunks[chunkCoord] = true
 
-        Defcon.instance.launch(Dispatchers.IO) {
+        Defcon.launch(Dispatchers.IO) {
             processChunkBiomes(worldName, chunkCoord, worldChunkBiomes)
         }
     }
@@ -172,7 +172,7 @@ class BiomeChunkLoader : Listener {
         chunkCoord: ChunkCoord,
         biomes: Set<CustomBiomeHandler.CustomBiomeBoundary>
     ) {
-        val world = Defcon.instance.server.getWorld(worldName) ?: return
+        val world = Defcon.server.getWorld(worldName) ?: return
 
         // Only get players from this specific world
         val worldPlayers = world.players

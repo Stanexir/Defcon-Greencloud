@@ -19,7 +19,7 @@
 
 package me.mochibit.defcon.utils
 
-import me.mochibit.defcon.classes.StructureBlock
+
 import org.bukkit.ChunkSnapshot
 import org.bukkit.Location
 import org.bukkit.Material
@@ -98,26 +98,26 @@ object Geometry {
         return rotatedPoints
     }
 
-    fun rotateStructureBlockPlaneXZ(
-        structureBlocks: List<StructureBlock>,
-        angle: Float = 90f
-    ): MutableList<StructureBlock> {
-        val rotatedStructure: MutableList<StructureBlock> = ArrayList()
-        for (structureBlock in structureBlocks) {
-            val rotatedX = structureBlock.z
-            val rotatedZ = structureBlocks.maxByOrNull { it.x }!!.x - structureBlock.x
-            rotatedStructure.add(
-                StructureBlock(
-                    structureBlock.block,
-                    rotatedX,
-                    structureBlock.y,
-                    rotatedZ,
-                    structureBlock.isInterface
-                )
-            )
-        }
-        return rotatedStructure
-    }
+//    fun rotateStructureBlockPlaneXZ(
+//        structureBlocks: List<StructureBlock>,
+//        angle: Float = 90f
+//    ): MutableList<StructureBlock> {
+//        val rotatedStructure: MutableList<StructureBlock> = ArrayList()
+//        for (structureBlock in structureBlocks) {
+//            val rotatedX = structureBlock.z
+//            val rotatedZ = structureBlocks.maxByOrNull { it.x }!!.x - structureBlock.x
+//            rotatedStructure.add(
+//                StructureBlock(
+//                    structureBlock.block,
+//                    rotatedX,
+//                    structureBlock.y,
+//                    rotatedZ,
+//                    structureBlock.isInterface
+//                )
+//            )
+//        }
+//        return rotatedStructure
+//    }
 
     fun getMinY(position: Location, maxDepth: Double? = null): Location {
         val clonedPosition = position.clone()

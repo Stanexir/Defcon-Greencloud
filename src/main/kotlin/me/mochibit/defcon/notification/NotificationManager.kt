@@ -51,7 +51,7 @@ object NotificationManager {
 
     // File management
     private val notificationFile: File by lazy {
-        val path = Paths.get(Defcon.instance.dataFolder.path, CONFIG_FILENAME)
+        val path = Paths.get(Defcon.dataFolder.path, CONFIG_FILENAME)
         path.parent.createDirectories() // Ensure directory exists
         path.toFile().apply {
             if (!exists()) createNewFile()
@@ -73,9 +73,9 @@ object NotificationManager {
     init {
         try {
             loadNotifications()
-            Defcon.instance.logger.info("NotificationManager initialized with ${notifications.size} notifications")
+            Defcon.logger.info("NotificationManager initialized with ${notifications.size} notifications")
         } catch (e: Exception) {
-            Defcon.instance.logger.severe("Failed to initialize NotificationManager: ${e.message}")
+            Defcon.logger.severe("Failed to initialize NotificationManager: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -97,7 +97,7 @@ object NotificationManager {
             notificationIndex = (notificationIndex + 1) % notifications.size
         }
 
-        Defcon.instance.logger.info("Notification broadcast task started with interval of $intervalSeconds seconds")
+        Defcon.logger.info("Notification broadcast task started with interval of $intervalSeconds seconds")
     }
 
     /**
@@ -106,7 +106,7 @@ object NotificationManager {
     fun stopBroadcastTask() {
         broadcastTask?.close()
         broadcastTask = null
-        Defcon.instance.logger.info("Notification broadcast task stopped")
+        Defcon.logger.info("Notification broadcast task stopped")
     }
 
     /**
@@ -136,7 +136,7 @@ object NotificationManager {
             audience.sendMessage(formattedMessage)
             playNotificationSound(audience, notification.type)
         } catch (e: Exception) {
-            Defcon.instance.logger.warning("Failed to show notification: ${e.message}")
+            Defcon.logger.warning("Failed to show notification: ${e.message}")
         }
     }
 
@@ -261,7 +261,7 @@ object NotificationManager {
                 gson.toJson(notificationsToSave, writer)
             }
         } catch (e: Exception) {
-            Defcon.instance.logger.warning("Failed to save notifications: ${e.message}")
+            Defcon.logger.warning("Failed to save notifications: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -281,7 +281,7 @@ object NotificationManager {
                 notifications.addAll(loadedNotifications.filter { it.saveToFile })
             }
         } catch (e: Exception) {
-            Defcon.instance.logger.warning("Failed to load notifications: ${e.message}")
+            Defcon.logger.warning("Failed to load notifications: ${e.message}")
             e.printStackTrace()
         }
     }

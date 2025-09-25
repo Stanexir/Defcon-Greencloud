@@ -36,7 +36,7 @@ import org.bukkit.Location
 class NuclearExplosion(center: Location, private val nuclearComponent: ExplosionComponent = ExplosionComponent()) :
     Explosion(center) {
     override fun explode() {
-        Defcon.instance.launch {
+        Defcon.launch {
             val pluginConfiguration = MainConfiguration.getSchema()
             // VFX
 //            val nuclearExplosion = NuclearExplosionVFX(nuclearComponent, center)
@@ -143,7 +143,7 @@ class NuclearExplosion(center: Location, private val nuclearComponent: Explosion
                 for (player in players) {
                     val playerDistance = player.location.distance(center)
                     if (playerDistance < pluginConfiguration.nuclearExplosionConfig.craterConfig.baseRadius) {
-                        withContext(Defcon.instance.minecraftDispatcher) {
+                        withContext(Defcon.minecraftDispatcher) {
                             player.damage(1000.0)
                         }
                     }

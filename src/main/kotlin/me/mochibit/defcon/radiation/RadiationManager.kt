@@ -46,7 +46,7 @@ object RadiationManager {
     }
 
     private suspend fun updatePlayers() = withContext(Dispatchers.IO) {
-        val players = Defcon.instance.server.onlinePlayers
+        val players = Defcon.server.onlinePlayers
         val playerDataSave = PlayerDataSave.getInstance()
         for (player in players) {
             val radiationAreas = RadiationArea.getAtLocation(player.location.add(0.0, 1.0, 0.0))
@@ -56,14 +56,14 @@ object RadiationManager {
             if (totalRadiation == 0.0) continue
 
             val geigerDetectEvent = GeigerDetectEvent(player, totalRadiation)
-            withContext(Defcon.instance.minecraftDispatcher) {
+            withContext(Defcon.minecraftDispatcher) {
                 Bukkit.getPluginManager().callEvent(geigerDetectEvent)
             }
 
             if (player.gameMode.let { it == GameMode.SURVIVAL || it == GameMode.ADVENTURE }) {
                 if (totalRadiation < 3.0) continue
                 val radSuffocateEvent = RadiationSuffocationEvent(player, totalRadiation, radiationAreas)
-                withContext(Defcon.instance.minecraftDispatcher) rad@{
+                withContext(Defcon.minecraftDispatcher) rad@{
                     Bukkit.getPluginManager().callEvent(radSuffocateEvent)
                     if (radSuffocateEvent.isCancelled()) {
                         return@rad
@@ -75,7 +75,7 @@ object RadiationManager {
 
                 playerDataSave.savePlayerData(player, playerData.radiationLevel)
 
-                withContext(Defcon.instance.minecraftDispatcher) {
+                withContext(Defcon.minecraftDispatcher) {
                     playerData.radiationLevel.apply {
                         if (this <= 0) return@apply
 

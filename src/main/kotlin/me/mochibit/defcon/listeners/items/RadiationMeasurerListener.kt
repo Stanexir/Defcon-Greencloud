@@ -43,7 +43,7 @@ class RadiationMeasurerListener : Listener {
         // Player a ticking sound randomly, to simulate the Geiger Counter, and with a density based on the radiation level, repeating a random number of times
         val ticks = (1.. event.radiationLevel.toInt() * 6).random()
         for (i in 0 until ticks) {
-            Bukkit.getScheduler().runTaskLaterAsynchronously(Defcon.instance, Runnable {
+            Bukkit.getScheduler().runTaskLaterAsynchronously(Defcon, Runnable {
                 player.playSound(location, Sound.UI_BUTTON_CLICK, 1.0f, 2.0f)
             }, (1..20).random().toLong())
         }

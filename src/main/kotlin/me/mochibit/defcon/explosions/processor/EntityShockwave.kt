@@ -208,7 +208,7 @@ class EntityShockwave(
             for (playerBatch in players.chunked(entityBatchSize)) {
                 if (isCleanedUp.get()) return@withContext
 
-                val batchEntities = withContext(Defcon.instance.minecraftDispatcher) {
+                val batchEntities = withContext(Defcon.minecraftDispatcher) {
                     playerBatch.flatMap { player ->
                         player.location.world?.getNearbyEntities(
                             player.location,
@@ -254,7 +254,7 @@ class EntityShockwave(
                 val entityUUIDs = entityCache[chunk] ?: continue
 
                 // Process entities with validation
-                val validEntities = withContext(Defcon.instance.minecraftDispatcher) {
+                val validEntities = withContext(Defcon.minecraftDispatcher) {
                     entityUUIDs.mapNotNull { uuid ->
                         center.world?.entities?.find { it.uniqueId == uuid && it.isValid }
                     }.filterIsInstance<LivingEntity>()
@@ -322,7 +322,7 @@ class EntityShockwave(
     private suspend fun applyExplosionEffects(
         entity: Entity,
         explosionPower: Float
-    ) = withContext(Defcon.instance.minecraftDispatcher) {
+    ) = withContext(Defcon.minecraftDispatcher) {
         if (isCleanedUp.get() || !entity.isValid) return@withContext
 
         try {

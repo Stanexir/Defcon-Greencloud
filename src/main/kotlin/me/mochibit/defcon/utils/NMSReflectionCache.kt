@@ -64,7 +64,8 @@ object NMSReflectionCache {
 
     private val heightmapTypes by lazy {
         findClass(if (isModern) "net.minecraft.world.level.levelgen" else "net.minecraft.server.$serverVersion",
-            if (isModern) "Heightmap\$Types" else "HeightMap\$Type")
+            if (isModern) $$"Heightmap$Types" else $$"HeightMap$Type"
+        )
     }
 
     private val lightEngine by lazy {

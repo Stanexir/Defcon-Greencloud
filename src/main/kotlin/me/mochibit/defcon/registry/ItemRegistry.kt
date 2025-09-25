@@ -102,7 +102,7 @@ object ItemRegistry {
             amount = recipe.resultAmount
         }
 
-        val namespacedKey = NamespacedKey(Defcon.Companion.instance, "item_${item.id}_shaped")
+        val namespacedKey = NamespacedKey(Defcon, "item_${item.id}_shaped")
         val shapedRecipe = ShapedRecipe(namespacedKey, resultItemStack)
 
         // Validate pattern
@@ -154,7 +154,7 @@ object ItemRegistry {
             amount = recipe.resultAmount
         }
 
-        val namespacedKey = NamespacedKey(Defcon.Companion.instance, "item_${item.id}_shapeless")
+        val namespacedKey = NamespacedKey(Defcon, "item_${item.id}_shapeless")
         val shapelessRecipe = ShapelessRecipe(namespacedKey, resultItemStack)
         recipe.ingredients.forEach { ingredientEntry ->
             when {

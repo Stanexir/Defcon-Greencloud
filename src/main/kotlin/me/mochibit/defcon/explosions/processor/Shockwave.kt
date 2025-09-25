@@ -54,7 +54,7 @@ class Shockwave(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun explode(): Job {
-        return Defcon.instance.launch(Dispatchers.IO) {
+        return Defcon.launch(Dispatchers.IO) {
             try {
                 for (currentRadius in radiusStart..shockwaveRadius) {
                     val radiusProgress = currentRadius / shockwaveRadius.toFloat()
@@ -327,7 +327,7 @@ class Shockwave(
                         try {
                             emit(Vector3i(worldX, world.maxHeight, worldZ))
                         } catch (e: Exception) {
-                            Defcon.instance.logger.warning("Error processing point ($worldX, $worldZ): ${e.message}")
+                            Defcon.logger.warning("Error processing point ($worldX, $worldZ): ${e.message}")
                         }
                     }
                 }

@@ -625,15 +625,15 @@ class CustomItemEquipListener : Listener {
      */
     private fun setCancelled(event: InventoryEvent) {
         when (event) {
+            is InventoryCreativeEvent -> {
+                event.isCancelled = true
+                event.result = Event.Result.DENY
+            }
             is InventoryClickEvent -> {
                 event.isCancelled = true
                 event.result = Event.Result.DENY
             }
             is InventoryDragEvent -> {
-                event.isCancelled = true
-                event.result = Event.Result.DENY
-            }
-            is InventoryCreativeEvent -> {
                 event.isCancelled = true
                 event.result = Event.Result.DENY
             }

@@ -58,7 +58,7 @@ class BlindFlashEffect(
         initializeTransforms()
 
         // Register event listener for player disconnects
-        Defcon.instance.server.pluginManager.registerEvents(this, Defcon.instance)
+        Defcon.server.pluginManager.registerEvents(this, Defcon)
         isListenerRegistered = true
     }
 
@@ -137,7 +137,7 @@ class BlindFlashEffect(
                 it.remove()
             } catch (e: Exception) {
                 // Log exception but continue cleaning up
-                Defcon.instance.logger.warning("Error removing display for player $playerUUID: ${e.message}")
+                Defcon.logger.warning("Error removing display for player $playerUUID: ${e.message}")
             }
         }
     }
@@ -164,7 +164,7 @@ class BlindFlashEffect(
 
         // Apply night vision effect with intensity based on distance
         if (!entity.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
-            Defcon.instance.launch {
+            Defcon.launch {
                 // Lower amplifier for distant effects
                 val amplifier = when (effectType) {
                     EffectType.CLOSE_RANGE -> 255
@@ -268,7 +268,7 @@ class BlindFlashEffect(
                 }
             } catch (e: Exception) {
                 // Log error but continue execution
-                Defcon.instance.logger.warning("Error updating flash effect: ${e.message}")
+                Defcon.logger.warning("Error updating flash effect: ${e.message}")
                 cleanup(player)
             }
         }

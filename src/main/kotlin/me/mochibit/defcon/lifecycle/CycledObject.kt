@@ -49,7 +49,7 @@ abstract class CycledObject(
         if (asyncHandling) {
             Dispatchers.Default
         } else {
-            Defcon.instance.minecraftDispatcher
+            Defcon.minecraftDispatcher
         }
     }
 
@@ -65,7 +65,7 @@ abstract class CycledObject(
             return
         }
 
-        Defcon.instance.launch(dispatcher) {
+        Defcon.launch(dispatcher) {
             try {
                 initialize()
 
@@ -83,7 +83,7 @@ abstract class CycledObject(
                     } catch (e: CancellationException) {
                         // Expected when job is cancelled
                     } catch (e: Exception) {
-                        Defcon.instance.logger.severe("Error in update cycle: ${e.message}")
+                        Defcon.logger.severe("Error in update cycle: ${e.message}")
                         e.printStackTrace()
                     }
                 }
@@ -95,7 +95,7 @@ abstract class CycledObject(
                     }
                 }
             } catch (e: Exception) {
-                Defcon.instance.logger.severe("Failed to initialize cycled object: ${e.message}")
+                Defcon.logger.severe("Failed to initialize cycled object: ${e.message}")
                 e.printStackTrace()
                 destroy()
             }
@@ -122,7 +122,7 @@ abstract class CycledObject(
             return
         }
 
-        Defcon.instance.launch(dispatcher) {
+        Defcon.launch(dispatcher) {
             try {
                 // Cancel the lifetime job if it exists
                 lifetimeJob?.cancelAndJoin()
@@ -138,7 +138,7 @@ abstract class CycledObject(
                 // Clean up resources
                 stop()
             } catch (e: Exception) {
-                Defcon.instance.logger.severe("Error during object destruction: ${e.message}")
+                Defcon.logger.severe("Error during object destruction: ${e.message}")
                 e.printStackTrace()
             } finally {
                 tickJob = null

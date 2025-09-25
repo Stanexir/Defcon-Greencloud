@@ -32,9 +32,8 @@ import org.reflections.Reflections
 import java.lang.reflect.Modifier
 
 object EventRegister {
-    private val packageName: String = Defcon.Companion.instance.javaClass.getPackage().name
-    private val plugin = Defcon.Companion.instance
-    private val logger = plugin.logger
+    private val packageName: String = Defcon.javaClass.getPackage().name
+    private val logger = Defcon.logger
 
     // Get the current server version
     private val currentVersion: String = Bukkit.getBukkitVersion().split("-")[0]
@@ -104,7 +103,7 @@ object EventRegister {
         try {
             val reflections = Reflections(packagePath)
             val bukkitListeners = reflections.getSubTypesOf(Listener::class.java)
-            val bukkitManager = plugin.server.pluginManager
+            val bukkitManager = Defcon.server.pluginManager
 
             logger.info("Found ${bukkitListeners.size} potential listeners in $packagePath")
 
@@ -113,7 +112,7 @@ object EventRegister {
                     try {
                         logger.info("Registering Bukkit listener: ${listenerClass.simpleName}")
                         val listenerObj = listenerClass.getDeclaredConstructor().newInstance()
-                        bukkitManager.registerSuspendingEvents(listenerObj, plugin)
+                        bukkitManager.registerSuspendingEvents(listenerObj, Defcon)
                         registeredListeners.add(listenerClass)
                     } catch (e: Exception) {
                         logger.warning("Failed to register listener ${listenerClass.simpleName}: ${e.message}")
