@@ -28,7 +28,7 @@ data class FissionCoreBlock(
     override val properties: PluginBlockProperties,
     override val unparsedBehaviourData: Map<String, Any>
 ) : PluginBlock(properties, unparsedBehaviourData) {
-    override fun copy(): FissionCoreBlock = copy()
+    override fun copied(): FissionCoreBlock = copy()
 }
 
 data class FissionCoreBlockItem(
@@ -36,5 +36,5 @@ data class FissionCoreBlockItem(
     override val unparsedBehaviourData: Map<String, Any>
 ): PluginItem(properties, unparsedBehaviourData)
 {
-    override fun copy(): FissionCoreBlockItem = copy()
+    override fun copied(): FissionCoreBlockItem = copy()
 }

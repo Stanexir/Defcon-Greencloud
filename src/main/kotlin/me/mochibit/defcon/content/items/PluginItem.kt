@@ -80,10 +80,5 @@ abstract class PluginItem(
     val hasLinkedBlock: Boolean
         get() = _linkedBlock != null
 
-    /**
-     * Creates a copy of this item instance with independent mutable state.
-     * Override this method in concrete implementations using data class copy() when possible.
-     */
-    abstract override fun copy(): PluginItem
-
+    abstract override fun copied(): PluginItem
 }

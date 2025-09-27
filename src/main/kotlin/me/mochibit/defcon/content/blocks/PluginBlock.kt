@@ -68,5 +68,5 @@ abstract class PluginBlock(
     val hasLinkedItem: Boolean
         get() = _linkedItem != null
 
-    abstract override fun copy(): PluginBlock
+    abstract override fun copied(): PluginBlock
 }

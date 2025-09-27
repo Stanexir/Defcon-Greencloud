@@ -26,5 +26,5 @@ data class RadiationMeasurerItem(
     override val properties: PluginItemProperties,
     override val unparsedBehaviourData: Map<String, Any>
 ) : PluginItem(properties, unparsedBehaviourData) {
-    override fun copy(): RadiationMeasurerItem = copy()
+    override fun copied(): RadiationMeasurerItem = copy()
 }

@@ -26,5 +26,5 @@ data class GasMaskItem(
     override val properties: PluginItemProperties,
     override val unparsedBehaviourData: Map<String, Any>
 ) : PluginItem(properties, unparsedBehaviourData) {
-    override fun copy(): PluginItem = copy()
+    override fun copied(): PluginItem = copy()
 }

@@ -48,7 +48,14 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KParameter
 import kotlin.reflect.full.primaryConstructor
 
-@CommandInfo("explode", "defcon.admin", false)
+@CommandInfo(
+    name = "explode",
+    aliases = ["boom", "nuke"],
+    permission = "defcon.admin",
+    adminOnly = true,
+    description = "Create explosions at specified locations or where you're looking",
+    usage = "/defcon explode <type> [pos <x> <y> <z>|raycast]"
+)
 class ExplodeCommand : GenericCommand() {
     companion object {
         // Cache explosion classes on load
@@ -73,7 +80,9 @@ class ExplodeCommand : GenericCommand() {
     override fun getArguments(): ArgumentBuilder<CommandSourceStack, *> {
         return Commands
             .argument("explosionName", StringArgumentType.word())
-            .suggests(explosionNamesSuggestion)
+            .suggests { _, builder -> suggestFromList(
+                explosionClasses.mapNotNull { it.simpleName }, builder
+            )}
             .then(
                 Commands.literal("pos")
                     .then(
@@ -93,17 +102,12 @@ class ExplodeCommand : GenericCommand() {
     }
 
     private fun handleWithRaycast(ctx: CommandContext<CommandSourceStack>): Int {
-        val sender = ctx.source.sender
-
-        if (sender !is Player) {
-            sendMessage(sender, "This command can only be executed by a player.", true)
-            return Command.SINGLE_SUCCESS
-        }
+        val player = requirePlayer(ctx) ?: return Command.SINGLE_SUCCESS
 
         // Get the block the player is looking at
-        val raycastResult = sender.world.rayTraceBlocks(
-            sender.eyeLocation,
-            sender.location.direction,
+        val raycastResult = player.world.rayTraceBlocks(
+            player.eyeLocation,
+            player.location.direction,
             MAX_RAYCAST_DISTANCE,
             FluidCollisionMode.SOURCE_ONLY,
             false
@@ -111,13 +115,12 @@ class ExplodeCommand : GenericCommand() {
 
         val hitBlock = raycastResult?.hitBlock
         if (hitBlock == null) {
-            sendMessage(sender, "No block found within range. Try looking at a block.", true)
+            sendWarning(player, "No block found within range. Try looking at a block.")
             return Command.SINGLE_SUCCESS
         }
 
         val explosionName = StringArgumentType.getString(ctx, "explosionName")
-
-        return createExplosion(sender, explosionName, hitBlock.location)
+        return createExplosion(ctx.source.sender, explosionName, hitBlock.location)
     }
 
     private fun handleWithCoordinate(ctx: CommandContext<CommandSourceStack>): Int {
@@ -142,27 +145,21 @@ class ExplodeCommand : GenericCommand() {
             return Command.SINGLE_SUCCESS
         }
 
-        // Get default explosion component
-
         try {
             // Create and trigger the explosion
             val centerParam = explosionClass.primaryConstructor?.parameters?.find { it.name == "center" }
                 ?: throw IllegalStateException("No center parameter found for explosion class $explosionName")
 
-            val params = mapOf(
-                centerParam to location
-            )
+            val params = mapOf(centerParam to location)
 
             val explosionInstance = explosionClass.primaryConstructor?.callBy(params)
                 ?: throw IllegalStateException("Could not instantiate explosion of type $explosionName")
-
 
             Bukkit.getScheduler().runTaskAsynchronously(Defcon) { ->
                 explosionInstance.explode()
             }
 
-            sendMessage(sender, "Created explosion of type $explosionName at ${location.blockX}, ${location.blockY}, ${location.blockZ}", false)
-
+            sendSuccess(sender, "Created explosion of type $explosionName at ${location.blockX}, ${location.blockY}, ${location.blockZ}")
             return Command.SINGLE_SUCCESS
         } catch (e: Exception) {
             sendMessage(sender, "Failed to create explosion: ${e.message}", true)

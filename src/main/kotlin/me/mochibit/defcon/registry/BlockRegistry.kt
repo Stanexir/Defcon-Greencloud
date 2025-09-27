@@ -86,7 +86,7 @@ object BlockRegistry {
      * Retrieves a block by ID. Returns a copy to prevent shared state issues.
      * This is the main retrieval method that ensures thread safety and state isolation.
      */
-    fun getBlock(id: String): PluginBlock? = _registeredBlocks[id]?.copy()
+    fun getBlock(id: String): PluginBlock? = _registeredBlocks[id]?.copied()
 
     /**
      * Gets the original registered block template (not a copy).
@@ -98,7 +98,7 @@ object BlockRegistry {
     /**
      * Returns copies of all registered blocks to prevent shared state issues.
      */
-    fun getAllBlocks(): Collection<PluginBlock> = _registeredBlocks.values.map { it.copy() }
+    fun getAllBlocks(): Collection<PluginBlock> = _registeredBlocks.values.map { it.copied() }
 
     /**
      * Returns the original templates of all registered blocks.

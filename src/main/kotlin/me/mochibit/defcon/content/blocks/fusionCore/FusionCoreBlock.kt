@@ -28,7 +28,7 @@ data class FusionCoreBlock(
     override val properties: PluginBlockProperties,
     override val unparsedBehaviourData: Map<String, Any>
 ) : PluginBlock(properties, unparsedBehaviourData) {
-    override fun copy(): FusionCoreBlock = copy()
+    override fun copied(): FusionCoreBlock = copy()
 }
 
 data class FusionCoreBlockItem(
@@ -36,5 +36,5 @@ data class FusionCoreBlockItem(
     override val unparsedBehaviourData: Map<String, Any>
 ): PluginItem(properties, unparsedBehaviourData)
 {
-    override fun copy(): FusionCoreBlockItem = copy()
+    override fun copied(): FusionCoreBlockItem = copy()
 }

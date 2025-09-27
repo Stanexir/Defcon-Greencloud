@@ -28,7 +28,7 @@ data class WarheadInterfaceBlock (
     override val properties: PluginBlockProperties,
     override val unparsedBehaviourData: Map<String, Any>
 ) : PluginBlock(properties, unparsedBehaviourData) {
-    override fun copy(): WarheadInterfaceBlock = copy()
+    override fun copied(): WarheadInterfaceBlock = copy()
 }
 
 data class WarheadInterfaceBlockItem(
@@ -36,5 +36,5 @@ data class WarheadInterfaceBlockItem(
     override val unparsedBehaviourData: Map<String, Any>
 ): PluginItem(properties, unparsedBehaviourData)
 {
-    override fun copy(): WarheadInterfaceBlockItem = copy()
+    override fun copied(): WarheadInterfaceBlockItem = copy()
 }

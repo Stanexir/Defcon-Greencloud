@@ -33,6 +33,7 @@ import me.mochibit.defcon.commands.CommandInfo
 import me.mochibit.defcon.commands.GenericCommand
 import me.mochibit.defcon.registry.ItemRegistry
 import org.bukkit.Bukkit
+import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import java.util.concurrent.CompletableFuture
 
@@ -41,56 +42,30 @@ import java.util.concurrent.CompletableFuture
  */
 @CommandInfo(
     name = "give",
+    aliases = ["item"],
     permission = "defcon.admin",
+    adminOnly = true,
     requiresPlayer = false,
-    description =
-        "This command gives a specified <bold> Defcon </bold> item to a player. " +
-        "If no player is specified, the item is given to the command executor."
+    description = "Give a specified Defcon item to a player. If no player is specified, the item is given to the command executor.",
+    usage = "/defcon give <item> [player]"
 )
 class GiveCommand : GenericCommand() {
 
     override fun getArguments(): ArgumentBuilder<CommandSourceStack, *> {
         return Commands
             .argument("item", StringArgumentType.word())
-            .suggests(::suggestItems)
+            .suggests { _, builder ->
+                suggestFromList(
+                    ItemRegistry.registeredItems.keys.toList(),
+                    builder
+                )
+            }
             .then(
                 Commands.argument("player", StringArgumentType.word())
                     .suggests(::suggestPlayers)
                     .executes(::handleFullCommand)
             )
             .executes(::handleExecutorAsTarget) // Allow execution without player argument
-    }
-
-    /**
-     * Provides item suggestions based on the registered items
-     */
-    private fun suggestItems(
-        context: CommandContext<CommandSourceStack>,
-        builder: SuggestionsBuilder
-    ): CompletableFuture<Suggestions> {
-        val prefix = builder.remainingLowerCase
-        ItemRegistry.registeredItems.keys
-            .filterNotNull()
-            .filter { it.lowercase().startsWith(prefix) }
-            .forEach(builder::suggest)
-
-        return builder.buildFuture()
-    }
-
-    /**
-     * Provides player suggestions based on online players
-     */
-    private fun suggestPlayers(
-        context: CommandContext<CommandSourceStack>,
-        builder: SuggestionsBuilder
-    ): CompletableFuture<Suggestions> {
-        val prefix = builder.remainingLowerCase
-        Bukkit.getServer().onlinePlayers
-            .map { it.name }
-            .filter { it.lowercase().startsWith(prefix) }
-            .forEach(builder::suggest)
-
-        return builder.buildFuture()
     }
 
     /**
@@ -120,13 +95,8 @@ class GiveCommand : GenericCommand() {
         val playerName = StringArgumentType.getString(ctx, "player")
         val sender = ctx.source.sender
 
-        // Find target player
-        val targetPlayer = Bukkit.getServer().getPlayer(playerName)
-
-        if (targetPlayer == null || !targetPlayer.isOnline) {
-            sendMessage(sender, "Player '$playerName' not found or not online", isError = true)
-            return Command.SINGLE_SUCCESS
-        }
+        // Find target player using helper method
+        val targetPlayer = getPlayerByName(ctx, playerName) ?: return Command.SINGLE_SUCCESS
 
         return giveItemToPlayer(sender, targetPlayer, itemId)
     }
@@ -135,12 +105,12 @@ class GiveCommand : GenericCommand() {
      * Helper method to give an item to a player
      * @return Command execution result code
      */
-    private fun giveItemToPlayer(sender: org.bukkit.command.CommandSender, targetPlayer: Player, itemId: String): Int {
+    private fun giveItemToPlayer(sender: CommandSender, targetPlayer: Player, itemId: String): Int {
         // Get the item from the register
         val item = ItemRegistry.registeredItems[itemId]
 
         if (item == null) {
-            sendMessage(sender, "Item with ID '$itemId' not found in the registry", isError = true)
+            sendMessage(sender, "Item with ID '$itemId' not found in the registry. Available items: ${ItemRegistry.registeredItems.keys.joinToString()}", isError = true)
             return Command.SINGLE_SUCCESS
         }
 
@@ -153,14 +123,14 @@ class GiveCommand : GenericCommand() {
                 val isSelf = sender == targetPlayer
 
                 if (isSelf) {
-                    sendMessage(sender, "You have been given a ${item.properties.displayName}")
+                    sendSuccess(sender, "You have been given a ${item.properties.displayName}")
                 } else {
-                    sendMessage(sender, "Gave ${targetPlayer.name} a ${item.properties.displayName}")
-                    sendMessage(targetPlayer, "You received a ${item.properties.displayName}")
+                    sendSuccess(sender, "Gave ${targetPlayer.name} a ${item.properties.displayName}")
+                    sendSuccess(targetPlayer, "You received a ${item.properties.displayName}")
                 }
             } else {
                 // Inventory was full
-                sendMessage(sender, "Could not give item - player inventory is full", isError = true)
+                sendWarning(sender, "Could not give item - player inventory is full")
             }
         } catch (e: Exception) {
             sendMessage(sender, "Failed to give item: ${e.message}", isError = true)

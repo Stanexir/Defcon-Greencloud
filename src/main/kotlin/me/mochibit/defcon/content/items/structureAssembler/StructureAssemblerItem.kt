@@ -19,7 +19,6 @@
 
 package me.mochibit.defcon.content.items.structureAssembler
 
-import me.mochibit.defcon.content.element.Element
 import me.mochibit.defcon.content.items.PluginItemProperties
 import me.mochibit.defcon.content.items.PluginItem
 
@@ -27,5 +26,5 @@ data class StructureAssemblerItem(
     override val properties: PluginItemProperties,
     override val unparsedBehaviourData: Map<String, Any>
 ) : PluginItem(properties, unparsedBehaviourData) {
-    override fun copy(): StructureAssemblerItem = copy()
+    override fun copied(): StructureAssemblerItem = copy()
 }

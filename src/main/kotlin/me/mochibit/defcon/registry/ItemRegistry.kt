@@ -67,12 +67,6 @@ object ItemRegistry {
                 return@forEach
             }
             val customItem = PluginItemFactory.create(item)
-            if (item.isBlockItem) {
-                val block = BlockRegistry.getBlockTemplate(item.id)
-                if (block != null) {
-                    customItem.linkBlock(block)
-                }
-            }
             info("Registered item ${item.id}")
             _registeredItems[customItem.properties.id] = customItem
         }
@@ -243,7 +237,7 @@ object ItemRegistry {
      * Retrieves an item by ID. Returns a copy to prevent shared state issues.
      * This is the main retrieval method that ensures thread safety and state isolation.
      */
-    fun getItem(id: String): PluginItem? = _registeredItems[id]?.copy()
+    fun getItem(id: String): PluginItem? = _registeredItems[id]?.copied()
 
     /**
      * Gets the original registered item template (not a copy).
@@ -255,7 +249,7 @@ object ItemRegistry {
     /**
      * Returns copies of all registered items to prevent shared state issues.
      */
-    fun getAllItems(): Collection<PluginItem> = _registeredItems.values.map { it.copy() }
+    fun getAllItems(): Collection<PluginItem> = _registeredItems.values.map { it.copied() }
 
     /**
      * Returns the original templates of all registered items.

@@ -32,21 +32,21 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
 
     data class ItemDefinition(
         val id: String,
-        val displayName: String,
+        val displayName: String = "Unnamed Item",
         val description: String? = null,
 
-        val minecraftId: String,
-        val legacyMinecraftId: String,
+        val minecraftId: String? = null,
+        val legacyMinecraftId: String? = minecraftId,
 
-        val itemModel: NamespacedKey?,
-        val legacyItemModel: Int,
+        val itemModel: NamespacedKey? = null,
+        val legacyItemModel: Int? = null,
 
-        val equipmentSlot: EquipmentSlot?,
-        val maxStackSize: Int,
+        val equipmentSlot: EquipmentSlot? = null,
+        val maxStackSize: Int = 64,
         override val behaviour: ItemBehaviour,
         override val behaviourData: Map<String, Any> = emptyMap(),
 
-        val craftingRecipe: CraftingRecipe?,
+        val craftingRecipe: CraftingRecipe? = null,
         val isBlockItem: Boolean = false,
     ) : ElementDefinition<PluginItemProperties, PluginItem> {
         sealed interface CraftingRecipe {
@@ -70,11 +70,11 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
         val tempItems = mutableListOf<ItemDefinition>()
 
         config.getConfigurationSection("items")?.let { itemsSection ->
-            tempItems += parseItemsFromSection(itemsSection, false)
+            tempItems.addAll(parseItemsFromSection(itemsSection, false))
         }
 
         config.getConfigurationSection("block-items")?.let { blockItemsSection ->
-            tempItems += parseItemsFromSection(blockItemsSection, true)
+            tempItems.addAll(parseItemsFromSection(blockItemsSection, true))
         }
 
         return tempItems.toList()
@@ -92,9 +92,9 @@ object ItemsConfiguration : PluginConfiguration<List<ItemsConfiguration.ItemDefi
         itemSection: ConfigurationSection,
         blockItem: Boolean
     ): ItemDefinition? {
-        val displayName = itemSection.getString("display-name") ?: return null
+        val displayName = itemSection.getString("display-name") ?: "Unnamed Item"
         val description = itemSection.getString("description")
-        val minecraftId = itemSection.getString("minecraft-id") ?: return null
+        val minecraftId = itemSection.getString("minecraft-id")
         val legacyMinecraftId = itemSection.getString("legacy-minecraft-id") ?: minecraftId
 
         val itemModel = itemSection.getString("model", null)?.let {

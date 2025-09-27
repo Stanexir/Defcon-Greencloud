@@ -82,6 +82,6 @@ class DefconPlugin : SuspendingJavaPlugin() {
     val minecraftVersion get() = Bukkit.getServer().bukkitVersion.split("-")[0]
 }
 
-val Defcon get() = me.mochibit.defcon.DefconPlugin.instance
+val Defcon get() = DefconPlugin.instance
 internal fun pluginNamespacedKey(key: String) = org.bukkit.NamespacedKey(Defcon, key)
 

@@ -40,7 +40,7 @@ enum class ItemBehaviour(
     STRUCTURE_ASSEMBLER(::StructureAssemblerItem),
 
     // BLOCK ITEMS
-    FISSION_CORE_BLOCK(::FissionCoreBlockItem),
-    FUSION_CORE_BLOCK(::FusionCoreBlockItem),
-    WARHEAD_INTERFACE_BLOCK(::WarheadInterfaceBlockItem),
+    FISSION_CORE(::FissionCoreBlockItem),
+    FUSION_CORE(::FusionCoreBlockItem),
+    WARHEAD_INTERFACE(::WarheadInterfaceBlockItem),
 }

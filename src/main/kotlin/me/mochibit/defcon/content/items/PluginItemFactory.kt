@@ -21,34 +21,81 @@ package me.mochibit.defcon.content.items
 
 import me.mochibit.defcon.config.ItemsConfiguration
 import me.mochibit.defcon.content.element.AbstractElementFactory
-import me.mochibit.defcon.content.items.gasMask.GasMaskItem
-import me.mochibit.defcon.content.items.radiationHealer.RadiationHealerDataParser
-import me.mochibit.defcon.content.items.radiationHealer.RadiationHealerItem
-import me.mochibit.defcon.content.items.radiationMeasurer.RadiationMeasurerItem
-import me.mochibit.defcon.content.items.structureAssembler.StructureAssemblerItem
-
+import me.mochibit.defcon.registry.BlockRegistry
+import me.mochibit.defcon.utils.Logger
 
 object PluginItemFactory :
     AbstractElementFactory<PluginItemProperties, PluginItem, ItemsConfiguration.ItemDefinition>() {
+
+    private const val DEFAULT_MINECRAFT_ID = "minecraft:stick"
+
     override fun create(elementDefinition: ItemsConfiguration.ItemDefinition): PluginItem {
-        val properties = PluginItemProperties(
+        val properties = createItemProperties(elementDefinition)
+        val customItem = createCustomItem(elementDefinition, properties)
+
+        if (elementDefinition.isBlockItem) {
+            linkBlockItem(customItem, elementDefinition.id)
+        }
+
+        return customItem
+    }
+
+    private fun createItemProperties(elementDefinition: ItemsConfiguration.ItemDefinition): PluginItemProperties {
+        return PluginItemProperties(
             id = elementDefinition.id,
             displayName = elementDefinition.displayName,
             description = elementDefinition.description,
-
-            minecraftId = elementDefinition.minecraftId,
+            minecraftId = resolveMinecraftId(elementDefinition),
             itemModel = elementDefinition.itemModel,
             equipmentSlot = elementDefinition.equipmentSlot,
             maxStackSize = elementDefinition.maxStackSize,
-            legacyProperties = PluginItemProperties.LegacyProperties(
-                legacyMinecraftId = elementDefinition.legacyMinecraftId,
-                legacyItemModel = elementDefinition.legacyItemModel
-            )
+            legacyProperties = createLegacyProperties(elementDefinition)
         )
+    }
 
+    private fun resolveMinecraftId(elementDefinition: ItemsConfiguration.ItemDefinition): String {
+        return when {
+            elementDefinition.minecraftId != null -> elementDefinition.minecraftId
+            elementDefinition.isBlockItem -> getBlockMinecraftId(elementDefinition.id)
+            else -> DEFAULT_MINECRAFT_ID
+        }
+    }
+
+    private fun getBlockMinecraftId(blockId: String): String {
+        return BlockRegistry.getBlockTemplate(blockId)
+            ?.properties
+            ?.blockBasis
+            ?: DEFAULT_MINECRAFT_ID
+    }
+
+    private fun createLegacyProperties(elementDefinition: ItemsConfiguration.ItemDefinition): PluginItemProperties.LegacyProperties {
+        return PluginItemProperties.LegacyProperties(
+            legacyMinecraftId = elementDefinition.legacyMinecraftId,
+            legacyItemModel = elementDefinition.legacyItemModel
+        )
+    }
+
+    private fun createCustomItem(
+        elementDefinition: ItemsConfiguration.ItemDefinition,
+        properties: PluginItemProperties
+    ): PluginItem {
         return elementDefinition.behaviour.elementConstructor(
             properties,
             elementDefinition.behaviourData
         )
+    }
+
+    private fun linkBlockItem(customItem: PluginItem, blockId: String) {
+        val block = BlockRegistry.getBlockTemplate(blockId)
+
+        if (block != null) {
+            customItem.linkBlock(block)
+            Logger.info("Linked block item ${customItem.properties.id} to block ${block.properties.id}")
+        } else {
+            Logger.warn(
+                "Block item ${customItem.properties.id} could not be linked - " +
+                        "corresponding block not found in BlockRegistry"
+            )
+        }
     }
 }

@@ -26,6 +26,7 @@ object PluginBlockFactory : AbstractElementFactory<PluginBlockProperties, Plugin
     override fun create(elementDefinition: BlocksConfiguration.BlockDefinition): PluginBlock {
         val properties = PluginBlockProperties(
             id = elementDefinition.id,
+            blockBasis = elementDefinition.blockBasis,
         )
 
         return elementDefinition.behaviour.elementConstructor(

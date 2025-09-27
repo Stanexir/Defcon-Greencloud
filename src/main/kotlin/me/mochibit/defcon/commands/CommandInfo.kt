@@ -21,4 +21,12 @@ package me.mochibit.defcon.commands
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class CommandInfo(val name: String, val permission: String = "", val requiresPlayer: Boolean, val description: String = "")
+annotation class CommandInfo(
+    val name: String,
+    val aliases: Array<String> = [],
+    val permission: String = "",
+    val requiresPlayer: Boolean = false,
+    val description: String = "",
+    val usage: String = "",
+    val adminOnly: Boolean = false
+)

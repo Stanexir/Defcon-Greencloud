@@ -30,6 +30,7 @@ import org.bukkit.configuration.ConfigurationSection
 object BlocksConfiguration : PluginConfiguration<List<BlocksConfiguration.BlockDefinition>>("blocks") {
     data class BlockDefinition(
         val id: String,
+        val blockBasis: String = "minecraft:stone",
         override val behaviour: ElementBehaviour<PluginBlockProperties, PluginBlock>,
         override val behaviourData: Map<String, Any>
     ): ElementDefinition<PluginBlockProperties, PluginBlock>
@@ -52,6 +53,8 @@ object BlocksConfiguration : PluginConfiguration<List<BlocksConfiguration.BlockD
                 return@mapNotNull null
             }
 
+            val blockBasis = blockSection.getString("block-basis") ?: "minecraft:stone"
+
             val behaviourStr = blockSection.getString("behaviour") ?: run {
                 Logger.warn("Block $blockId has no behaviour defined, skipping")
                 return@mapNotNull null
@@ -73,6 +76,7 @@ object BlocksConfiguration : PluginConfiguration<List<BlocksConfiguration.BlockD
 
             BlockDefinition(
                 id = blockId,
+                blockBasis = blockBasis,
                 behaviour = behaviour,
                 behaviourData = behaviourData
             )

@@ -30,5 +30,5 @@ data class RadiationHealerItem(
         super.behaviourProperties as RadiationHealerProperties
     }
 
-    override fun copy(): RadiationHealerItem = copy()
+    override fun copied(): RadiationHealerItem = copy()
 }
