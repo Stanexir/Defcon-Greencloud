@@ -1,7 +1,7 @@
 /*
  *
  * DEFCON: Nuclear warfare plugin for minecraft servers.
- * Copyright (c) 2024 mochibit.
+ * Copyright (c) 2024-2025 mochibit.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -17,17 +17,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.extensions
+package me.mochibit.defcon.events.handlers.blocks
 
-import me.mochibit.defcon.registry.ItemRegistry
-import me.mochibit.defcon.content.items.PluginItem
-import org.bukkit.inventory.ItemStack
+import me.mochibit.defcon.events.AutoRegisterHandler
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+import org.bukkit.event.block.BlockBreakEvent
 
+@AutoRegisterHandler
+class RadiationAreaExpand: Listener {
 
-fun ItemStack.getPluginItem(): PluginItem? {
-    val meta = this.itemMeta ?: return null
-    val pluginItemId = meta.getData(PluginItemPropertyKeys.itemId) ?: return null
-    return ItemRegistry.getItem(pluginItemId)
+    // On block update, if the block has a neighbor wich is a radioactive block, expand the radiation area
+
+    @EventHandler
+    fun onBlockBreak(event: BlockBreakEvent) {
+
+    }
+
 }
-
-

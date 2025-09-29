@@ -41,6 +41,7 @@ object MainConfiguration : PluginConfiguration<MainConfiguration.BaseConfigurati
         }
 
         data class NuclearExplosionConfig(
+            val biomeHandling: Boolean = true,
             val shockwaveConfig: ShockwaveConfig,
             val craterConfig: CraterConfig,
             val falloutConfig: FalloutConfig,
@@ -91,6 +92,7 @@ object MainConfiguration : PluginConfiguration<MainConfiguration.BaseConfigurati
         )
 
         val nuclearExplosionConfig = BaseConfiguration.NuclearExplosionConfig(
+            biomeHandling = config.getBoolean("nuclear-explosion-settings.biome-handling", true),
             shockwaveConfig = BaseConfiguration.NuclearExplosionConfig.ShockwaveConfig(
                 baseRadius = config.getInt("nuclear-explosion-settings.shockwave-config.base-radius", 800),
                 baseHeight = config.getInt("nuclear-explosion-settings.shockwave-config.base-height", 300)

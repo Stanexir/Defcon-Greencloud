@@ -17,17 +17,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.extensions
+package me.mochibit.defcon.events.handlers.items
 
-import me.mochibit.defcon.registry.ItemRegistry
-import me.mochibit.defcon.content.items.PluginItem
-import org.bukkit.inventory.ItemStack
+import org.bukkit.event.Listener
 
-
-fun ItemStack.getPluginItem(): PluginItem? {
-    val meta = this.itemMeta ?: return null
-    val pluginItemId = meta.getData(PluginItemPropertyKeys.itemId) ?: return null
-    return ItemRegistry.getItem(pluginItemId)
-}
-
-
+class RadiationInhibitorListener : Listener

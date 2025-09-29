@@ -32,11 +32,6 @@ object PluginItemFactory :
     override fun create(elementDefinition: ItemsConfiguration.ItemDefinition): PluginItem {
         val properties = createItemProperties(elementDefinition)
         val customItem = createCustomItem(elementDefinition, properties)
-
-        if (elementDefinition.isBlockItem) {
-            linkBlockItem(customItem, elementDefinition.id)
-        }
-
         return customItem
     }
 
@@ -83,19 +78,5 @@ object PluginItemFactory :
             properties,
             elementDefinition.behaviourData
         )
-    }
-
-    private fun linkBlockItem(customItem: PluginItem, blockId: String) {
-        val block = BlockRegistry.getBlockTemplate(blockId)
-
-        if (block != null) {
-            customItem.linkBlock(block)
-            Logger.info("Linked block item ${customItem.properties.id} to block ${block.properties.id}")
-        } else {
-            Logger.warn(
-                "Block item ${customItem.properties.id} could not be linked - " +
-                        "corresponding block not found in BlockRegistry"
-            )
-        }
     }
 }

@@ -19,11 +19,18 @@
 
 package me.mochibit.defcon.content.blocks
 
+import com.jeff_media.customblockdata.CustomBlockData
+import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.content.element.Element
 import me.mochibit.defcon.content.element.ElementBehaviourPropParser
 import me.mochibit.defcon.content.element.ElementBehaviourProperties
 import me.mochibit.defcon.content.items.PluginItem
+import me.mochibit.defcon.extensions.PluginBlockPropertyKeys
+import me.mochibit.defcon.extensions.removeData
+import me.mochibit.defcon.extensions.setData
+import me.mochibit.defcon.registry.ItemRegistry
 import net.kyori.adventure.text.minimessage.MiniMessage
+import org.bukkit.World
 
 abstract class PluginBlock(
     override val properties: PluginBlockProperties,
@@ -32,41 +39,23 @@ abstract class PluginBlock(
     override val behaviourProperties: ElementBehaviourProperties? = behaviourPropParser?.parse(unparsedBehaviourData),
 
     private val mini: MiniMessage = MiniMessage.miniMessage(),
-
-    private var _linkedItem: PluginItem? = null
 ): Element {
-    /**
-     * Links this block to an item. This creates a bidirectional relationship.
-     * @param item The item to link to this block
-     */
-    fun linkItem(item: PluginItem) {
-        if (_linkedItem == item) return
-
-        _linkedItem?.unlinkBlock() // Unlink from previous item if exists
-        _linkedItem = item
-
-        if (item.linkedBlock != this) {
-            item.linkBlock(this)
-        }
-    }
-
-    /**
-     * Unlinks this block from its associated item
-     */
-    fun unlinkItem() {
-        _linkedItem?.let { item ->
-            _linkedItem = null
-            if (item.linkedBlock == this) {
-                item.unlinkBlock()
-            }
-        }
-    }
-
     val linkedItem: PluginItem?
-        get() = _linkedItem
-
-    val hasLinkedItem: Boolean
-        get() = _linkedItem != null
+        get() = ItemRegistry.getItem(properties.id)
 
     abstract override fun copied(): PluginBlock
+
+    fun placeBlock(x: Double, y: Double, z: Double, world: World) {
+        val block = world.getBlockAt(x.toInt(), y.toInt(), z.toInt())
+        val blockData = CustomBlockData(block, Defcon)
+
+        blockData.setData(PluginBlockPropertyKeys.blockId, properties.id)
+    }
+
+    fun removeBlock(x: Double, y: Double, z: Double, world: World) {
+        val block = world.getBlockAt(x.toInt(), y.toInt(), z.toInt())
+        val blockData = CustomBlockData(block, Defcon)
+
+        blockData.removeData(PluginBlockPropertyKeys.blockId)
+    }
 }

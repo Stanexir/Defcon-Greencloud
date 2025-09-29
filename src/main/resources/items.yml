@@ -64,22 +64,24 @@ items:
 
 block-items:
   fission-core:
-    display-name: "Fission core block"
+    display-name: "Fission core"
     description: |
       Fission core for the nuclear warhead.
-      It can be configured to be either a gun-type or implosion-type warhead through a <yellow> warhead interface </yellow>
+      It can be configured to be either a gun-type
+      or implosion-type warhead through a
+      <yellow>warhead interface</yellow>
     behaviour: "fission_core"
 
   fusion-core:
-    display-name: "Fusion core block"
+    display-name: "Fusion core"
     description: |
       Fusion-enabled block for a warhead.
-      It can be configured through a <yellow> warhead interface </yellow>
+      It can be configured through a <yellow>warhead interface</yellow>
       It needs to be <red>boosted</red> by a fission core block to work.
     behaviour: "fusion_core"
 
   warhead-interface:
-    display-name: "Warhead interface block"
+    display-name: "Warhead interface"
     description: |
       Essential configuration block for arming nuclear warheads.
       It allows the management of the fusion and fissile materials,

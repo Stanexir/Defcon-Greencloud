@@ -1,7 +1,7 @@
 /*
  *
  * DEFCON: Nuclear warfare plugin for minecraft servers.
- * Copyright (c) 2024 mochibit.
+ * Copyright (c) 2025 mochibit.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -17,17 +17,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.extensions
+package me.mochibit.defcon.events
 
-import me.mochibit.defcon.registry.ItemRegistry
-import me.mochibit.defcon.content.items.PluginItem
-import org.bukkit.inventory.ItemStack
+import com.github.retrooper.packetevents.event.PacketListenerPriority
 
 
-fun ItemStack.getPluginItem(): PluginItem? {
-    val meta = this.itemMeta ?: return null
-    val pluginItemId = meta.getData(PluginItemPropertyKeys.itemId) ?: return null
-    return ItemRegistry.getItem(pluginItemId)
-}
-
-
+@MustBeDocumented
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+internal annotation class AutoRegisterHandler(
+    val enabled: Boolean = true,
+    val fromVersion: String = "any",
+    val toVersion: String = "latest",
+    val packetPriority: PacketListenerPriority = PacketListenerPriority.NORMAL
+)

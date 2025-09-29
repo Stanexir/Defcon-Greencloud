@@ -12,13 +12,16 @@ import me.mochibit.defcon.utils.Logger.info
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
-import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
-
+@OptIn(ExperimentalTime::class)
 object CustomBiomeHandler {
     data class CustomBiomeBoundary(
         val id: Int = 0,
@@ -31,10 +34,11 @@ object CustomBiomeHandler {
         val priority: Int = 0,
         val transitions: List<BiomeTransition> = emptyList()
     ) {
-        data class BiomeTransition(
-            val transitionTime: Instant,
+        data class BiomeTransition constructor(
+            val transitionDuration: Duration,
             val targetBiome: NamespacedKey,
             val targetPriority: Int = 0,
+            val transitionTime: Instant = Clock.System.now() + transitionDuration,
             val completed: Boolean = false,
         )
 
@@ -63,9 +67,9 @@ object CustomBiomeHandler {
                     minZ <= other.minZ && maxZ >= other.maxZ
 
         fun getNextPendingTransition(): BiomeTransition? {
-            val now = Instant.now()
+            val now = Clock.System.now()
             return transitions.asSequence()
-                .filter { !it.completed && it.transitionTime.isBefore(now) }
+                .filter { !it.completed && it.transitionTime < now }
                 .minByOrNull { it.transitionTime }
         }
 

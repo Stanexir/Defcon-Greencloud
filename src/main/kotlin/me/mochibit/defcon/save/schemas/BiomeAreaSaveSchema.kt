@@ -22,7 +22,11 @@ package me.mochibit.defcon.save.schemas
 import me.mochibit.defcon.biomes.CustomBiomeHandler
 import org.bukkit.NamespacedKey
 import org.bukkit.event.EventPriority
-import java.time.Instant
+
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 data class BiomeAreaSaveSchema(
     var biomeAreas: HashSet<BoundarySaveSchema> = HashSet()
@@ -55,13 +59,15 @@ data class BiomeAreaSaveSchema(
     )
 
     data class BiomeTransitionSaveSchema(
-        val transitionTime: Long,
+        val transitionDuration: String,
         val targetBiome: NamespacedKey,
+        val transitionTime: Long,
         val completed: Boolean = false,
         val targetPriority: Int = 0,
     )
 }
 
+@OptIn(ExperimentalTime::class)
 fun CustomBiomeHandler.CustomBiomeBoundary.toSchema(): BiomeAreaSaveSchema.BoundarySaveSchema {
     return BiomeAreaSaveSchema.BoundarySaveSchema(
         id = id,
@@ -77,8 +83,9 @@ fun CustomBiomeHandler.CustomBiomeBoundary.toSchema(): BiomeAreaSaveSchema.Bound
         priority = priority,
         transition = transitions.map {
             BiomeAreaSaveSchema.BiomeTransitionSaveSchema(
-                it.transitionTime.toEpochMilli(),
+                it.transitionDuration.toString(),
                 it.targetBiome,
+                it.transitionTime.toEpochMilliseconds(),
                 it.completed,
                 it.targetPriority
             )
@@ -86,6 +93,7 @@ fun CustomBiomeHandler.CustomBiomeBoundary.toSchema(): BiomeAreaSaveSchema.Bound
     )
 }
 
+@OptIn(ExperimentalTime::class)
 fun BiomeAreaSaveSchema.BoundarySaveSchema.toCustomBiomeBoundary(): CustomBiomeHandler.CustomBiomeBoundary {
     return CustomBiomeHandler.CustomBiomeBoundary(
         id = id,
@@ -101,9 +109,10 @@ fun BiomeAreaSaveSchema.BoundarySaveSchema.toCustomBiomeBoundary(): CustomBiomeH
         priority = priority,
         transitions = transition.map {
             CustomBiomeHandler.CustomBiomeBoundary.BiomeTransition(
-                Instant.ofEpochMilli(it.transitionTime),
+                Duration.parse(it.transitionDuration),
                 it.targetBiome,
                 it.targetPriority,
+                Instant.fromEpochMilliseconds(it.transitionTime),
                 it.completed,
             )
         }

@@ -1,7 +1,7 @@
 /*
  *
  * DEFCON: Nuclear warfare plugin for minecraft servers.
- * Copyright (c) 2024 mochibit.
+ * Copyright (c) 2024-2025 mochibit.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -17,17 +17,33 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.extensions
+package me.mochibit.defcon.events.plugin.geiger
 
-import me.mochibit.defcon.registry.ItemRegistry
-import me.mochibit.defcon.content.items.PluginItem
-import org.bukkit.inventory.ItemStack
+import org.bukkit.entity.HumanEntity
+import org.bukkit.event.Event
+import org.bukkit.event.HandlerList
 
+class GeigerDetectEvent(val player: HumanEntity, val radiationLevel: Double) : Event() {
+    private var isCancelled = false
 
-fun ItemStack.getPluginItem(): PluginItem? {
-    val meta = this.itemMeta ?: return null
-    val pluginItemId = meta.getData(PluginItemPropertyKeys.itemId) ?: return null
-    return ItemRegistry.getItem(pluginItemId)
+    companion object {
+        private val HANDLERS = HandlerList()
+
+        @JvmStatic
+        fun getHandlerList(): HandlerList {
+            return HANDLERS
+        }
+    }
+
+    override fun getHandlers(): HandlerList {
+        return HANDLERS
+    }
+
+    fun setCancelled(cancel: Boolean) {
+        isCancelled = cancel
+    }
+
+    fun isCancelled(): Boolean {
+        return isCancelled
+    }
 }
-
-

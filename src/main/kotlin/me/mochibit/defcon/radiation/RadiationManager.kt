@@ -23,8 +23,8 @@ import com.github.shynixn.mccoroutine.bukkit.minecraftDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.mochibit.defcon.Defcon
-import me.mochibit.defcon.events.geiger.GeigerDetectEvent
-import me.mochibit.defcon.events.radiationarea.RadiationSuffocationEvent
+import me.mochibit.defcon.events.plugin.geiger.GeigerDetectEvent
+import me.mochibit.defcon.events.plugin.radiationarea.RadiationSuffocationEvent
 import me.mochibit.defcon.player.PlayerData
 import me.mochibit.defcon.save.savedata.PlayerDataSave
 import me.mochibit.defcon.threading.scheduling.intervalAsync

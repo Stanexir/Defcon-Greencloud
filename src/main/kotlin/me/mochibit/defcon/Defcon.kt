@@ -22,7 +22,7 @@ package me.mochibit.defcon
 import com.github.shynixn.mccoroutine.bukkit.SuspendingJavaPlugin
 import me.mochibit.defcon.biomes.CustomBiomeHandler
 import me.mochibit.defcon.config.PluginConfiguration
-import me.mochibit.defcon.content.listeners.EventRegister
+import me.mochibit.defcon.events.EventRegister
 import me.mochibit.defcon.content.pack.DatapackRegistry
 import me.mochibit.defcon.content.pack.ResourcePackRegistry
 import me.mochibit.defcon.notification.NotificationManager

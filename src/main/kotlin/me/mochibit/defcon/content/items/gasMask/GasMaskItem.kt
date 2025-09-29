@@ -19,12 +19,38 @@
 
 package me.mochibit.defcon.content.items.gasMask
 
+import com.github.shynixn.mccoroutine.bukkit.launch
+import com.github.shynixn.mccoroutine.bukkit.minecraftDispatcher
+import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.content.items.PluginItemProperties
 import me.mochibit.defcon.content.items.PluginItem
+import me.mochibit.defcon.extensions.random
+import org.bukkit.Sound
+import org.bukkit.entity.Player
+import org.bukkit.inventory.EquipmentSlot
 
 data class GasMaskItem(
     override val properties: PluginItemProperties,
     override val unparsedBehaviourData: Map<String, Any>
 ) : PluginItem(properties, unparsedBehaviourData) {
     override fun copied(): PluginItem = copy()
+
+    fun canProtectFromRadiation(radiationLevel: Double): Boolean {
+        return true
+        //TODO : To add gas mask protection data
+    }
+
+
+    override fun onEquip(player: Player, affectedSlot: EquipmentSlot) {
+        if (affectedSlot != EquipmentSlot.HEAD) return
+        playGasMaskEquipSound(player)
+    }
+
+
+    private fun playGasMaskEquipSound(player: Player) {
+        Defcon.launch(Defcon.minecraftDispatcher) {
+            val randomizedPitch = (0.6f..0.9f).random()
+            player.world.playSound(player.location, Sound.ENTITY_PLAYER_BREATH, 2.0f, randomizedPitch)
+        }
+    }
 }

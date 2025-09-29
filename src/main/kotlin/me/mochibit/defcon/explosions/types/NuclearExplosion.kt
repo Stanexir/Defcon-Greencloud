@@ -25,16 +25,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.mochibit.defcon.Defcon
+import me.mochibit.defcon.biomes.CustomBiomeHandler
+import me.mochibit.defcon.biomes.definitions.BurningAirBiome
+import me.mochibit.defcon.biomes.definitions.NuclearFalloutBiome
 import me.mochibit.defcon.config.MainConfiguration
 import me.mochibit.defcon.config.PluginConfiguration
 import me.mochibit.defcon.explosions.ExplosionComponent
 import me.mochibit.defcon.explosions.processor.Crater
 import me.mochibit.defcon.explosions.processor.Shockwave
+import me.mochibit.defcon.threading.scheduling.runLater
 import org.bukkit.Location
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 
 class NuclearExplosion(center: Location, private val nuclearComponent: ExplosionComponent = ExplosionComponent()) :
     Explosion(center) {
+    @OptIn(ExperimentalTime::class)
     override fun explode() {
         Defcon.launch {
             val pluginConfiguration = MainConfiguration.getSchema()
@@ -89,26 +97,29 @@ class NuclearExplosion(center: Location, private val nuclearComponent: Explosion
 //                )
 //            }
 
-//            launch(Dispatchers.Default) {
-//                val burningBiomeUUID = CustomBiomeHandler.createBiomeArea(
-//                    center,
-//                    BurningAirBiome,
-//                    lengthPositiveY = falloutRadius,
-//                    lengthNegativeY = craterRadius / 6,
-//                    lengthNegativeX = falloutRadius,
-//                    lengthNegativeZ = falloutRadius,
-//                    lengthPositiveX = falloutRadius,
-//                    lengthPositiveZ = falloutRadius,
-//                    priority = 100,
-//                )
-//
-//                CustomBiomeHandler.scheduleBiomeTransition(
-//                    burningBiomeUUID,
-//                    NuclearFalloutBiome.key,
-//                    Instant.now().plusSeconds(1.minutes.inWholeSeconds),
-//                    0
-//                )
-//            }
+            if (pluginConfiguration.nuclearExplosionConfig.biomeHandling) {
+                launch(Dispatchers.Default) {
+                    val falloutRadius = pluginConfiguration.nuclearExplosionConfig.falloutConfig.baseRadius
+                    val craterRadius = pluginConfiguration.nuclearExplosionConfig.craterConfig.baseRadius
+                    CustomBiomeHandler.createBiomeArea(
+                        center,
+                        BurningAirBiome,
+                        lengthPositiveY = falloutRadius,
+                        lengthNegativeY = craterRadius / 6,
+                        lengthNegativeX = falloutRadius,
+                        lengthNegativeZ = falloutRadius,
+                        lengthPositiveX = falloutRadius,
+                        lengthPositiveZ = falloutRadius,
+                        priority = 100,
+                        transitions = listOf(
+                            CustomBiomeHandler.CustomBiomeBoundary.BiomeTransition(
+                                1.minutes,
+                                NuclearFalloutBiome.key,
+                            )
+                        )
+                    )
+                }
+            }
 //
 //            runLater(1.minutes, Dispatchers.Default) {
 //                RadiationAreaFactory.fromCenter(

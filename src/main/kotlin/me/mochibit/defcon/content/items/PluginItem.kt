@@ -23,7 +23,10 @@ import me.mochibit.defcon.content.blocks.PluginBlock
 import me.mochibit.defcon.content.element.Element
 import me.mochibit.defcon.content.element.ElementBehaviourPropParser
 import me.mochibit.defcon.content.element.ElementBehaviourProperties
+import me.mochibit.defcon.registry.BlockRegistry
 import net.kyori.adventure.text.minimessage.MiniMessage
+import org.bukkit.entity.Player
+import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 
 
@@ -35,8 +38,6 @@ abstract class PluginItem(
 
     private val mini: MiniMessage = MiniMessage.miniMessage(),
     private val itemStackFactory: ItemStackFactory = FactoryMetaStrategies.getFactory(),
-
-    private var _linkedBlock: PluginBlock? = null
 ) : Element {
     val name: String
         get() = mini.stripTags(properties.displayName)
@@ -47,38 +48,13 @@ abstract class PluginItem(
     val isEquippable: Boolean
         get() = properties.equipmentSlot?.isArmor ?: false
 
-    /**
-     * Links this item to a block. This creates a bidirectional relationship.
-     * @param block The block to link to this item
-     */
-    fun linkBlock(block: PluginBlock) {
-        if (_linkedBlock == block) return
-
-        _linkedBlock?.unlinkItem() // Unlink from previous block if exists
-        _linkedBlock = block
-
-        if (block.linkedItem != this) {
-            block.linkItem(this)
-        }
-    }
-
-    /**
-     * Unlinks this item from its associated block
-     */
-    fun unlinkBlock() {
-        _linkedBlock?.let { block ->
-            _linkedBlock = null
-            if (block.linkedItem == this) {
-                block.unlinkItem()
-            }
-        }
-    }
-
     val linkedBlock: PluginBlock?
-        get() = _linkedBlock
-
-    val hasLinkedBlock: Boolean
-        get() = _linkedBlock != null
+        get() = BlockRegistry.getBlock(properties.id)
 
     abstract override fun copied(): PluginItem
+
+    open fun onEquip(player: Player, affectedSlot: EquipmentSlot) {}
+
+    open fun onUnequip(player: Player, affectedSlot: EquipmentSlot) {}
+
 }
