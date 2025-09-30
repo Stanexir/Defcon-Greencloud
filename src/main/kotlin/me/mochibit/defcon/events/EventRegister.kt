@@ -40,7 +40,7 @@ object EventRegister {
     fun registerPacketListeners(): EventRegister {
         info("Registering annotated packet listeners")
 
-        val reflections = Reflections(Defcon.javaClass.classLoader)
+        val reflections = Reflections(Defcon::class.java.packageName)
         val annotatedClasses = reflections.getTypesAnnotatedWith(AutoRegisterHandler::class.java)
             .filter { PacketListener::class.java.isAssignableFrom(it) }
 

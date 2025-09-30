@@ -1,5 +1,7 @@
 # Base nuclear explosions configuration
 nuclear-explosion-settings:
+  biome-handling: true # Whether to set custom biomes in the affected area
+
   shockwave-config:
     base-radius: 800 # The radius (in blocks) of the shockwave
     base-height: 300 # The height (in blocks) of the shockwave, all structures under this height will be destroyed,

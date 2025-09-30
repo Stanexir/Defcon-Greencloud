@@ -45,6 +45,7 @@ abstract class PluginItem(
     val itemStack: ItemStack
         get() = itemStackFactory.create(properties)
 
+
     val isEquippable: Boolean
         get() = properties.equipmentSlot?.isArmor ?: false
 
