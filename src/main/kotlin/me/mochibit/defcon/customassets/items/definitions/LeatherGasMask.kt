@@ -105,5 +105,8 @@ class LeatherGasMask: AbstractCustomItemModel(
     ),
     ModelData(
         name = "leather_gas_mask",
+        tints = listOf(
+            ModelData.DyeTint()
+        )
     )
 )

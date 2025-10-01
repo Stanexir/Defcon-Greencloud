@@ -17,7 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.content.pack
+package me.mochibit.defcon.registry
 
 import me.mochibit.defcon.utils.Logger
 import java.io.File

@@ -17,11 +17,12 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.content.pack
+package me.mochibit.defcon.registry
 
 import kotlinx.coroutines.runBlocking
 import me.mochibit.defcon.Defcon
 import me.mochibit.defcon.config.MainConfiguration
+import me.mochibit.defcon.content.pack.FormatReader
 import me.mochibit.defcon.utils.Logger.err
 import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.utils.Logger.warn
@@ -340,6 +341,8 @@ object ResourcePackRegistry : PackRegistry(true) {
             e.printStackTrace()
         }
     }
+
+    //TODO: Replace with kotlinx.serialization
 
     /**
      * Creates an item model JSON file for a group of custom items.

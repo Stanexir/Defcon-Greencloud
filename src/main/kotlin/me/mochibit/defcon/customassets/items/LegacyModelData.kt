@@ -19,6 +19,8 @@
 
 package me.mochibit.defcon.customassets.items
 
+import kotlinx.serialization.Serializable
+import org.bukkit.Color
 import org.bukkit.Material
 import java.util.*
 
@@ -34,10 +36,23 @@ data class LegacyModelData(
     val animationFrames: Map<Int, String> = mapOf(),
     )
 
-
+@Serializable
 data class ModelData(
     val name: String,
     val type: String = "model",
     val isItem : Boolean = true,
-    val model: String = "${if (isItem) "item" else "block"}/$name/$name"
-)
+    val model: String = "${if (isItem) "item" else "block"}/$name/$name",
+    val tints: List<TintDefinition> = emptyList()
+) {
+    @Serializable
+    sealed interface TintDefinition {
+        val type: String
+    }
+
+    data class DyeTint(
+        override val type: String = "minecraft:dye",
+        val default: Int = Color.WHITE.asRGB()
+    ) : TintDefinition
+}
+
+

@@ -20,7 +20,7 @@
 package me.mochibit.defcon.events.handlers.player
 
 import me.mochibit.defcon.utils.Logger
-import me.mochibit.defcon.content.pack.ResourcePackRegistry
+import me.mochibit.defcon.registry.ResourcePackRegistry
 import me.mochibit.defcon.events.AutoRegisterHandler
 import net.kyori.adventure.resource.ResourcePackRequest
 import net.kyori.adventure.text.minimessage.MiniMessage

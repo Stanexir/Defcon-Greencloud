@@ -2,6 +2,7 @@ import java.time.Instant
 
 plugins {
     kotlin("jvm") version "2.2.0"
+    kotlin("plugin.serialization") version "2.2.20"
     id("com.gradleup.shadow") version "9.0.0-beta12"
     id("xyz.jpenilla.run-paper") version "2.3.1"
     id("de.eldoria.plugin-yml.bukkit") version "0.7.1"
@@ -95,6 +96,7 @@ dependencies {
     library(kotlin("stdlib", Versions.KOTLIN))
     library(kotlin("reflect", Versions.KOTLIN))
     library("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.KOTLINX_COROUTINES}")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
     // Coroutines for Minecraft
     library("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:${Versions.MCCOROUTINE}")

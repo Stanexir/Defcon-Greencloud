@@ -17,12 +17,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package me.mochibit.defcon.content.pack
+package me.mochibit.defcon.registry
 
 import me.mochibit.defcon.utils.Logger.info
 import me.mochibit.defcon.biomes.BiomeRegister
 import me.mochibit.defcon.biomes.CustomBiome
 import me.mochibit.defcon.biomes.data.BiomeEffects
+import me.mochibit.defcon.content.pack.FormatReader
 import me.mochibit.defcon.notification.NotificationManager
 import me.mochibit.defcon.notification.NotificationType
 import me.mochibit.defcon.utils.versionGreaterOrEqualThan

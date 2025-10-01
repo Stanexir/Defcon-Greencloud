@@ -23,8 +23,8 @@ import com.github.shynixn.mccoroutine.bukkit.SuspendingJavaPlugin
 import me.mochibit.defcon.biomes.CustomBiomeHandler
 import me.mochibit.defcon.config.PluginConfiguration
 import me.mochibit.defcon.events.EventRegister
-import me.mochibit.defcon.content.pack.DatapackRegistry
-import me.mochibit.defcon.content.pack.ResourcePackRegistry
+import me.mochibit.defcon.registry.DatapackRegistry
+import me.mochibit.defcon.registry.ResourcePackRegistry
 import me.mochibit.defcon.notification.NotificationManager
 import me.mochibit.defcon.radiation.RadiationManager
 import me.mochibit.defcon.registry.BlockRegistry
