@@ -18,7 +18,7 @@ Removal of radiation zones.
 ---
 ## ✅ Simple guide on installing the plugin.
 
-Make sure the server software is **paper spigot 1.21+** and not spigot (for now)!
+Make sure the server software is **paper/purpur spigot 1.21+** and not spigot (for now)!
 
 Install **Protocollib**, **Worldedit**, **Worldguard** and **Vault**.
 
