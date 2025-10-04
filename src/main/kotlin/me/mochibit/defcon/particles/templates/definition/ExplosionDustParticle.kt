@@ -33,7 +33,7 @@ class ExplosionDustParticle : TextDisplayParticle(
     TextDisplayParticleProperties(
         text = "\uE000",
     ).apply {
-        color = Color.fromRGB(49,49,49)
+        color = Color.fromRGB(23,19,25)
         scale = Vector3f(40.0f, 40.0f, 40.0f)
         viewRange = 500.0f
     }
