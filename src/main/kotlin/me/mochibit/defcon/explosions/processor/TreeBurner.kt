@@ -194,7 +194,7 @@ class TreeBurner(
             newX,
             y,
             newZ,
-            Material.POLISHED_BASALT
+            Material.BASALT
         )
 
         // Remove the original block if it moved

@@ -36,13 +36,13 @@ class Crater(
     private val maxScorchRayDepth = 20
 
     private val scorchMaterials = listOf(
-        Material.TUFF,
         Material.DEEPSLATE,
         Material.BASALT,
         Material.BLACKSTONE,
-        Material.COAL_BLOCK,
-        Material.BLACK_CONCRETE_POWDER,
-        Material.BLACK_CONCRETE,
+        Material.OBSIDIAN,
+        Material.GREEN_TERRACOTTA,
+        Material.LIME_TERRACOTTA,
+        Material.MAGMA_BLOCK,
     )
 
     // Efficient structure for processed blocks
