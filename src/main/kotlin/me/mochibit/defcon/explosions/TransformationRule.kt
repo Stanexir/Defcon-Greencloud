@@ -47,8 +47,8 @@ class TransformationRule {
 
         val BURNT_BLOCK: EnumSet<Material> = EnumSet.of(
             Material.COBBLED_DEEPSLATE,
-            Material.BLACK_CONCRETE_POWDER,
-            Material.OBSIDIAN
+            Material.BASALT,
+            Material.BLACKSTONE
         )
 
         val DESTROYED_BLOCK: EnumSet<Material> = EnumSet.of(
@@ -58,8 +58,8 @@ class TransformationRule {
 
         val DIRT_TRANSFORMATIONS: EnumSet<Material> = EnumSet.of(
             Material.COARSE_DIRT,
-            Material.MUD,
-            Material.MUDDY_MANGROVE_ROOTS
+            Material.PACKED_MUD,
+            Material.GRAVEL
         )
 
         val SLAB_TRANSFORMATIONS: EnumSet<Material> = EnumSet.of(
