@@ -3,6 +3,18 @@
 _This Minecraft plugin for spigot adds Nuclear energy and the weapons that come with it._
 Nuke your opponents from your base with missiles and witness the destruction power of nuclear weapons.
 
+# Main changes between the original and this fork:
+
+Green-blue-purple mushroom cloud instead of yellow-orange-red
+
+Diffrent block destruction pallete.
+
+Resource pack does not send to a user.
+
+No client sided biome generation.
+
+Removal of radiation zones.
+
 ---
 ## ✅ Simple guide on installing the plugin.
 
