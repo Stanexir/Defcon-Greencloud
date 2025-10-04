@@ -54,16 +54,16 @@ class TemperatureComponent(
 
     private val temperatureEmissionGradient = Gradient(
         arrayOf(
-            Color.fromRGB(31, 26, 25),
-            Color.fromRGB(67, 58, 53),
-            Color.fromRGB(102, 74, 66),
-            Color.fromRGB(157, 108, 92),
-            Color.fromRGB(51, 22, 15),
-            Color.fromRGB(178, 34, 34),
-            Color.fromRGB(255, 122, 0),
-            Color.fromRGB(241, 198, 9),
-            Color.fromRGB(255, 243, 71),
-            Color.fromRGB(253, 255, 165)
+            Color.fromRGB(23, 19, 25),
+            Color.fromRGB(9, 0, 51),
+            Color.fromRGB(0, 33, 51),
+            Color.fromRGB(1, 76, 47),
+            Color.fromRGB(1, 99, 34),
+            Color.fromRGB(7, 127, 33),
+            Color.fromRGB(13, 226, 34),
+            Color.fromRGB(38, 255, 63),
+            Color.fromRGB(48, 255, 144),
+            Color.fromRGB(127, 255, 127)
         )
     )
 
