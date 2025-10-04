@@ -122,43 +122,6 @@ class NuclearExplosion(center: Location, private val nuclearComponent: Explosion
             }
 
             launch(Dispatchers.Default) {
-                val burningBiomeUUID = CustomBiomeHandler.createBiomeArea(
-                    center,
-                    BurningAirBiome,
-                    lengthPositiveY = falloutRadius,
-                    lengthNegativeY = craterRadius / 6,
-                    lengthNegativeX = falloutRadius,
-                    lengthNegativeZ = falloutRadius,
-                    lengthPositiveX = falloutRadius,
-                    lengthPositiveZ = falloutRadius,
-                    priority = 100,
-                )
-
-                CustomBiomeHandler.scheduleBiomeTransition(
-                    burningBiomeUUID,
-                    NuclearFalloutBiome.key,
-                    Instant.now().plusSeconds(1.minutes.inWholeSeconds),
-                    0
-                )
-            }
-
-            runLaterAsync(1.minutes) {
-                RadiationAreaFactory.fromCenter(
-                    center.toVector3i(), center.world, 5.0, 20000,
-                    Vector3i(
-                        falloutRadius,
-                        falloutSpreadAir,
-                        falloutRadius
-                    ),
-                    Vector3i(
-                        -falloutRadius,
-                        -falloutSpreadUnderground,
-                        -falloutRadius
-                    ),
-                )
-            }
-
-            launch(Dispatchers.Default) {
                 val players = center.world.players
                 // Kill all the players within the crater radius instantly
                 for (player in players) {
